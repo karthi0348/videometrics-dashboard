@@ -44,16 +44,16 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
     if (subProfile.cameraLocations) {
       const locations = Array.isArray(subProfile.cameraLocations) 
         ? subProfile.cameraLocations 
-        : Object.values(subProfile.cameraLocations || {});
+        : Object.values(subProfile.cameraLocations || {}); 
       setCameraLocations(locations.map(({ id, ...rest }) => rest));
     }
 
     // Initialize monitoring schedules if they exist
-    if (subProfile.monitoringSchedule) {
-      const schedules = Array.isArray(subProfile.monitoringSchedule) 
-        ? subProfile.monitoringSchedule 
-        : Object.values(subProfile.monitoringSchedule || {});
-      setMonitoringSchedules(schedules.map(({ id, ...rest }) => rest));
+    if (subProfile.monitoringSchedules) {
+      const schedules = Array.isArray(subProfile.monitoringSchedules) 
+        ? subProfile.monitoringSchedules 
+        : Object.values(subProfile.monitoringSchedules || {}) as MonitoringSchedule[];
+      setMonitoringSchedules(schedules.map(({ id, ...rest }) => rest) as Omit<MonitoringSchedule, 'id'>[]);
     }
 
     // Initialize alert settings if they exist

@@ -31,7 +31,7 @@ const DeleteSubProfileModal: React.FC<DeleteSubProfileModalProps> = ({
   };
 
   const cameraLocations = extractArrayData(subProfile.cameraLocations);
-  const monitoringSchedules = extractArrayData(subProfile.monitoringSchedule || subProfile.monitoringSchedules);
+  const monitoringSchedules = extractArrayData(subProfile.monitoringSchedules);
   const alertSettings = extractArrayData(subProfile.alertSettings);
 
   const isConfirmationValid = confirmationText === subProfile.name;
