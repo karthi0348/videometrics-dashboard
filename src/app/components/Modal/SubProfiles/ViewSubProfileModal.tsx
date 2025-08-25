@@ -21,7 +21,7 @@ interface ViewSubProfileModalProps {
 const ViewSubProfileModal: React.FC<ViewSubProfileModalProps> = ({
   subProfile,
   onClose,
-}) => {
+}:any) => {
   const formatDate = (date: Date) => {
     return date.toLocaleString("en-US", {
       year: "numeric",
@@ -147,7 +147,7 @@ const ViewSubProfileModal: React.FC<ViewSubProfileModalProps> = ({
                 </h3>
                 {subProfile.tags && subProfile.tags.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {subProfile.tags.map((tag, index) => (
+                    {subProfile.tags.map((tag:any, index:any) => (
                       <span
                         key={index}
                         className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200"
