@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import MetricStructureEditor from "./MetricStructureEditor";
 import ChartConfiguration from "./ChartConfiguration";
 import SummaryConfiguration from "./SummaryConfiguration";
+import TemplateApiService from "@/helpers/service/templates/template-api-service";
 
 interface FormData {
   templateName: string;
@@ -35,8 +36,9 @@ interface SummaryConfig {
 interface NewTemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: FormData & { 
-    metricStructure: string; 
+  refresh: any;
+  onSubmit: (data: FormData & {
+    metricStructure: string;
     chartConfiguration?: ChartConfig[];
     summaryConfiguration?: SummaryConfig;
   }) => void;
@@ -46,7 +48,10 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  refresh
 }) => {
+  const templateApiService: TemplateApiService = new TemplateApiService();
+
   const [formData, setFormData] = useState<FormData>({
     templateName: "",
     description: "",
@@ -77,13 +82,28 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
     setIsSubmitting(true);
 
     try {
-      await onSubmit({
-        ...formData,
-        metricStructure: jsonContent,
-        chartConfiguration: chartConfigs.length > 0 ? chartConfigs : undefined,
-        summaryConfiguration: summaryConfig || undefined,
-      });
+      const payload = {
+        template_name: formData.templateName,
+        description: formData.description,
+        tags: [], // you can add tag input later
+        version: "1.0.0",
+        analysis_prompt: formData.analysisPrompt,
+        metric_structure: JSON.parse(jsonContent),  // JSON structure
+        chart_config: chartConfigs.length > 0 ? chartConfigs : [],
+        summary_config: summaryConfig || null,
+        gui_config: {
+          layout_type: "dashboard",
+          theme: "light",
+          components: [],
+          responsive_breakpoints: {},
+          custom_css: "",
+        },
+        is_public: formData.makePublic,
+      };
 
+      await templateApiService.createTemplate(payload);
+      refresh()
+      onClose();
       // Reset form
       setFormData({
         templateName: "",
@@ -349,9 +369,8 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
                   </span>
                 </h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transform transition-transform ${
-                    expandedSections.metricStructure ? "rotate-180" : ""
-                  }`}
+                  className={`w-5 h-5 text-gray-500 transform transition-transform ${expandedSections.metricStructure ? "rotate-180" : ""
+                    }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

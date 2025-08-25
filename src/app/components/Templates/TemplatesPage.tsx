@@ -1,7 +1,9 @@
 'use client';
 
-import React, { JSX, useState } from 'react';
+import React, { JSX, useEffect, useState } from 'react';
 import NewTemplateModal from '../Modal/Template/NewTemplateModal';
+import TemplateApiService from '@/helpers/service/templates/template-api-service';
+import ErrorHandler from '@/helpers/ErrorHandler';
 
 interface Template {
   id: string;
@@ -42,14 +44,14 @@ const mockProfiles: Profile[] = [
 ];
 
 // Assignment Modal Component
-const AssignmentModal = ({ 
-  isOpen, 
-  onClose, 
+const AssignmentModal = ({
+  isOpen,
+  onClose,
   template,
-  onAssign 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
+  onAssign
+}: {
+  isOpen: boolean;
+  onClose: () => void;
   template: Template | null;
   onAssign: (profileId: string, priority: string) => void;
 }) => {
@@ -156,11 +158,10 @@ const AssignmentModal = ({
           <button
             onClick={handleAssign}
             disabled={!selectedProfile}
-            className={`px-4 py-2 text-white rounded-lg transition-colors ${
-              selectedProfile 
-                ? 'bg-teal-500 hover:bg-teal-600' 
-                : 'bg-gray-300 cursor-not-allowed'
-            }`}
+            className={`px-4 py-2 text-white rounded-lg transition-colors ${selectedProfile
+              ? 'bg-teal-500 hover:bg-teal-600'
+              : 'bg-gray-300 cursor-not-allowed'
+              }`}
           >
             Assign Template
           </button>
@@ -171,13 +172,13 @@ const AssignmentModal = ({
 };
 
 // Template Settings Modal Component
-const TemplateSettingsModal = ({ 
-  isOpen, 
-  onClose, 
-  template 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
+const TemplateSettingsModal = ({
+  isOpen,
+  onClose,
+  template
+}: {
+  isOpen: boolean;
+  onClose: () => void;
   template: Template | null;
 }) => {
   if (!isOpen || !template) return null;
@@ -213,7 +214,7 @@ const TemplateSettingsModal = ({
           {/* Template Information */}
           <div>
             <h3 className="text-lg font-medium text-gray-900 mb-4">Template Information</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -276,21 +277,19 @@ const TemplateSettingsModal = ({
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 py-4 border-t border-gray-200">
             <div>
               <span className="block text-xs font-medium text-gray-500 mb-1">Status:</span>
-              <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                template.status === 'active' 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-yellow-100 text-yellow-700'
-              }`}>
+              <span className={`inline-flex px-2 py-1 text-xs rounded-full ${template.status === 'active'
+                ? 'bg-green-100 text-green-700'
+                : 'bg-yellow-100 text-yellow-700'
+                }`}>
                 {template.status}
               </span>
             </div>
             <div>
               <span className="block text-xs font-medium text-gray-500 mb-1">Visibility:</span>
-              <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                template.visibility === 'Public' 
-                  ? 'bg-teal-100 text-teal-700' 
-                  : 'bg-gray-100 text-gray-700'
-              }`}>
+              <span className={`inline-flex px-2 py-1 text-xs rounded-full ${template.visibility === 'Public'
+                ? 'bg-teal-100 text-teal-700'
+                : 'bg-gray-100 text-gray-700'
+                }`}>
                 {template.visibility}
               </span>
             </div>
@@ -349,82 +348,41 @@ const TemplateSettingsModal = ({
 };
 
 const TemplatesPage: React.FC = () => {
+  const templateApiService: TemplateApiService = new TemplateApiService();
+
   const [showModal, setShowModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'beta'>('all');
-  const [filterVisibility, setFilterVisibility] = useState<'all' | 'Public' | 'Private'>('all');
+  const [filterStatus, setFilterStatus] = useState<any>('');
+  const [filterVisibility, setFilterVisibility] = useState<any>('');
   const [showAssignments, setShowAssignments] = useState<{ [key: string]: boolean }>({});
-  const [templates, setTemplates] = useState<Template[]>([
-    {
-      id: '1',
-      name: 'Blueberry Health',
-      description: 'Simple monitoring for blueberry tree health and fruit ripeness assessment on 10-acre farm',
-      tags: ['agriculture', 'health', 'monitoring'],
-      visibility: 'Public',
-      status: 'active',
-      uses: 0,
-      assignedProfiles: 1,
-      icon: 'chart-bar',
-      color: 'teal',
-      analysisPrompt: 'Analyze the health indicators of blueberry plants including leaf color, fruit development, and overall plant structure.',
-      created: '7/19/2025, 12:45:38 PM',
-      rating: 0.0
-    },
-    {
-      id: '2',
-      name: 'Video Quality Analysis',
-      description: 'Comprehensive video quality metrics including resolution, bitrate, and compression analysis',
-      tags: ['quality', 'video', 'metrics'],
-      visibility: 'Public',
-      status: 'active',
-      uses: 12,
-      assignedProfiles: 3,
-      icon: 'clipboard',
-      color: 'blue',
-      analysisPrompt: 'Evaluate video quality parameters including resolution, bitrate, compression artifacts, and overall visual clarity.',
-      created: '7/18/2025, 09:30:15 AM',
-      rating: 4.2
-    },
-    {
-      id: '3',
-      name: 'Content Insights',
-      description: 'Extract meaningful insights from video content using AI-powered analysis and pattern recognition',
-      tags: ['AI', 'content', 'analysis'],
-      visibility: 'Private',
-      status: 'beta',
-      uses: 5,
-      assignedProfiles: 1,
-      icon: 'server',
-      color: 'purple',
-      analysisPrompt: 'Extract key insights from video content including object detection, scene analysis, and pattern recognition.',
-      created: '7/17/2025, 03:22:45 PM',
-      rating: 3.8
-    },
-  ]);
+  const [templates, setTemplates] = useState<any>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(6); // default items per page
+  const [totalCount, setTotalCount] = useState(0);
 
   const handleCreateTemplate = (data: FormData & { metricStructure: string }) => {
     console.log('Creating template:', data);
-    
-    const newTemplate: Template = {
-      id: Date.now().toString(),
-      name: data.templateName,
-      description: data.description,
-      tags: [],
-      visibility: data.makePublic ? 'Public' : 'Private',
-      status: 'active',
-      uses: 0,
-      assignedProfiles: 0,
-      icon: 'chart-bar',
-      color: 'teal',
-      analysisPrompt: data.analysisPrompt,
-      created: new Date().toLocaleString(),
-      rating: 0.0
-    };
 
-    setTemplates(prev => [...prev, newTemplate]);
+    // const newTemplate: Template = {
+    //   id: Date.now().toString(),
+    //   name: data.templateName,
+    //   description: data.description,
+    //   tags: [],
+    //   visibility: data.makePublic ? 'Public' : 'Private',
+    //   status: 'active',
+    //   uses: 0,
+    //   assignedProfiles: 0,
+    //   icon: 'chart-bar',
+    //   color: 'teal',
+    //   analysisPrompt: data.analysisPrompt,
+    //   created: new Date().toLocaleString(),
+    //   rating: 0.0
+    // };
+
+    // setTemplates((prev: any) => [...prev, newTemplate]);
     setShowModal(false);
   };
 
@@ -439,19 +397,19 @@ const TemplatesPage: React.FC = () => {
   };
 
   const handleAssignTemplate = (profileId: string, priority: string) => {
-    if (selectedTemplate) {
-      console.log(`Assigning template "${selectedTemplate.name}" to profile "${profileId}" with priority ${priority}`);
-      
-      // Update the template's assigned profiles count
-      setTemplates(prev => prev.map(template => 
-        template.id === selectedTemplate.id 
-          ? { ...template, assignedProfiles: template.assignedProfiles + 1 }
-          : template
-      ));
-      
-      // You can add more logic here to track specific assignments
-      alert(`Template "${selectedTemplate.name}" assigned to profile "${profileId}" with priority ${priority === '1' ? 'High' : priority === '2' ? 'Medium' : 'Low'}`);
-    }
+    // if (selectedTemplate) {
+    //   console.log(`Assigning template "${selectedTemplate.name}" to profile "${profileId}" with priority ${priority}`);
+
+    //   // Update the template's assigned profiles count
+    //   setTemplates((prev: any) => prev.map((template: any) =>
+    //     template.id === selectedTemplate.id
+    //       ? { ...template, assignedProfiles: template.assignedProfiles + 1 }
+    //       : template
+    //   ));
+
+    //   // You can add more logic here to track specific assignments
+    //   alert(`Template "${selectedTemplate.name}" assigned to profile "${profileId}" with priority ${priority === '1' ? 'High' : priority === '2' ? 'Medium' : 'Low'}`);
+    // }
   };
 
   const toggleAssignments = (templateId: string) => {
@@ -461,15 +419,15 @@ const TemplatesPage: React.FC = () => {
     }));
   };
 
-  const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         template.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = filterStatus === 'all' || template.status === filterStatus;
-    const matchesVisibility = filterVisibility === 'all' || template.visibility === filterVisibility;
-    
-    return matchesSearch && matchesStatus && matchesVisibility;
-  });
+  // const filteredTemplates = templates.filter((template: any) => {
+  //   const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  //     template.tags.some((tag: any) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+  //   const matchesStatus = filterStatus === 'all' || template.status === filterStatus;
+  //   const matchesVisibility = filterVisibility === 'all' || template.visibility === filterVisibility;
+
+  //   return matchesSearch && matchesStatus && matchesVisibility;
+  // });
 
   const getIcon = (iconName: string) => {
     const icons: { [key: string]: JSX.Element } = {
@@ -507,6 +465,36 @@ const TemplatesPage: React.FC = () => {
     return colorMap[color] || colorMap.teal;
   };
 
+  const getAllTemplate = async () => {
+    try {
+      const params = new URLSearchParams();
+
+      // if (tags) {
+      //   params.append("tags", tags);
+      // }
+      if (searchQuery) {
+        params.append("search_query", searchQuery);
+      }
+      if (filterStatus) {
+        params.append("status_filter", filterStatus);
+      }
+      params.append("page", page.toString());
+      params.append("page_size", pageSize.toString());
+      params.append("sort_by", "created_at");
+      params.append("sort_order", "dec")
+      const url = `?${params.toString()}`;
+      let result = await templateApiService.getAllTemplate(url);
+      setTemplates(result);
+    } catch (error: any) {
+      setTemplates([]);
+      return ErrorHandler(error);
+    }
+  };
+
+  useEffect(() => {
+    getAllTemplate();
+  }, [searchQuery, filterStatus, page, pageSize]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
@@ -518,13 +506,14 @@ const TemplatesPage: React.FC = () => {
               <p className="text-gray-600 mt-1">Create and manage analysis templates for your video content</p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base">
+              <button className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
+                onClick={getAllTemplate}>
                 <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Refresh
               </button>
-              <button 
+              <button
                 onClick={() => setShowModal(true)}
                 className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2 text-sm sm:text-base"
               >
@@ -552,19 +541,19 @@ const TemplatesPage: React.FC = () => {
             </div>
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'beta')}
+              onChange={(e) => setFilterStatus(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             >
-              <option value="all">All Status</option>
+              <option value="">All Status</option>
               <option value="active">Active</option>
               <option value="beta">Beta</option>
             </select>
             <select
               value={filterVisibility}
-              onChange={(e) => setFilterVisibility(e.target.value as 'all' | 'Public' | 'Private')}
+              onChange={(e) => setFilterVisibility(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
             >
-              <option value="all">All Visibility</option>
+              <option value="">All Visibility</option>
               <option value="Public">Public</option>
               <option value="Private">Private</option>
             </select>
@@ -573,16 +562,16 @@ const TemplatesPage: React.FC = () => {
           {/* Stats */}
           <div className="mt-4 flex items-center gap-6 text-sm text-gray-600">
             <span>Total: {templates.length}</span>
-            <span>Showing: {filteredTemplates.length}</span>
-            <span>Active: {templates.filter(t => t.status === 'active').length}</span>
-            <span>Beta: {templates.filter(t => t.status === 'beta').length}</span>
+            <span>Showing: {templates.length}</span>
+            <span>Active: {templates.filter((t: any) => t.status === 'active').length}</span>
+            <span>Beta: {templates.filter((t: any) => t.status === 'beta').length}</span>
           </div>
         </div>
       </div>
 
       {/* Templates Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-        {filteredTemplates.length === 0 ? (
+        {templates.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -597,7 +586,7 @@ const TemplatesPage: React.FC = () => {
               }
             </p>
             {!searchQuery && filterStatus === 'all' && filterVisibility === 'all' && (
-              <button 
+              <button
                 onClick={() => setShowModal(true)}
                 className="px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
               >
@@ -607,10 +596,10 @@ const TemplatesPage: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTemplates.map((template) => {
+            {templates.map((template: any) => {
               const colorClasses = getColorClasses(template.color);
               return (
-                <div 
+                <div
                   key={template.id}
                   className={`bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 ${colorClasses.hover}`}
                 >
@@ -634,19 +623,24 @@ const TemplatesPage: React.FC = () => {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
                           </button>
-                          <h3 className="text-lg font-semibold text-gray-900">{template.name}</h3>
+                          <h3 className="text-lg font-semibold text-gray-900">{template.template_name}</h3>
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            template.visibility === 'Public' ? colorClasses.badge : 'bg-gray-100 text-gray-700'
-                          }`}>
+                          {/* <span className={`px-2 py-1 text-xs rounded-full ${template.is_public === 'Public' ? colorClasses.badge : 'bg-gray-100 text-gray-700'
+                            }`}>
                             {template.visibility}
+                          </span> */}
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${template.is_public ? colorClasses.badge : "bg-gray-100 text-gray-700"
+                              }`}
+                          >
+                            {template.is_public ? "Public" : "Private"}
                           </span>
-                          <span className={`px-2 py-1 text-xs rounded-full ${
-                            template.status === 'active' 
-                              ? 'bg-green-100 text-green-700' 
-                              : 'bg-yellow-100 text-yellow-700'
-                          }`}>
+
+                          <span className={`px-2 py-1 text-xs rounded-full ${template.status === 'active'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                            }`}>
                             {template.status}
                           </span>
                         </div>
@@ -673,7 +667,7 @@ const TemplatesPage: React.FC = () => {
                   {template.tags.length > 0 && (
                     <div className="mb-4">
                       <div className="flex flex-wrap gap-1">
-                        {template.tags.slice(0, 3).map((tag, index) => (
+                        {template.tags.slice(0, 3).map((tag: any, index: any) => (
                           <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
                             {tag}
                           </span>
@@ -690,7 +684,7 @@ const TemplatesPage: React.FC = () => {
                   <div className="mb-4 space-y-1">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Uses:</span>
-                      <span className="text-gray-900 font-medium">{template.uses}</span>
+                      <span className="text-gray-900 font-medium">{template.usage_count}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-500">Assigned to:</span>
@@ -724,13 +718,13 @@ const TemplatesPage: React.FC = () => {
                     <button className="flex-1 px-2 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-xs font-medium">
                       Use Template
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleOpenAssignment(template)}
                       className="px-3 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-xs font-medium"
                     >
                       Assign
                     </button>
-                    <button 
+                    <button
                       onClick={() => toggleAssignments(template.id)}
                       className="px-2 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-xs font-medium whitespace-nowrap min-w-0"
                     >
@@ -744,9 +738,48 @@ const TemplatesPage: React.FC = () => {
         )}
       </div>
 
+
+      <div className="flex justify-center items-center mt-6">
+        <button
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+          disabled={page === 1}
+          className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-50"
+        >
+          Previous
+        </button>
+
+        <span className="text-gray-600">
+          Page {page} of {Math.ceil(totalCount / pageSize) || 1}
+        </span>
+        <select
+          value={pageSize}
+          onChange={(e) => {
+            setPageSize(Number(e.target.value));
+            setPage(1);
+          }}
+          className="ml-2 border rounded px-2 py-1"
+        >
+          <option value={5}>5</option>
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+        </select>
+
+        <button
+          onClick={() =>
+            setPage((prev) =>
+              prev < Math.ceil(totalCount / pageSize) ? prev + 1 : prev
+            )
+          }
+          disabled={page >= Math.ceil(totalCount / pageSize)}
+          className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
       {/* Modals */}
       <NewTemplateModal
         isOpen={showModal}
+        refresh={getAllTemplate}
         onClose={() => setShowModal(false)}
         onSubmit={handleCreateTemplate}
       />
