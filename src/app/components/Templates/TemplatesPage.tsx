@@ -4,6 +4,11 @@ import React, { JSX, useEffect, useState } from 'react';
 import NewTemplateModal from '../Modal/Template/NewTemplateModal';
 import TemplateApiService from '@/helpers/service/templates/template-api-service';
 import ErrorHandler from '@/helpers/ErrorHandler';
+import ProfileApiService from '@/helpers/service/profile/profile-api-service';
+import AssignmentModal from '../Modal/Template/AssignmentModal';
+import DeleteModal from '../Common/DeleteModal';
+import { toast } from 'react-toastify';
+import EditTemplateModal from '../Modal/Template/EditTemplateModal';
 
 interface Template {
   id: string;
@@ -32,144 +37,6 @@ interface Profile {
   id: string;
   name: string;
 }
-
-// Mock profiles data
-const mockProfiles: Profile[] = [
-  { id: '22', name: 'profile22' },
-  { id: '255', name: 'profile255' },
-  { id: 'rr', name: 'rr' },
-  { id: '2ww', name: 'profile2ww' },
-  { id: '22222', name: 'profile22222' },
-  { id: '22333', name: 'profile22333' },
-];
-
-// Assignment Modal Component
-const AssignmentModal = ({
-  isOpen,
-  onClose,
-  template,
-  onAssign
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  template: Template | null;
-  onAssign: (profileId: string, priority: string) => void;
-}) => {
-  const [selectedProfile, setSelectedProfile] = useState<string>('');
-  const [selectedPriority, setSelectedPriority] = useState<'1' | '2' | '3'>('1');
-
-  const handleAssign = () => {
-    if (selectedProfile && template) {
-      onAssign(selectedProfile, selectedPriority);
-      onClose();
-      setSelectedProfile('');
-      setSelectedPriority('1');
-    }
-  };
-
-  const handleCancel = () => {
-    onClose();
-    setSelectedProfile('');
-    setSelectedPriority('1');
-  };
-
-  if (!isOpen || !template) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Assign Template to Sub-Profiles</h2>
-          <button
-            onClick={handleCancel}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-4">
-          <p className="text-sm text-gray-600 mb-4">
-            Select profiles and sub-profiles to assign the template '{template.name}' to.
-          </p>
-
-          {/* Profile Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Profile
-            </label>
-            <div className="relative">
-              <select
-                value={selectedProfile}
-                onChange={(e) => setSelectedProfile(e.target.value)}
-                className="w-full px-3 py-2 border-2 border-teal-500 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 appearance-none bg-white"
-              >
-                <option value="">Select a profile</option>
-                {mockProfiles.map((profile) => (
-                  <option key={profile.id} value={profile.id}>
-                    {profile.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Priority Selection */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Priority
-            </label>
-            <div className="relative">
-              <select
-                value={selectedPriority}
-                onChange={(e) => setSelectedPriority(e.target.value as '1' | '2' | '3')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 appearance-none bg-white"
-              >
-                <option value="1">High (1)</option>
-                <option value="2">Medium (2)</option>
-                <option value="3">Low (3)</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleAssign}
-            disabled={!selectedProfile}
-            className={`px-4 py-2 text-white rounded-lg transition-colors ${selectedProfile
-              ? 'bg-teal-500 hover:bg-teal-600'
-              : 'bg-gray-300 cursor-not-allowed'
-              }`}
-          >
-            Assign Template
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Template Settings Modal Component
 const TemplateSettingsModal = ({
@@ -351,40 +218,26 @@ const TemplatesPage: React.FC = () => {
   const templateApiService: TemplateApiService = new TemplateApiService();
 
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedEditTemplateId, setSelectedEditTemplateId] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<any>('');
   const [filterVisibility, setFilterVisibility] = useState<any>('');
-  const [showAssignments, setShowAssignments] = useState<{ [key: string]: boolean }>({});
+  const [tempId, setTempId] = useState<any>(null);
+  const [showAssignments, setShowAssignments] = useState<boolean>(false);
   const [templates, setTemplates] = useState<any>([]);
+  const [assesmentInfo, setAssesmentInfo] = useState([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(6); // default items per page
+  const [pageSize, setPageSize] = useState(6);
   const [totalCount, setTotalCount] = useState(0);
 
-  const handleCreateTemplate = (data: FormData & { metricStructure: string }) => {
-    console.log('Creating template:', data);
-
-    // const newTemplate: Template = {
-    //   id: Date.now().toString(),
-    //   name: data.templateName,
-    //   description: data.description,
-    //   tags: [],
-    //   visibility: data.makePublic ? 'Public' : 'Private',
-    //   status: 'active',
-    //   uses: 0,
-    //   assignedProfiles: 0,
-    //   icon: 'chart-bar',
-    //   color: 'teal',
-    //   analysisPrompt: data.analysisPrompt,
-    //   created: new Date().toLocaleString(),
-    //   rating: 0.0
-    // };
-
-    // setTemplates((prev: any) => [...prev, newTemplate]);
-    setShowModal(false);
-  };
+  //delete
+  const [deleteModal, setDeleteModal] = useState<boolean>(false);
+  const [selectedId, setSelectedId] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const handleOpenSettings = (template: Template) => {
     setSelectedTemplate(template);
@@ -396,38 +249,53 @@ const TemplatesPage: React.FC = () => {
     setShowAssignmentModal(true);
   };
 
-  const handleAssignTemplate = (profileId: string, priority: string) => {
-    // if (selectedTemplate) {
-    //   console.log(`Assigning template "${selectedTemplate.name}" to profile "${profileId}" with priority ${priority}`);
-
-    //   // Update the template's assigned profiles count
-    //   setTemplates((prev: any) => prev.map((template: any) =>
-    //     template.id === selectedTemplate.id
-    //       ? { ...template, assignedProfiles: template.assignedProfiles + 1 }
-    //       : template
-    //   ));
-
-    //   // You can add more logic here to track specific assignments
-    //   alert(`Template "${selectedTemplate.name}" assigned to profile "${profileId}" with priority ${priority === '1' ? 'High' : priority === '2' ? 'Medium' : 'Low'}`);
-    // }
+  const toggleAssignments = async (templateId: string) => {
+    try {
+      if (!showAssignments) {
+        let res = await templateApiService.getSubProfileAssignments(templateId);
+        setAssesmentInfo(res);
+        setTempId(templateId);
+        setShowAssignments(true);
+      } else {
+        setAssesmentInfo([]);
+        setTempId(null);
+        setShowAssignments(false);
+      }
+    } catch (err: any) {
+      setAssesmentInfo([]);
+      return ErrorHandler(err)
+    }
   };
 
-  const toggleAssignments = (templateId: string) => {
-    setShowAssignments(prev => ({
-      ...prev,
-      [templateId]: !prev[templateId]
-    }));
+  const handleOpenEdit = (id: any) => {
+    setShowEditModal(true);
+    setSelectedEditTemplateId(id)
+  }
+
+  // Delete Data
+  const handleDelete = async () => {
+    if (selectedId) {
+      setDeleteLoading(true)
+      try {
+        await templateApiService.deleteTemplate(selectedId);
+        toast.success("Template Deleted Successfully", {
+          containerId: "TR",
+        });
+        await getAllTemplate();
+        setDeleteModal(false);
+        return;
+      } catch (error: any) {
+        return ErrorHandler(error);
+      } finally {
+        setDeleteLoading(false)
+      }
+    }
   };
 
-  // const filteredTemplates = templates.filter((template: any) => {
-  //   const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //     template.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //     template.tags.some((tag: any) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-  //   const matchesStatus = filterStatus === 'all' || template.status === filterStatus;
-  //   const matchesVisibility = filterVisibility === 'all' || template.visibility === filterVisibility;
-
-  //   return matchesSearch && matchesStatus && matchesVisibility;
-  // });
+  const deleteTemplate = (id: any) => {
+    setSelectedId(id);
+    setDeleteModal(true);
+  };
 
   const getIcon = (iconName: string) => {
     const icons: { [key: string]: JSX.Element } = {
@@ -647,12 +515,14 @@ const TemplatesPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                      <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        onClick={() => handleOpenEdit(template.id)}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
-                      <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                      <button className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        onClick={() => deleteTemplate(template.id)}>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -693,16 +563,16 @@ const TemplatesPage: React.FC = () => {
                   </div>
 
                   {/* Current Assignments Section */}
-                  {showAssignments[template.id] && (
+                  {tempId === template.id && showAssignments && (
                     <div className="mb-4 p-3 bg-gray-50 rounded-lg border">
                       <h4 className="text-sm font-medium text-gray-700 mb-2">Current Assignments:</h4>
-                      {template.assignedProfiles > 0 ? (
+                      {assesmentInfo.length > 0 ? (
                         <div className="text-sm text-gray-600">
                           <p>Profile assignments would be displayed here</p>
                           <div className="mt-2 space-y-1">
-                            {Array.from({ length: template.assignedProfiles }, (_, i) => (
-                              <div key={i} className="flex items-center justify-between py-1">
-                                <span className="text-gray-700">Profile {i + 1}</span>
+                            {assesmentInfo.map((item: any, idx: any) => (
+                              <div key={idx} className="flex items-center justify-between py-1">
+                                <span className="text-gray-700">Profile : {item.assigned_by}</span>
                                 <span className="text-xs text-gray-500">Assigned</span>
                               </div>
                             ))}
@@ -728,7 +598,7 @@ const TemplatesPage: React.FC = () => {
                       onClick={() => toggleAssignments(template.id)}
                       className="px-2 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-xs font-medium whitespace-nowrap min-w-0"
                     >
-                      {showAssignments[template.id] ? 'Hide assignment' : 'View assignments'}
+                      {tempId === template.id && showAssignments ? 'Hide assignment' : 'View assignments'}
                     </button>
                   </div>
                 </div>
@@ -781,7 +651,13 @@ const TemplatesPage: React.FC = () => {
         isOpen={showModal}
         refresh={getAllTemplate}
         onClose={() => setShowModal(false)}
-        onSubmit={handleCreateTemplate}
+      />
+
+      <EditTemplateModal
+        isEditOpen={showEditModal}
+        refresh={getAllTemplate}
+        id={selectedEditTemplateId}
+        onClose={() => setShowEditModal(false)}
       />
 
       <TemplateSettingsModal
@@ -797,10 +673,17 @@ const TemplatesPage: React.FC = () => {
         isOpen={showAssignmentModal}
         onClose={() => {
           setShowAssignmentModal(false);
+          getAllTemplate();
           setSelectedTemplate(null);
         }}
         template={selectedTemplate}
-        onAssign={handleAssignTemplate}
+      />
+
+      <DeleteModal
+        show={deleteModal}
+        onDeleteClick={handleDelete}
+        isLoading={deleteLoading}
+        onCloseClick={() => setDeleteModal(false)}
       />
     </div>
   );

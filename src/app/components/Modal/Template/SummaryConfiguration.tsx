@@ -11,17 +11,19 @@ interface SummaryConfig {
 interface SummaryConfigurationProps {
   isExpanded: boolean;
   onToggle: () => void;
+  config: any;
   onConfigChange: (config: SummaryConfig | null) => void;
 }
 
 const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
   isExpanded,
   onToggle,
+  config,
   onConfigChange
 }) => {
   const [activeTab, setActiveTab] = useState<'visual' | 'json' | 'form' | 'tree'>('visual');
   const [showPreview, setShowPreview] = useState(false);
-  
+
   const [summaryConfig, setSummaryConfig] = useState<SummaryConfig>({
     summary_type: "executive",
     sections: ["overview", "key_metrics"],
@@ -81,7 +83,7 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
     const newSections = summaryConfig.sections.includes(sectionValue)
       ? summaryConfig.sections.filter(s => s !== sectionValue)
       : [...summaryConfig.sections, sectionValue];
-    
+
     updateJsonFromVisual({
       ...summaryConfig,
       sections: newSections
@@ -96,6 +98,14 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
       console.error('Invalid JSON');
     }
   };
+
+  React.useEffect(() => {
+  if (config) {
+    setSummaryConfig(config);
+    setJsonContent(JSON.stringify(config, null, 2));
+  }
+}, [config]);
+
 
   const minifyJson = () => {
     try {
@@ -185,7 +195,7 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
 
   const renderFormEditor = () => {
     const config = isValidJson() ? JSON.parse(jsonContent) : {};
-    
+
     return (
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="border-b border-gray-200 p-4">
@@ -204,7 +214,7 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
           </div>
           <p className="text-xs text-gray-500 mt-1">Edit your data using form fields with automatic type detection and validation.</p>
         </div>
-        
+
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
@@ -230,7 +240,7 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
               <input
                 type="text"
                 value={config.summary_type || ''}
-                onChange={(e) => updateVisualFromJson(JSON.stringify({...config, summary_type: e.target.value}, null, 2))}
+                onChange={(e) => updateVisualFromJson(JSON.stringify({ ...config, summary_type: e.target.value }, null, 2))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 placeholder="executive"
               />
@@ -257,7 +267,7 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
                   </button>
                 </div>
               </div>
-              
+
               <div className="ml-6 space-y-3">
                 {(config.sections || []).map((section: string, index: number) => (
                   <div key={index} className="flex items-center gap-2">
@@ -269,14 +279,14 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
                       onChange={(e) => {
                         const newSections = [...(config.sections || [])];
                         newSections[index] = e.target.value;
-                        updateVisualFromJson(JSON.stringify({...config, sections: newSections}, null, 2));
+                        updateVisualFromJson(JSON.stringify({ ...config, sections: newSections }, null, 2));
                       }}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                     />
                     <button
                       onClick={() => {
                         const newSections = (config.sections || []).filter((_: any, i: number) => i !== index);
-                        updateVisualFromJson(JSON.stringify({...config, sections: newSections}, null, 2));
+                        updateVisualFromJson(JSON.stringify({ ...config, sections: newSections }, null, 2));
                       }}
                       className="text-red-500 hover:text-red-700"
                     >
@@ -289,7 +299,7 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
                 <button
                   onClick={() => {
                     const newSections = [...(config.sections || []), ''];
-                    updateVisualFromJson(JSON.stringify({...config, sections: newSections}, null, 2));
+                    updateVisualFromJson(JSON.stringify({ ...config, sections: newSections }, null, 2));
                   }}
                   className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
                 >
@@ -317,7 +327,7 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
               <input
                 type="text"
                 value={config.format || ''}
-                onChange={(e) => updateVisualFromJson(JSON.stringify({...config, format: e.target.value}, null, 2))}
+                onChange={(e) => updateVisualFromJson(JSON.stringify({ ...config, format: e.target.value }, null, 2))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 placeholder="markdown"
               />
@@ -338,7 +348,7 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
               <input
                 type="text"
                 value={String(config.include_recommendations || '')}
-                onChange={(e) => updateVisualFromJson(JSON.stringify({...config, include_recommendations: e.target.value}, null, 2))}
+                onChange={(e) => updateVisualFromJson(JSON.stringify({ ...config, include_recommendations: e.target.value }, null, 2))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 placeholder="true"
               />
@@ -362,10 +372,10 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
     const config = isValidJson() ? JSON.parse(jsonContent) : {};
     const characterCount = jsonContent.length;
     const propertyCount = Object.keys(config).length;
-    
+
     return (
       <div className="space-y-6">
-  
+
 
         {/* Tree View Content */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -508,12 +518,11 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
             />
           </svg>
           Summary Configuration
-         
+
         </h3>
         <svg
-          className={`w-5 h-5 text-gray-500 transform transition-transform ${
-            isExpanded ? "rotate-180" : ""
-          }`}
+          className={`w-5 h-5 text-gray-500 transform transition-transform ${isExpanded ? "rotate-180" : ""
+            }`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -531,7 +540,7 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
         <div className="border-t border-gray-200">
           <div className="p-6 bg-gray-50">
             <p className="text-sm text-gray-600 mb-4">
-              Configure how analysis summaries will be generated. Either chart configuration or summary 
+              Configure how analysis summaries will be generated. Either chart configuration or summary
               configuration is required.
             </p>
 
@@ -688,11 +697,10 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('visual')}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'visual'
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'visual'
                     ? 'border-b-2 border-orange-500 text-orange-600 bg-white'
                     : 'text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -703,11 +711,10 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('json')}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'json'
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'json'
                     ? 'border-b-2 border-orange-500 text-orange-600 bg-white'
                     : 'text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -717,11 +724,10 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('form')}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'form'
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'form'
                     ? 'border-b-2 border-orange-500 text-orange-600 bg-white'
                     : 'text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -731,11 +737,10 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab('tree')}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === 'tree'
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'tree'
                     ? 'border-b-2 border-orange-500 text-orange-600 bg-white'
                     : 'text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100'
-                }`}
+                  }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2z" />
@@ -757,11 +762,10 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
                       {summaryTypes.map((type) => (
                         <label
                           key={type.value}
-                          className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                            summaryConfig.summary_type === type.value
+                          className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${summaryConfig.summary_type === type.value
                               ? 'border-orange-500 bg-orange-50'
                               : 'border-gray-300 hover:border-gray-400'
-                          }`}
+                            }`}
                         >
                           <input
                             type="radio"
@@ -794,11 +798,10 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
                       {availableSections.map((section) => (
                         <label
                           key={section.value}
-                          className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                            summaryConfig.sections.includes(section.value)
+                          className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${summaryConfig.sections.includes(section.value)
                               ? 'border-orange-500 bg-orange-50'
                               : 'border-gray-300 hover:border-gray-400'
-                          }`}
+                            }`}
                         >
                           <input
                             type="checkbox"
@@ -849,11 +852,10 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
                       {formatOptions.map((format) => (
                         <label
                           key={format.value}
-                          className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-                            summaryConfig.format === format.value
+                          className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${summaryConfig.format === format.value
                               ? 'border-orange-500 bg-orange-50'
                               : 'border-gray-300 hover:border-gray-400'
-                          }`}
+                            }`}
                         >
                           <input
                             type="radio"
@@ -982,7 +984,7 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
                       {jsonContent.length} characters
                     </div>
                   </div>
-                  
+
                   <div className="relative">
                     <div className="absolute left-0 top-0 bottom-0 w-12 bg-gray-100 border-r border-gray-300 flex flex-col text-xs text-gray-500 font-mono overflow-hidden rounded-l">
                       {jsonContent.split('\n').map((_, index) => (
@@ -994,11 +996,10 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
                     <textarea
                       value={jsonContent}
                       onChange={(e) => updateVisualFromJson(e.target.value)}
-                      className={`w-full h-64 pl-14 pr-4 py-3 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white resize-none ${
-                        isValidJson() 
-                          ? 'border-gray-300 focus:border-orange-500' 
+                      className={`w-full h-64 pl-14 pr-4 py-3 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none bg-white resize-none ${isValidJson()
+                          ? 'border-gray-300 focus:border-orange-500'
                           : 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                      }`}
+                        }`}
                       placeholder="Enter summary configuration JSON..."
                       spellCheck={false}
                     />

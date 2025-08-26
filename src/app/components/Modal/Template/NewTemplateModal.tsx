@@ -3,6 +3,7 @@ import MetricStructureEditor from "./MetricStructureEditor";
 import ChartConfiguration from "./ChartConfiguration";
 import SummaryConfiguration from "./SummaryConfiguration";
 import TemplateApiService from "@/helpers/service/templates/template-api-service";
+import ErrorHandler from "@/helpers/ErrorHandler";
 
 interface FormData {
   templateName: string;
@@ -37,17 +38,11 @@ interface NewTemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
   refresh: any;
-  onSubmit: (data: FormData & {
-    metricStructure: string;
-    chartConfiguration?: ChartConfig[];
-    summaryConfiguration?: SummaryConfig;
-  }) => void;
 }
 
 const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
   isOpen,
   onClose,
-  onSubmit,
   refresh
 }) => {
   const templateApiService: TemplateApiService = new TemplateApiService();
@@ -124,8 +119,8 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
         chartConfiguration: false,
         summaryConfiguration: false,
       });
-    } catch (error) {
-      console.error("Error creating template:", error);
+    } catch (error: any) {
+      return ErrorHandler(error)
     } finally {
       setIsSubmitting(false);
     }

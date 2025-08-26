@@ -19,12 +19,14 @@ interface ChartConfig {
 interface ChartConfigurationProps {
   isExpanded?: boolean;
   onToggle?: () => void;
+  config: any;
   onConfigChange?: (config: ChartConfig[]) => void;
 }
 
 const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
   isExpanded = true,
   onToggle,
+  config,
   onConfigChange,
 }) => {
   const [activeTab, setActiveTab] = useState<
@@ -52,6 +54,13 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
     JSON.stringify(charts, null, 2)
   );
 
+  React.useEffect(() => {
+    if (config) {
+      setCharts(config);
+      setJsonContent(JSON.stringify(config, null, 2));
+    }
+  }, [config]);
+
   const chartTypes = [
     "Line Chart",
     "Bar Chart",
@@ -69,7 +78,7 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
       updatedCharts[index] = {
         ...updatedCharts[index],
         [parent]: {
-...(updatedCharts[index][parent as keyof ChartConfig] as object),
+          ...(updatedCharts[index][parent as keyof ChartConfig] as object),
           [child]: value,
         },
       };
@@ -290,9 +299,8 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
             {charts.length} chart{charts.length !== 1 ? "s" : ""}
           </span>
           <svg
-            className={`w-5 h-5 text-gray-500 transform transition-transform ${
-              isExpanded ? "rotate-180" : ""
-            }`}
+            className={`w-5 h-5 text-gray-500 transform transition-transform ${isExpanded ? "rotate-180" : ""
+              }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -411,11 +419,10 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab("visual")}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === "visual"
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "visual"
                     ? "border-b-2 border-purple-500 text-purple-600 bg-white"
                     : "text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <svg
                   className="w-4 h-4"
@@ -441,11 +448,10 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab("json")}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === "json"
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "json"
                     ? "border-b-2 border-purple-500 text-purple-600 bg-white"
                     : "text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <svg
                   className="w-4 h-4"
@@ -465,11 +471,10 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab("form")}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === "form"
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "form"
                     ? "border-b-2 border-purple-500 text-purple-600 bg-white"
                     : "text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <svg
                   className="w-4 h-4"
@@ -489,11 +494,10 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveTab("tree")}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === "tree"
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === "tree"
                     ? "border-b-2 border-purple-500 text-purple-600 bg-white"
                     : "text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 <svg
                   className="w-4 h-4"
@@ -703,11 +707,10 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
                       </svg>
                       Chart Configuration Array
                       <span
-                        className={`ml-2 px-2 py-1 text-xs rounded-full ${
-                          isValidJson()
+                        className={`ml-2 px-2 py-1 text-xs rounded-full ${isValidJson()
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
-                        }`}
+                          }`}
                       >
                         {isValidJson() ? "Valid" : "Invalid"}
                       </span>
@@ -814,11 +817,10 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
                         // Invalid JSON, don't update charts
                       }
                     }}
-                    className={`w-full h-64 pl-14 pr-4 py-3 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white resize-none ${
-                      isValidJson()
+                    className={`w-full h-64 pl-14 pr-4 py-3 font-mono text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white resize-none ${isValidJson()
                         ? "border-gray-300 focus:border-purple-500"
                         : "border-red-300 focus:border-red-500 focus:ring-red-500"
-                    }`}
+                      }`}
                     spellCheck={false}
                   />
                 </div>
