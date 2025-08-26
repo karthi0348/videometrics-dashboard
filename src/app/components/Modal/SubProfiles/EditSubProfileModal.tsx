@@ -45,7 +45,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
       const locations = Array.isArray(subProfile.cameraLocations) 
         ? subProfile.cameraLocations 
         : Object.values(subProfile.cameraLocations || {}); 
-      setCameraLocations(locations.map(({ id, ...rest }) => rest));
+      setCameraLocations(locations.map(({ id, ...rest }:any) => rest));
     }
 
     // Initialize monitoring schedules if they exist
@@ -58,10 +58,10 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
 
     // Initialize alert settings if they exist
     if (subProfile.alertSettings) {
-      const alerts = Array.isArray(subProfile.alertSettings) 
+      const alerts:any = Array.isArray(subProfile.alertSettings) 
         ? subProfile.alertSettings 
         : Object.values(subProfile.alertSettings || {});
-      setAlertSettings(alerts.map(({ id, ...rest }) => rest));
+      setAlertSettings(alerts.map(({ id, ...rest }:any) => rest));
     }
   }, [subProfile]);
 
