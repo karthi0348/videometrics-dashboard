@@ -6,7 +6,7 @@ import { Profile } from '@/app/types/profiles';
 interface ProfileDetailsProps {
   profile: Profile;
   onEdit: (updatedProfile: Profile) => void;
-  onDelete: (profileId: string) => void;
+  onDelete: (id: number) => void; 
   onViewSubProfiles: () => void;
 }
 

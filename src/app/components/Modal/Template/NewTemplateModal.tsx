@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import MetricStructureEditor from "./MetricStructureEditor";
-import ChartConfiguration from "./ChartConfiguration";
-import SummaryConfiguration from "./SummaryConfiguration";
+import ChartConfiguration from "./ChartConfiguration/ChartConfiguration";
+import SummaryConfiguration from "./SummaryConfiguration/SummaryConfiguration";
 import TemplateApiService from "@/helpers/service/templates/template-api-service";
 
 interface FormData {

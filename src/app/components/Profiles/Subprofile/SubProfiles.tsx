@@ -12,6 +12,7 @@ import DeleteSubProfileModal from '../../Modal/SubProfiles/DeleteSubProfileModal
 
 interface SubProfileListProps {
   profile: Profile;
+  onBackToDetails: () => void; 
 }
 
 const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
@@ -195,6 +196,7 @@ const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
             Manage sub-profiles for {profile.name} ({filteredSubProfiles.length} of {subProfiles.length})
           </p>
         </div>
+        
         <button
           onClick={() => setShowCreateModal(true)}
           disabled={creating}

@@ -1,6 +1,6 @@
 
 export interface Profile {
-  id: string;
+  id: number;
   name: string;
   email: string;
   tag: string;
@@ -18,13 +18,4 @@ export interface Profile {
   lastUpdated: string;
 }
 
-/**
- * Interface representing a sub-profile, linked to a main profile.
- */
-export interface SubProfile {
-  id: string;
-  profileId: string;
-  name: string;
-  email: string;
-  created: string;
-}
+

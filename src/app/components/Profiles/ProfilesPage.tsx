@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { Plus, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { Profile } from '@/app/types/profiles';
-import { CreateSubProfileRequest } from '@/app/types/subprofiles';
+import { CreateSubProfileAPIRequest } from '@/app/types/subprofiles';
 import YourProfiles from '@/app/components/Profiles/YourProfiles';
 import ProfileDetails from '@/app/components/Profiles/ProfileDetails';
 import SubProfiles from '@/app/components/Profiles/Subprofile/SubProfiles';
@@ -66,7 +66,7 @@ const ProfilesPage: React.FC = () => {
       
       // Transform API response to match Profile interface
       const transformedProfiles: Profile[] = profilesArray.map((item: any) => ({
-        id: item.id || item._id || `profile_${Date.now()}`,
+        id: Number(item.id || item._id) || Date.now(),
         name: item.name || '',
         email: item.email || '',
         tag: item.tag || 'default',
@@ -144,7 +144,7 @@ const ProfilesPage: React.FC = () => {
       const data = await response.json();
       
       const createdProfile: Profile = {
-        id: data.id || data._id || `profile_${Date.now()}`,
+        id: Number(data.id || data._id) || Date.now(),
         name: data.name || payload.name,
         email: data.email || payload.email,
         tag: data.tag || payload.tag,
@@ -192,7 +192,7 @@ const ProfilesPage: React.FC = () => {
         status: updatedProfile.status
       };
 
-      const url = API_ENDPOINTS.UPDATE_PROFILE.replace('{profile_id}', updatedProfile.id);
+      const url = API_ENDPOINTS.UPDATE_PROFILE.replace('{profile_id}', updatedProfile.id.toString());
       const response = await fetch(url, {
         method: 'PUT',
         headers: getAuthHeaders(),
@@ -242,7 +242,7 @@ const ProfilesPage: React.FC = () => {
     }
   };
 
-  const handleDeleteProfile = async (profileId: string) => {
+  const handleDeleteProfile = async (profileId: number) => {
     if (!window.confirm('Are you sure you want to delete this profile and all its sub-profiles?')) {
       return;
     }
@@ -251,7 +251,7 @@ const ProfilesPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const url = API_ENDPOINTS.DELETE_PROFILE.replace('{profile_id}', profileId);
+      const url = API_ENDPOINTS.DELETE_PROFILE.replace('{profile_id}', profileId.toString());
       const response = await fetch(url, {
         method: 'DELETE',
         headers: getAuthHeaders(),

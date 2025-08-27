@@ -3,43 +3,43 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Purple Color Palette */
+  --purple-primary: rgb(81, 77, 223);    /* #514ddf */
+  --purple-secondary: rgb(120, 37, 195); /* #7825c3 */
+  --purple-tertiary: rgb(100, 33, 172);  /* #6421ac */
+  --purple-accent: rgb(196, 127, 254);   /* #c47ffe */
+  --purple-medium: rgb(135, 40, 212);    /* #8728d4 */
+  --purple-dark: rgb(61, 24, 129);       /* #3d1881 */
 }
 
-h1{ 
+h1 { 
   font-size: 30px;
   font-weight: bold;
+  color: var(--purple-primary);
 }
 
-h2{
+h2 {
   font-size: 20px;
   font-weight: bold;
+  color: var(--purple-secondary);
 }
 
-h3{
+h3 {
   font-size: 15px;
   font-weight: bold;
+  color: var(--purple-tertiary);
 }
-
-
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: "Gotham", Arial, Helvetica, sans-serif;
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Gotham", Arial, Helvetica, sans-serif;
 }
-
-
