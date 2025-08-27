@@ -6,7 +6,7 @@ const ErrorHandler = (error: AxiosError) => {
         if (error.response.data) {
             const data: any = error.response.data;
             if (typeof data === 'object') {
-                const errorMessages = (data.message || data.error);
+                const errorMessages = (data?.error?.message || data.message);
                 toast.error(errorMessages, { containerId: 'TR' });
             } else {
                 toast.error(data, { containerId: 'TR' });

@@ -2,6 +2,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -26,11 +28,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <meta name="theme-color" content="#1976d2" />
       </head>
       <body className={`${inter.className} h-100`}>
+        <ToastContainer containerId={'TR'} />
+        <ToastContainer containerId={'BC'} />
         <div id="root" className="h-100">
           {children}
         </div>
         {/* Bootstrap JS for interactive components */}
-        <script 
+        <script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
           integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
           crossOrigin="anonymous"
