@@ -6,6 +6,7 @@ import VideoTable from './components/Videos/VideoTable';
 import Header from './components/Videos/Videos';
 import ProfilesPage from './components/Profiles/ProfilesPage';
 import TemplatesPage from './components/Templates/TemplatesPage';
+import ProcessVideoPage from './components/ProcessVideo/ProcessVideo'; // Import the new component
 import { Video, ViewMode } from './types';
 
 // Placeholder components for other pages
@@ -56,53 +57,6 @@ const ProcessedVideosPage = () => (
         <button className="w-full sm:w-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
           Process Videos
         </button>
-      </div>
-    </div>
-  </div>
-);
-
-const ProcessVideoPage = () => (
-  <div className="p-4 sm:p-6">
-    <div className="text-center">
-      <div className="mb-6">
-        <div className="mx-auto w-16 h-16 sm:w-24 sm:h-24 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 sm:w-12 sm:h-12 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Process Video</h2>
-        <p className="text-sm sm:text-base text-gray-600">Transform and enhance your video content</p>
-      </div>
-      <div className="max-w-2xl mx-auto bg-gray-50 rounded-lg p-6 sm:p-8">
-        <div className="space-y-4">
-          <div className="text-left">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Video to Process</label>
-            <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
-              <option>Choose a video...</option>
-              <option>test.mp4</option>
-            </select>
-          </div>
-          <div className="text-left">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Processing Options</label>
-            <div className="space-y-2">
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm sm:text-base">Extract audio</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm sm:text-base">Generate thumbnails</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" />
-                <span className="text-sm sm:text-base">Video analytics</span>
-              </label>
-            </div>
-          </div>
-          <button className="w-full mt-6 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
-            Start Processing
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -237,7 +191,7 @@ const Home: React.FC = () => {
       case 'processed':
         return <ProcessedVideosPage />;
       case 'process':
-        return <ProcessVideoPage />;
+        return <ProcessVideoPage videos={videos} />; // Use the new component and pass videos
       case 'templates':
         return <TemplatesPage />;
       case 'profiles':
@@ -246,7 +200,8 @@ const Home: React.FC = () => {
         return <SettingsPage />;
       case 'help':
         return <HelpPage />;
-     
+      default:
+        return <VideoTable videos={videos} viewMode={viewMode} />; // Default to videos page
     }
   };
 
