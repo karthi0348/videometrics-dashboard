@@ -9,6 +9,7 @@ import AssignmentModal from '../Modal/Template/AssignmentModal';
 import DeleteModal from '../Common/DeleteModal';
 import { toast } from 'react-toastify';
 import EditTemplateModal from '../Modal/Template/EditTemplateModal';
+import moment from 'moment';
 
 interface Template {
   id: string;
@@ -46,9 +47,17 @@ const TemplateSettingsModal = ({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  template: Template | null;
+  template: any;
 }) => {
   if (!isOpen || !template) return null;
+
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+
+  const handleOpenAssignment = (template: Template) => {
+    setSelectedTemplate(template);
+    setShowAssignmentModal(true);
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -89,7 +98,7 @@ const TemplateSettingsModal = ({
                 </label>
                 <input
                   type="text"
-                  value={template.name}
+                  value={template.template_name}
                   readOnly
                   className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-gray-500"
                 />
@@ -114,7 +123,7 @@ const TemplateSettingsModal = ({
                 <div className="text-sm text-gray-500">
                   {template.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
-                      {template.tags.map((tag, index) => (
+                      {template.tags.map((tag: any, index: any) => (
                         <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md">
                           {tag}
                         </span>
@@ -153,16 +162,16 @@ const TemplateSettingsModal = ({
             </div>
             <div>
               <span className="block text-xs font-medium text-gray-500 mb-1">Visibility:</span>
-              <span className={`inline-flex px-2 py-1 text-xs rounded-full ${template.visibility === 'Public'
+              <span className={`inline-flex px-2 py-1 text-xs rounded-full ${template.is_public
                 ? 'bg-teal-100 text-teal-700'
                 : 'bg-gray-100 text-gray-700'
                 }`}>
-                {template.visibility}
+                {template.is_public ? "Public" : "Private"}
               </span>
             </div>
             <div>
               <span className="block text-xs font-medium text-gray-500 mb-1">Usage Count:</span>
-              <span className="text-sm font-medium text-gray-900">{template.uses}</span>
+              <span className="text-sm font-medium text-gray-900">{template.usage_count}</span>
             </div>
             <div>
               <span className="block text-xs font-medium text-gray-500 mb-1">Rating:</span>
@@ -180,7 +189,7 @@ const TemplateSettingsModal = ({
             <div>
               <span className="block text-xs font-medium text-gray-500 mb-1">Created:</span>
               <span className="text-sm font-medium text-gray-900">
-                {template.created || "7/19/2025, 12:45:38 PM"}
+                {moment(template.created_at).format("MM/DD/YYYY, hh:mm:ss A")}
               </span>
             </div>
           </div>
@@ -205,11 +214,21 @@ const TemplateSettingsModal = ({
           <button className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
             Use Template
           </button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => handleOpenAssignment(template)}>
             Assign Template
           </button>
         </div>
       </div>
+
+      <AssignmentModal
+        isOpen={showAssignmentModal}
+        onClose={() => {
+          setShowAssignmentModal(false);
+          setSelectedTemplate(null);
+        }}
+        template={selectedTemplate}
+      />
     </div>
   );
 };
@@ -572,8 +591,8 @@ const TemplatesPage: React.FC = () => {
                           <div className="mt-2 space-y-1">
                             {assesmentInfo.map((item: any, idx: any) => (
                               <div key={idx} className="flex items-center justify-between py-1">
-                                <span className="text-gray-700">Profile : {item.assigned_by}</span>
-                                <span className="text-xs text-gray-500">Assigned</span>
+                                <span className="text-gray-700">Sub-Profile Id : {item.sub_profile_id}</span>
+                                <span className="text-xs text-gray-500">Priority : {item.priority}</span>
                               </div>
                             ))}
                           </div>
