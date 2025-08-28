@@ -287,17 +287,29 @@ const ProfilesPage: React.FC = () => {
         <title>Profiles Manager</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
-      <div className="min-h-screen bg-gray-50 font-sans text-gray-900 p-4 sm:p-6 lg:p-8">
+      <div className="min-h-screen font-sans text-gray-900 p-4 sm:p-6 lg:p-8" 
+           style={{ backgroundColor: 'rgb(196, 127, 254, 0.05)' }}>
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div className="flex items-center gap-4">
-<h1 className="text-sm font-mono">Profiles</h1>
-            <span className="text-sm font-medium text-gray-500">Manage your profiles and sub-profiles</span>
+            <h1 className="text-sm font-mono" style={{ color: 'var(--purple-secondary)' }}>
+              Profiles
+            </h1>
+            <span className="text-sm font-medium" style={{ color: 'var(--purple-tertiary)' }}>
+              Manage your profiles and sub-profiles
+            </span>
           </div>
           <div className="flex gap-2">
             {activeView !== 'create' && (
               <button
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg shadow transition-colors disabled:opacity-50"
+                style={{ backgroundColor: 'var(--purple-secondary)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--purple-tertiary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--purple-secondary)';
+                }}
                 onClick={() => handleViewChange('create')}
                 disabled={loading}
               >
@@ -307,7 +319,17 @@ const ProfilesPage: React.FC = () => {
             )}
             {activeView !== 'list' && (
               <button
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg shadow transition-colors"
+                style={{
+                  backgroundColor: 'rgb(196, 127, 254, 0.1)',
+                  color: 'var(--purple-secondary)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.1)';
+                }}
                 onClick={() => handleViewChange('list')}
               >
                 <ArrowLeft className="w-4 h-4" />
@@ -319,9 +341,14 @@ const ProfilesPage: React.FC = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="mb-6 border px-4 py-3 rounded-lg"
+               style={{
+                 backgroundColor: 'rgb(239, 68, 68, 0.05)',
+                 borderColor: 'rgb(239, 68, 68, 0.2)',
+                 color: 'rgb(153, 27, 27)'
+               }}>
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <AlertCircle className="w-5 h-5 flex-shrink-0" style={{ color: 'rgb(239, 68, 68)' }} />
               <div className="flex-1">
                 <span className="font-medium">Error:</span>
                 <span className="ml-1">{error}</span>
@@ -341,7 +368,14 @@ const ProfilesPage: React.FC = () => {
             </div>
             <button 
               onClick={() => setError(null)} 
-              className="mt-3 text-sm text-red-600 hover:text-red-800 underline"
+              className="mt-3 text-sm underline hover:no-underline transition-colors"
+              style={{ color: 'rgb(239, 68, 68)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'rgb(185, 28, 28)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'rgb(239, 68, 68)';
+              }}
             >
               Dismiss
             </button>
@@ -349,13 +383,19 @@ const ProfilesPage: React.FC = () => {
         )}
 
         {/* Content Area */}
-        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 relative">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 relative border"
+             style={{
+               boxShadow: '0 25px 50px -12px rgb(81, 77, 223, 0.1), 0 10px 25px -5px rgb(81, 77, 223, 0.05)',
+               borderColor: 'rgb(196, 127, 254, 0.2)'
+             }}>
           {/* Loading Overlay */}
           {loading && (
             <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-2xl">
               <div className="flex items-center gap-3">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                <span className="text-lg font-medium">Loading...</span>
+                <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--purple-secondary)' }} />
+                <span className="text-lg font-medium" style={{ color: 'var(--purple-secondary)' }}>
+                  Loading...
+                </span>
               </div>
             </div>
           )}

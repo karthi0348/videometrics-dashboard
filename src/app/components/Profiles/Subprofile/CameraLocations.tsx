@@ -64,7 +64,7 @@ const FormEditor = () => {
     updateJsonFromData(sampleData);
   }, []);
 
-  const updateJsonFromData = (newData) => {
+  const updateJsonFromData = (newData:any) => {
     setJsonValue(JSON.stringify(newData, null, 2));
   };
 
@@ -78,15 +78,15 @@ const FormEditor = () => {
     }
   };
 
-  const getDataType = (value) => {
+  const getDataType = (value:any) => {
     if (Array.isArray(value)) return 'array';
     if (value === null) return 'string';
     return typeof value;
   };
 
-  const handleValueChange = (path, newValue, newType = null) => {
+  const handleValueChange = (path:any, newValue:any, newType = null) => {
     const pathArray = path.split('.');
-    const newData = { ...data };
+    const newData = JSON.parse(JSON.stringify(data)); // Deep clone to avoid mutations
     
     let current = newData;
     for (let i = 0; i < pathArray.length - 1; i++) {
@@ -122,27 +122,73 @@ const FormEditor = () => {
     updateJsonFromData(newData);
   };
 
+  const handleKeyRename = (oldPath:any, newKey:any) => {
+    if (!newKey.trim()) return; // Don't rename to empty key
+    
+    const pathArray = oldPath.split('.');
+    const oldKey = pathArray[pathArray.length - 1];
+    
+    if (oldKey === newKey) return; // No change needed
+    
+    const newData = JSON.parse(JSON.stringify(data));
+    
+    if (pathArray.length === 1) {
+      // Root level property
+      if (newData[newKey] !== undefined) {
+        alert('Property name already exists');
+        return;
+      }
+      newData[newKey] = newData[oldKey];
+      delete newData[oldKey];
+    } else {
+      // Nested property
+      const parentPath = pathArray.slice(0, -1);
+      let parent = newData;
+      
+      for (let i = 0; i < parentPath.length; i++) {
+        parent = parent[parentPath[i]];
+      }
+      
+      if (parent[newKey] !== undefined) {
+        alert('Property name already exists');
+        return;
+      }
+      
+      parent[newKey] = parent[oldKey];
+      delete parent[oldKey];
+    }
+    
+    setData(newData);
+    updateJsonFromData(newData);
+  };
+
   const addProperty = (path = '') => {
     const newKey = `newProperty${Date.now()}`;
     const fullPath = path ? `${path}.${newKey}` : newKey;
     handleValueChange(fullPath, '', 'string');
   };
 
-  const removeProperty = (path) => {
+  const removeProperty = (path:any) => {
     const pathArray = path.split('.');
-    const newData = { ...data };
+    const newData = JSON.parse(JSON.stringify(data));
     
-    let current = newData;
-    for (let i = 0; i < pathArray.length - 1; i++) {
-      current = current[pathArray[i]];
+    if (pathArray.length === 1) {
+      // Root level property
+      delete newData[pathArray[0]];
+    } else {
+      // Nested property
+      let current = newData;
+      for (let i = 0; i < pathArray.length - 1; i++) {
+        current = current[pathArray[i]];
+      }
+      delete current[pathArray[pathArray.length - 1]];
     }
     
-    delete current[pathArray[pathArray.length - 1]];
     setData(newData);
     updateJsonFromData(newData);
   };
 
-  const toggleObjectExpansion = (key) => {
+  const toggleObjectExpansion = (key:any) => {
     const newExpanded = new Set(expandedObjects);
     if (newExpanded.has(key)) {
       newExpanded.delete(key);
@@ -152,7 +198,7 @@ const FormEditor = () => {
     setExpandedObjects(newExpanded);
   };
 
-  const renderFormField = (key, value, path = '', depth = 0) => {
+  const renderFormField = (key:any, value:any, path = '', depth = 0) => {
     const currentPath = path ? `${path}.${key}` : key;
     const dataType = getDataType(value);
     const typeConfig = dataTypes[dataType] || dataTypes.string;
@@ -166,11 +212,14 @@ const FormEditor = () => {
               <input
                 type="text"
                 value={key}
-                onChange={(e) => {
-                  // Handle key rename logic here
-                  console.log('Renaming key:', key, 'to:', e.target.value);
+                onChange={(e) => handleKeyRename(currentPath, e.target.value)}
+                onBlur={(e) => {
+                  // Ensure the rename is applied when focus is lost
+                  if (e.target.value !== key) {
+                    handleKeyRename(currentPath, e.target.value);
+                  }
                 }}
-                className="bg-white px-2 py-1 text-sm rounded border focus:ring-2 focus:ring-blue-500"
+                className="bg-white px-2 py-1 text-sm rounded border focus:ring-2 focus:ring-purple-500"
               />
               <button
                 onClick={() => removeProperty(currentPath)}
@@ -188,8 +237,12 @@ const FormEditor = () => {
               <span className="text-gray-700 font-medium text-sm">{key}</span>
               <select 
                 value={dataType}
-                onChange={(e) => handleValueChange(currentPath, value, e.target.value)}
-                className="text-xs border rounded px-2 py-1 text-gray-600 focus:ring-1 focus:ring-blue-500"
+                onChange={(e) => {
+                  const newType = e.target.value;
+                  const defaultValue = dataTypes[newType].defaultValue;
+                  handleValueChange(currentPath, defaultValue, newType);
+                }}
+                className="text-xs border rounded px-2 py-1 text-gray-600 focus:ring-1 focus:ring-purple-500"
               >
                 {Object.entries(dataTypes).map(([type, config]) => (
                   <option key={type} value={type}>{config.label}</option>
@@ -200,28 +253,28 @@ const FormEditor = () => {
             {/* Value Editor based on type */}
             {dataType === 'string' && (
               <textarea
-                value={value}
+                value={value || ''}
                 onChange={(e) => handleValueChange(currentPath, e.target.value)}
                 placeholder="Enter text value..."
-                className="w-full p-3 border rounded text-sm resize-none h-20 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-3 border rounded text-sm resize-none h-20 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               />
             )}
 
             {dataType === 'number' && (
               <input
                 type="number"
-                value={value}
+                value={value || 0}
                 onChange={(e) => handleValueChange(currentPath, parseFloat(e.target.value) || 0)}
-                className="w-full p-3 border rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-3 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 step="0.1"
               />
             )}
 
             {dataType === 'boolean' && (
               <select
-                value={value.toString()}
+                value={value?.toString() || 'false'}
                 onChange={(e) => handleValueChange(currentPath, e.target.value === 'true')}
-                className="w-full p-3 border rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full p-3 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               >
                 <option value="true">true</option>
                 <option value="false">false</option>
@@ -235,17 +288,17 @@ const FormEditor = () => {
                   <div key={index} className="flex items-center gap-2">
                     <input
                       type="text"
-                      value={item}
+                      value={item || ''}
                       onChange={(e) => {
-                        const newArray = [...value];
+                        const newArray = [...(value || [])];
                         newArray[index] = e.target.value;
                         handleValueChange(currentPath, newArray);
                       }}
-                      className="flex-1 p-2 border rounded text-sm focus:ring-1 focus:ring-blue-500"
+                      className="flex-1 p-2 border rounded text-sm focus:ring-1 focus:ring-purple-500"
                     />
                     <button
                       onClick={() => {
-                        const newArray = value.filter((_, i) => i !== index);
+                        const newArray = (value || []).filter((_, i) => i !== index);
                         handleValueChange(currentPath, newArray);
                       }}
                       className="p-1 text-red-500 hover:bg-red-50 rounded"
@@ -255,8 +308,9 @@ const FormEditor = () => {
                   </div>
                 ))}
                 <button
-                  onClick={() => handleValueChange(currentPath, [...value, ''])}
-                  className="text-sm text-blue-600 hover:bg-blue-50 px-2 py-1 rounded flex items-center gap-1"
+                  onClick={() => handleValueChange(currentPath, [...(value || []), ''])}
+                  className="text-sm hover:bg-purple-50 px-2 py-1 rounded flex items-center gap-1"
+                  style={{ color: 'var(--purple-secondary)' }}
                 >
                   <Plus className="w-3 h-3" />
                   Add item
@@ -276,11 +330,12 @@ const FormEditor = () => {
                     ) : (
                       <ChevronRight className="w-4 h-4" />
                     )}
-                    Object ({Object.keys(value).length} properties)
+                    Object ({Object.keys(value || {}).length} properties)
                   </button>
                   <button
                     onClick={() => addProperty(currentPath)}
-                    className="text-sm text-blue-600 hover:bg-blue-50 px-2 py-1 rounded flex items-center gap-1"
+                    className="text-sm hover:bg-purple-50 px-2 py-1 rounded flex items-center gap-1"
+                    style={{ color: 'var(--purple-secondary)' }}
                   >
                     <Plus className="w-3 h-3" />
                     Add property
@@ -288,8 +343,8 @@ const FormEditor = () => {
                 </div>
 
                 {expandedObjects.has(currentPath) && (
-                  <div className="space-y-3 pl-4 border-l-2 border-gray-200">
-                    {Object.entries(value).map(([subKey, subValue]) => 
+                  <div className="space-y-3 pl-4 border-l-2" style={{ borderColor: 'var(--purple-accent)' }}>
+                    {Object.entries(value || {}).map(([subKey, subValue]) => 
                       renderFormField(subKey, subValue, currentPath, depth + 1)
                     )}
                   </div>
@@ -350,7 +405,7 @@ const FormEditor = () => {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-medium text-gray-900">Camera Locations Configuration</h3>
+            <h2 style={{ color: 'var(--purple-tertiary)' }} className="text-lg font-bold">Camera Locations Configuration</h2>
             <div className="flex items-center gap-2">
               <span className={`px-2 py-1 rounded text-xs font-medium ${
                 isValidJson ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -375,9 +430,13 @@ const FormEditor = () => {
             onClick={() => setConfigurationMode('json')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
               configurationMode === 'json'
-                ? 'border-blue-500 text-blue-600'
+                ? 'text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
+            style={{
+              borderColor: configurationMode === 'json' ? 'var(--purple-secondary)' : 'transparent',
+              color: configurationMode === 'json' ? 'var(--purple-secondary)' : undefined
+            }}
           >
             <Code className="w-4 h-4" />
             JSON Editor
@@ -386,9 +445,13 @@ const FormEditor = () => {
             onClick={() => setConfigurationMode('form')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
               configurationMode === 'form'
-                ? 'border-blue-500 text-blue-600'
+                ? 'text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
+            style={{
+              borderColor: configurationMode === 'form' ? 'var(--purple-secondary)' : 'transparent',
+              color: configurationMode === 'form' ? 'var(--purple-secondary)' : undefined
+            }}
           >
             <Edit className="w-4 h-4" />
             Form Editor
@@ -397,9 +460,13 @@ const FormEditor = () => {
             onClick={() => setConfigurationMode('tree')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
               configurationMode === 'tree'
-                ? 'border-blue-500 text-blue-600'
+                ? 'text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
+            style={{
+              borderColor: configurationMode === 'tree' ? 'var(--purple-secondary)' : 'transparent',
+              color: configurationMode === 'tree' ? 'var(--purple-secondary)' : undefined
+            }}
           >
             <Eye className="w-4 h-4" />
             Tree View
@@ -419,14 +486,14 @@ const FormEditor = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={copyJson}
-                  className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+                  className="p-2 text-gray-600 hover:bg-purple-100 rounded"
                   title="Copy"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
                 <button
                   onClick={resetToFormData}
-                  className="p-2 text-gray-600 hover:bg-gray-200 rounded"
+                  className="p-2 text-gray-600 hover:bg-purple-100 rounded"
                   title="Reset"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -437,7 +504,8 @@ const FormEditor = () => {
             <div className="flex items-center gap-2 mb-2">
               <button
                 onClick={formatJson}
-                className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="px-3 py-1 text-sm text-white rounded hover:opacity-90"
+                style={{ backgroundColor: 'var(--purple-secondary)' }}
               >
                 Format
               </button>
@@ -464,10 +532,10 @@ const FormEditor = () => {
                     JSON.parse(e.target.value);
                     setJsonError('');
                   } catch (error) {
-                    setJsonError('"[object Object]" is not valid JSON');
+                    setJsonError('Invalid JSON format');
                   }
                 }}
-                className="w-full h-64 p-4 font-mono text-sm border-none focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full h-64 p-4 font-mono text-sm border-none focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                 placeholder="Enter JSON configuration..."
               />
             </div>
@@ -483,7 +551,8 @@ const FormEditor = () => {
               <div className="mt-4">
                 <button
                   onClick={applyJsonChanges}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="px-4 py-2 text-white rounded-lg hover:opacity-90"
+                  style={{ backgroundColor: 'green' }}
                 >
                   Apply Changes
                 </button>
@@ -504,7 +573,8 @@ const FormEditor = () => {
               </div>
               <button
                 onClick={() => addProperty()}
-                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 flex items-center gap-1"
+                className="px-3 py-1 text-white text-sm rounded hover:opacity-90 flex items-center gap-1"
+                style={{ backgroundColor: 'var(--purple-secondary)' }}
               >
                 <Plus className="w-4 h-4" />
                 Add Property
@@ -521,7 +591,8 @@ const FormEditor = () => {
                   <p className="mb-4">No properties defined yet.</p>
                   <button
                     onClick={() => addProperty()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 text-white rounded hover:opacity-90"
+                    style={{ backgroundColor: 'var(--purple-secondary)' }}
                   >
                     Add Your First Property
                   </button>
@@ -547,7 +618,7 @@ const FormEditor = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-gray-700">Data Structure</span>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                  <span className="px-2 py-1 text-white text-xs font-medium rounded" style={{ backgroundColor: 'var(--purple-secondary)' }}>
                     object
                   </span>
                   <span className="text-xs text-gray-500">
@@ -569,8 +640,8 @@ const FormEditor = () => {
       {/* Status Bar */}
       <div className="bg-gray-50 px-4 py-3 rounded-lg">
         <div className="flex items-center justify-between text-sm">
-          <span>Data Type: <span className="text-blue-600 font-medium">Object</span></span>
-          <span>Size: <span className="text-blue-600 font-medium">{objectSize} properties</span></span>
+          <span>Data Type: <span className="font-medium" style={{ color: 'var(--purple-secondary)' }}>Object</span></span>
+          <span>Size: <span className="font-medium" style={{ color: 'var(--purple-secondary)' }}>{objectSize} properties</span></span>
           <span className="text-gray-500">{JSON.stringify(data).length} characters</span>
         </div>
       </div>

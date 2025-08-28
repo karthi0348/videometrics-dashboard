@@ -38,11 +38,13 @@ const YourProfiles: React.FC<YourProfilesProps> = ({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start gap-4">
-        <div className="bg-blue-100 p-3 rounded-xl">
-          <User className="w-6 h-6 text-blue-600" />
+        <div className="p-3 rounded-xl" style={{ backgroundColor: 'rgb(196, 127, 254, 0.2)' }}>
+          <User className="w-6 h-6" style={{ color: 'var(--purple-secondary)' }} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Your Profiles</h2>
+          <h2 className="text-2xl font-bold" style={{ color: 'var(--purple-secondary)' }}>
+            Your Profiles
+          </h2>
           <p className="text-gray-600 mt-1">
             Select a profile to view details or manage sub-profiles
           </p>
@@ -58,7 +60,19 @@ const YourProfiles: React.FC<YourProfilesProps> = ({
             placeholder="Search profiles..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:border-transparent"
+            style={{ 
+              '--tw-ring-color': 'var(--purple-secondary)',
+              focusRingColor: 'var(--purple-secondary)'
+            } as React.CSSProperties}
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--purple-secondary)';
+              e.target.style.boxShadow = '0 0 0 2px rgb(81, 77, 223, 0.2)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#d1d5db';
+              e.target.style.boxShadow = 'none';
+            }}
           />
         </div>
         <div>
@@ -66,12 +80,20 @@ const YourProfiles: React.FC<YourProfilesProps> = ({
           <button
             onClick={onRefresh}
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg shadow hover:bg-gray-200 transition-colors"
+            style={{ 
+              backgroundColor: 'rgb(196, 127, 254, 0.1)',
+              color: 'var(--purple-secondary)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.1)';
+            }}
           >
             <RefreshCcw className="w-4 h-4" />
             Refresh
           </button>
-
-          {/* render list here */}
         </div>
         <div className="flex gap-2">
           {["all", "active", "inactive"].map((filter) => (
@@ -80,9 +102,29 @@ const YourProfiles: React.FC<YourProfilesProps> = ({
               onClick={() => setFilterStatus(filter as any)}
               className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors ${
                 filterStatus === filter
-                  ? "bg-blue-600 text-white"
+                  ? "text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
+              style={{
+                backgroundColor: filterStatus === filter 
+                  ? 'var(--purple-secondary)' 
+                  : filterStatus !== filter 
+                    ? 'rgb(196, 127, 254, 0.1)' 
+                    : undefined,
+                color: filterStatus === filter 
+                  ? 'white' 
+                  : 'var(--purple-secondary)'
+              }}
+              onMouseEnter={(e) => {
+                if (filterStatus !== filter) {
+                  e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.2)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (filterStatus !== filter) {
+                  e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.1)';
+                }
+              }}
             >
               {filter} (
               {filter === "all"
@@ -101,18 +143,32 @@ const YourProfiles: React.FC<YourProfilesProps> = ({
           <div
             key={profile.id}
             className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-lg transition-shadow"
+            style={{ borderColor: 'rgb(196, 127, 254, 0.3)' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'var(--purple-secondary)';
+              e.currentTarget.style.boxShadow = '0 10px 25px -5px rgb(81, 77, 223, 0.1), 0 4px 6px -2px rgb(81, 77, 223, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'rgb(196, 127, 254, 0.3)';
+              e.currentTarget.style.boxShadow = '0 1px 3px 0 rgb(0, 0, 0, 0.1), 0 1px 2px 0 rgb(0, 0, 0, 0.06)';
+            }}
           >
             <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 truncate">
+                <h3 className="text-lg font-semibold truncate" style={{ color: 'var(--purple-secondary)' }}>
                   {profile.name}
                 </h3>
                 <div
                   className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium mt-1 ${
                     profile.status === "Active"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
+                      ? "text-green-800"
+                      : "text-red-800"
                   }`}
+                  style={{
+                    backgroundColor: profile.status === "Active" 
+                      ? 'rgb(34, 197, 94, 0.1)' 
+                      : 'rgb(239, 68, 68, 0.1)'
+                  }}
                 >
                   <div
                     className={`w-2 h-2 rounded-full ${
@@ -128,19 +184,19 @@ const YourProfiles: React.FC<YourProfilesProps> = ({
 
             <div className="space-y-3 mb-4">
               <div className="flex items-center gap-2 text-sm text-gray-600 truncate">
-                <Mail className="w-4 h-4 text-gray-400" />
+                <Mail className="w-4 h-4" style={{ color: 'var(--purple-accent)' }} />
                 <span>{profile.email}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600 truncate">
-                <User className="w-4 h-4 text-gray-400" />
+                <User className="w-4 h-4" style={{ color: 'var(--purple-accent)' }} />
                 <span>{profile.contact}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600 truncate">
-                <Building className="w-4 h-4 text-gray-400" />
+                <Building className="w-4 h-4" style={{ color: 'var(--purple-accent)' }} />
                 <span>{profile.industry}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-gray-600 truncate">
-                <MapPin className="w-4 h-4 text-gray-400" />
+                <MapPin className="w-4 h-4" style={{ color: 'var(--purple-accent)' }} />
                 <span>{profile.location}</span>
               </div>
             </div>
@@ -150,7 +206,11 @@ const YourProfiles: React.FC<YourProfilesProps> = ({
                 {profile.tags.slice(0, 3).map((tag, index) => (
                   <span
                     key={index}
-                    className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-md"
+                    className="px-2 py-1 text-xs rounded-md"
+                    style={{
+                      backgroundColor: 'rgb(196, 127, 254, 0.2)',
+                      color: 'var(--purple-secondary)'
+                    }}
                   >
                     {tag}
                   </span>
@@ -170,14 +230,31 @@ const YourProfiles: React.FC<YourProfilesProps> = ({
             <div className="flex gap-2">
               <button
                 onClick={() => onViewSubProfiles(profile)}
-                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+                style={{
+                  backgroundColor: 'rgb(196, 127, 254, 0.1)',
+                  color: 'var(--purple-secondary)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.1)';
+                }}
               >
                 <Eye className="w-4 h-4" />
                 Sub-profiles
               </button>
               <button
                 onClick={() => onProfileSelect(profile)}
-                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                className="flex-1 flex items-center justify-center gap-1 px-3 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+                style={{ backgroundColor: 'var(--purple-secondary)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--purple-tertiary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--purple-secondary)';
+                }}
               >
                 <Edit className="w-4 h-4" />
                 View Details
@@ -189,8 +266,8 @@ const YourProfiles: React.FC<YourProfilesProps> = ({
 
       {filteredProfiles.length === 0 && (
         <div className="text-center py-12">
-          <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <Search className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--purple-accent)' }} />
+          <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--purple-secondary)' }}>
             No profiles found
           </h3>
           <p className="text-gray-600">

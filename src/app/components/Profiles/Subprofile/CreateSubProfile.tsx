@@ -156,12 +156,12 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Create New Sub-profile</h2>
+            <h2 style={{ color: 'var(--purple-secondary)' }} className="text-2xl font-bold">Create New Sub-profile</h2>
             <p className="text-sm text-gray-500 mt-1">Create a new sub-profile for {profile.name}</p>
           </div>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-purple-100 rounded-full transition-colors"
             disabled={loading}
           >
             <X className="w-6 h-6" />
@@ -190,11 +190,15 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
+                      ? 'text-purple-700'
                       : hasErrors
                       ? 'border-transparent text-red-500 hover:text-red-700'
                       : 'border-transparent text-gray-500 hover:text-gray-700'
                   }`}
+                  style={{
+                    borderColor: activeTab === tab.id ? 'var(--purple-secondary)' : 'transparent',
+                    color: activeTab === tab.id ? 'var(--purple-secondary)' : undefined
+                  }}
                 >
                   <div className="flex items-center gap-2">
                     {Icon && <Icon className="w-4 h-4" />}
@@ -219,7 +223,7 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
                     errors.name ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter sub-profile name"
@@ -241,7 +245,7 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={4}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none ${
                     errors.description ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="Enter description"
@@ -263,7 +267,7 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
                   type="text"
                   value={formData.tags}
                   onChange={(e) => handleInputChange('tags', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   placeholder="tag1, tag2, tag3"
                   disabled={loading}
                 />
@@ -277,7 +281,7 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
                   type="text"
                   value={formData.areaType}
                   onChange={(e) => handleInputChange('areaType', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 ${
                     errors.areaType ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="e.g., dining, kitchen, lobby, warehouse"
@@ -325,14 +329,18 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
               <button
                 onClick={onCancel}
                 disabled={loading}
-                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg hover:bg-blue-700 hover:border-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white border rounded-lg hover:opacity-90 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                style={{ 
+                  backgroundColor: 'var(--purple-secondary)',
+                  borderColor: 'var(--purple-secondary)'
+                }}
               >
                 {loading ? (
                   <>

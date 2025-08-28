@@ -233,14 +233,7 @@ const Home: React.FC = () => {
     switch (activePage) {
       case 'dashboard':
         return <DashboardPage />;
-      case 'videos':
-        return (
-          <VideoTable 
-            videos={videos}
-            setVideos={setVideos}
-            viewMode={viewMode}
-          />
-        );
+      
       case 'processed':
         return <ProcessedVideosPage />;
       case 'process':
@@ -253,14 +246,7 @@ const Home: React.FC = () => {
         return <SettingsPage />;
       case 'help':
         return <HelpPage />;
-      default:
-        return (
-          <VideoTable 
-            videos={videos}
-            setVideos={setVideos}
-            viewMode={viewMode}
-          />
-        );
+     
     }
   };
 

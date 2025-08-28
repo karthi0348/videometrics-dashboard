@@ -154,7 +154,7 @@ const MonitoringScheduleEditor = () => {
 
   const renderFormField = (schedule, index) => {
     return (
-      <div key={index} className="border rounded-lg p-6 bg-white shadow-sm">
+      <div key={index} className="border border-purple-200 rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
         {/* Schedule Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -166,7 +166,7 @@ const MonitoringScheduleEditor = () => {
           </div>
           <button
             onClick={() => removeMonitoringSchedule(index)}
-            className="p-2 text-red-500 hover:bg-red-50 rounded-full"
+            className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -176,14 +176,14 @@ const MonitoringScheduleEditor = () => {
           {/* Schedule Name */}
           <div className="md:col-span-2">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Edit className="w-4 h-4" />
+              <Edit className="w-4 h-4 text-purple-500" />
               Schedule Name
             </label>
             <input
               type="text"
               value={schedule.name}
               onChange={(e) => updateMonitoringSchedule(index, 'name', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
               placeholder="Enter schedule name"
             />
           </div>
@@ -191,13 +191,13 @@ const MonitoringScheduleEditor = () => {
           {/* Priority */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Flag className="w-4 h-4" />
+              <Flag className="w-4 h-4 text-purple-500" />
               Priority
             </label>
             <select
               value={schedule.priority}
               onChange={(e) => updateMonitoringSchedule(index, 'priority', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
             >
               {priorityOptions.map(priority => (
                 <option key={priority} value={priority}>
@@ -210,13 +210,13 @@ const MonitoringScheduleEditor = () => {
           {/* Active Status */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Play className="w-4 h-4" />
+              <Play className="w-4 h-4 text-purple-500" />
               Status
             </label>
             <select
               value={schedule.isActive.toString()}
               onChange={(e) => updateMonitoringSchedule(index, 'isActive', e.target.value === 'true')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
             >
               <option value="true">Active</option>
               <option value="false">Inactive</option>
@@ -226,41 +226,41 @@ const MonitoringScheduleEditor = () => {
           {/* Start Time */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Clock className="w-4 h-4" />
+              <Clock className="w-4 h-4 text-purple-500" />
               Start Time
             </label>
             <input
               type="time"
               value={schedule.startTime}
               onChange={(e) => updateMonitoringSchedule(index, 'startTime', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
             />
           </div>
 
           {/* End Time */}
           <div>
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Clock className="w-4 h-4" />
+              <Clock className="w-4 h-4 text-purple-500" />
               End Time
             </label>
             <input
               type="time"
               value={schedule.endTime}
               onChange={(e) => updateMonitoringSchedule(index, 'endTime', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
             />
           </div>
 
           {/* Timezone */}
           <div className="md:col-span-2">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Globe className="w-4 h-4" />
+              <Globe className="w-4 h-4 text-purple-500" />
               Timezone
             </label>
             <select
               value={schedule.timezone}
               onChange={(e) => updateMonitoringSchedule(index, 'timezone', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
             >
               {timezones.map(tz => (
                 <option key={tz} value={tz}>{tz}</option>
@@ -271,7 +271,7 @@ const MonitoringScheduleEditor = () => {
           {/* Days */}
           <div className="md:col-span-2">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
-              <Calendar className="w-4 h-4" />
+              <Calendar className="w-4 h-4 text-purple-500" />
               Active Days
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -286,7 +286,7 @@ const MonitoringScheduleEditor = () => {
                         : schedule.days.filter(d => d !== day);
                       updateMonitoringSchedule(index, 'days', newDays);
                     }}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                   />
                   <span className="text-sm text-gray-700 capitalize">
                     {day.substring(0, 3)}
@@ -311,17 +311,17 @@ const MonitoringScheduleEditor = () => {
           const isExpanded = expandedSchedules.has(scheduleKey);
           
           return (
-            <div key={index} className="border rounded-lg overflow-hidden bg-white">
+            <div key={index} className="border border-purple-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
               <div 
-                className="px-4 py-3 bg-gray-50 border-b cursor-pointer hover:bg-gray-100"
+                className="px-4 py-3 bg-purple-50 border-b border-purple-100 cursor-pointer hover:bg-purple-100 transition-colors"
                 onClick={() => toggleScheduleExpansion(index)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     {isExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-gray-600" />
+                      <ChevronDown className="w-4 h-4 text-purple-600" />
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-gray-600" />
+                      <ChevronRight className="w-4 h-4 text-purple-600" />
                     )}
                     <div className={`w-3 h-3 rounded-full ${schedule.isActive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                     <span className="font-medium text-gray-900">{schedule.name}</span>
@@ -364,7 +364,7 @@ const MonitoringScheduleEditor = () => {
                     <span className="text-gray-500 text-sm">Days:</span>
                     <div className="mt-1 flex flex-wrap gap-1">
                       {schedule.days.map(day => (
-                        <span key={day} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full capitalize">
+                        <span key={day} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full capitalize">
                           {day}
                         </span>
                       ))}
@@ -385,20 +385,20 @@ const MonitoringScheduleEditor = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="max-w-6xl mx-auto p-6 space-y-6" style={{ fontFamily: 'Gotham, Arial, Helvetica, sans-serif' }}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <Calendar className="w-6 h-6 text-blue-600" />
-            <h3 className="text-xl font-semibold text-gray-900">Monitoring Schedule Editor</h3>
+            <Calendar className="w-6 h-6" style={{ color: 'rgb(81, 77, 223)' }} />
+            <h2 className="text-sm " style={{ color: 'var(--purple-tertiary)' }}>Monitoring Schedule Editor</h2>
             <div className="flex items-center gap-2">
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                 isValidJson ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
               }`}>
                 {isValidJson ? 'Valid JSON' : 'Invalid JSON'}
               </span>
-              <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+              <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
                 {schedulesCount} schedule{schedulesCount !== 1 ? 's' : ''}
               </span>
               <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
@@ -413,14 +413,14 @@ const MonitoringScheduleEditor = () => {
       </div>
 
       {/* Mode Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-purple-200">
         <nav className="flex space-x-8">
           <button
             onClick={() => setConfigurationMode('json')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
               configurationMode === 'json'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'text-purple-600 border-purple-500'
+                : 'border-transparent text-gray-500 hover:text-purple-600'
             }`}
           >
             <Code className="w-4 h-4" />
@@ -430,8 +430,8 @@ const MonitoringScheduleEditor = () => {
             onClick={() => setConfigurationMode('form')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
               configurationMode === 'form'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'text-purple-600 border-purple-500'
+                : 'border-transparent text-gray-500 hover:text-purple-600'
             }`}
           >
             <Edit className="w-4 h-4" />
@@ -441,8 +441,8 @@ const MonitoringScheduleEditor = () => {
             onClick={() => setConfigurationMode('tree')}
             className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
               configurationMode === 'tree'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'text-purple-600 border-purple-500'
+                : 'border-transparent text-gray-500 hover:text-purple-600'
             }`}
           >
             <Eye className="w-4 h-4" />
@@ -454,23 +454,23 @@ const MonitoringScheduleEditor = () => {
       {/* JSON Editor Mode */}
       {configurationMode === 'json' && (
         <div className="space-y-4">
-          <div className="bg-gray-50 p-6 rounded-lg">
+          <div className="bg-purple-50 p-6 rounded-lg border border-purple-100">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Code className="w-5 h-5 text-gray-600" />
-                <h3 className="font-medium text-gray-900">JSON Configuration Editor</h3>
+                <Code className="w-5 h-5 text-purple-600" />
+                <h2 className="font-medium text-purple-800">JSON Configuration Editor</h2>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={copyJson}
-                  className="p-2 text-gray-600 hover:bg-gray-200 rounded transition-colors"
+                  className="p-2 text-purple-600 hover:bg-purple-200 rounded transition-colors"
                   title="Copy JSON"
                 >
                   <Copy className="w-4 h-4" />
                 </button>
                 <button
                   onClick={resetToFormData}
-                  className="p-2 text-gray-600 hover:bg-gray-200 rounded transition-colors"
+                  className="p-2 text-purple-600 hover:bg-purple-200 rounded transition-colors"
                   title="Reset to Form Data"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -481,13 +481,19 @@ const MonitoringScheduleEditor = () => {
             <div className="flex items-center gap-2 mb-4">
               <button
                 onClick={formatJson}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 text-sm text-white rounded-lg transition-colors"
+                style={{ backgroundColor: 'rgb(81, 77, 223)' }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(120, 37, 195)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(81, 77, 223)'}
               >
                 Format
               </button>
               <button
                 onClick={minifyJson}
-                className="px-4 py-2 text-sm bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 text-sm text-white rounded-lg transition-colors"
+                style={{ backgroundColor: 'rgb(100, 33, 172)' }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(61, 24, 129)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(100, 33, 172)'}
               >
                 Minify
               </button>
@@ -499,7 +505,7 @@ const MonitoringScheduleEditor = () => {
               </button>
             </div>
 
-            <div className="border rounded-lg overflow-hidden bg-white">
+            <div className="border border-purple-200 rounded-lg overflow-hidden bg-white">
               <textarea
                 value={jsonValue}
                 onChange={(e) => {
@@ -515,7 +521,7 @@ const MonitoringScheduleEditor = () => {
                     setJsonError('Invalid JSON format');
                   }
                 }}
-                className="w-full h-80 p-4 font-mono text-sm border-none focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full h-80 p-4 font-mono text-sm border-none focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
                 placeholder="Enter monitoring schedule JSON configuration..."
               />
             </div>
@@ -531,7 +537,10 @@ const MonitoringScheduleEditor = () => {
               <div className="mt-4 flex items-center gap-3">
                 <button
                   onClick={applyJsonChanges}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-6 py-2 text-white rounded-lg transition-colors"
+                  style={{ backgroundColor: 'rgb(81, 77, 223)' }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(120, 37, 195)'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(81, 77, 223)'}
                 >
                   Apply Changes
                 </button>
@@ -549,12 +558,15 @@ const MonitoringScheduleEditor = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Edit className="w-5 h-5 text-gray-600" />
-              <h4 className="font-medium text-gray-900">Interactive Schedule Editor</h4>
+              <Edit className="w-5 h-5 text-purple-600" />
+              <h2 className="font-medium text-purple-700">Interactive Schedule Editor</h2>
             </div>
             <button
               onClick={addMonitoringSchedule}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2"
+              style={{ backgroundColor: 'rgb(120, 37, 195)' }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(120, 37, 195)'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(81, 77, 223)'}
             >
               <Plus className="w-4 h-4" />
               Add Schedule
@@ -567,13 +579,16 @@ const MonitoringScheduleEditor = () => {
             )}
 
             {monitoringSchedules.length === 0 && (
-              <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-lg">
-                <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-medium mb-2">No Monitoring Schedules</h3>
+              <div className="text-center py-16 text-gray-500 bg-purple-50 rounded-lg border border-purple-100">
+                <Calendar className="w-16 h-16 mx-auto mb-4 text-purple-300" />
+                <h3 className="text-lg font-medium mb-2 text-purple-700">No Monitoring Schedules</h3>
                 <p className="mb-6">Create your first monitoring schedule to get started.</p>
                 <button
                   onClick={addMonitoringSchedule}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-6 py-3 text-white rounded-lg transition-colors"
+                  style={{ backgroundColor: 'rgb(81, 77, 223)' }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(120, 37, 195)'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(81, 77, 223)'}
                 >
                   Add Your First Schedule
                 </button>
@@ -585,11 +600,11 @@ const MonitoringScheduleEditor = () => {
 
       {/* Tree View Mode */}
       {configurationMode === 'tree' && (
-        <div className="bg-gray-50 p-6 rounded-lg">
+        <div className="bg-purple-50 p-6 rounded-lg border border-purple-100">
           <div className="flex items-center gap-2 mb-6">
-            <Eye className="w-5 h-5 text-gray-600" />
-            <h3 className="font-medium text-gray-900">Schedule Tree View</h3>
-            <span className="text-sm text-gray-500">
+            <Eye className="w-5 h-5 text-purple-600" />
+            <h2 className="font-medium text-purple-800">Schedule Tree View</h2>
+            <span className="text-sm text-purple-600">
               Expandable view of all monitoring schedules
             </span>
           </div>
@@ -597,8 +612,8 @@ const MonitoringScheduleEditor = () => {
           {monitoringSchedules.length > 0 ? (
             renderTreeView()
           ) : (
-            <div className="text-center py-12 text-gray-500 bg-white rounded-lg border-2 border-dashed border-gray-200">
-              <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+            <div className="text-center py-12 text-purple-500 bg-white rounded-lg border-2 border-dashed border-purple-200">
+              <Calendar className="w-12 h-12 mx-auto mb-4 text-purple-300" />
               <p className="text-lg font-medium mb-2">No Schedules to Display</p>
               <p className="text-sm">Switch to Form Editor to create schedules</p>
             </div>
@@ -607,14 +622,14 @@ const MonitoringScheduleEditor = () => {
       )}
 
       {/* Status Bar */}
-      <div className="bg-gray-50 px-6 py-4 rounded-lg">
+      <div className="bg-purple-50 px-6 py-4 rounded-lg border border-purple-100">
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-6">
-            <span>Total: <span className="text-blue-600 font-medium">{schedulesCount} schedule{schedulesCount !== 1 ? 's' : ''}</span></span>
+            <span>Total: <span className="text-purple-600 font-medium">{schedulesCount} schedule{schedulesCount !== 1 ? 's' : ''}</span></span>
             <span>Active: <span className="text-green-600 font-medium">{activeSchedules}</span></span>
             <span>Inactive: <span className="text-gray-600 font-medium">{schedulesCount - activeSchedules}</span></span>
           </div>
-          <span className="text-gray-500">{JSON.stringify(monitoringSchedules).length} characters</span>
+          <span className="text-purple-500">{JSON.stringify(monitoringSchedules).length} characters</span>
         </div>
       </div>
     </div>

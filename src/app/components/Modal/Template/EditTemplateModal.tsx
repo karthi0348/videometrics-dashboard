@@ -79,13 +79,19 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
         setIsSubmitting(true);
 
         try {
+            // Parse metric structure only if it's valid JSON, otherwise use null
+            let metricStructure = null;
+            if (jsonContent.trim() && isValidJson()) {
+                metricStructure = JSON.parse(jsonContent);
+            }
+
             const payload = {
                 template_name: formData.templateName,
                 description: formData.description,
                 tags: [], // you can add tag input later
                 version: "1.0.0",
                 analysis_prompt: formData.analysisPrompt,
-                metric_structure: JSON.parse(jsonContent),  // JSON structure
+                metric_structure: metricStructure,  // Can be null now
                 chart_config: chartConfigs.length > 0 ? chartConfigs : [],
                 summary_config: summaryConfig || null,
                 gui_config: {
@@ -144,6 +150,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
     };
 
     const isValidJson = () => {
+        if (!jsonContent.trim()) return true; // Empty content is valid (optional)
         try {
             JSON.parse(jsonContent);
             return true;
@@ -157,8 +164,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
             formData.templateName.trim().length >= 3 &&
             formData.description.trim().length >= 10 &&
             formData.analysisPrompt.trim().length >= 20 &&
-            isValidJson() &&
-            getObjectProperties() > 0
+            isValidJson() // Only check if JSON is valid, not if it exists
         );
     };
 
@@ -188,16 +194,11 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
             makePublic: data.is_public || false,
         });
 
-        // Set metric structure as JSON string
+        // Set metric structure as JSON string - can be empty now
         setJsonContent(
             data.metric_structure
                 ? JSON.stringify(data.metric_structure, null, 2)
-                : `{
-  "total_customers": "integer",
-  "average_wait_time": "float",
-  "peak_hours": "array",
-  "satisfaction_score": "float"
-}`
+                : "" // Empty string instead of default structure
         );
 
         // Set chart config (if null, use empty array)
@@ -404,9 +405,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                                         />
                                     </svg>
                                     Metric Structure
-                                    <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full">
-                                        Required
-                                    </span>
+                                    <span className="text-sm text-gray-500 font-normal">(Optional)</span>
                                 </h3>
                                 <svg
                                     className={`w-5 h-5 text-gray-500 transform transition-transform ${expandedSections.metricStructure ? "rotate-180" : ""
@@ -512,7 +511,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                                                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                                                 />
                                             </svg>
-                                            Creating...
+                                            Updating...
                                         </>
                                     ) : (
                                         <>

@@ -107,16 +107,23 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Create New Profile</h2>
+      <h2 className="text-2xl font-bold" style={{ color: 'var(--purple-secondary)' }}>
+        Create New Profile
+      </h2>
       
       {error && (
-        <div className="p-4 text-sm text-red-700 bg-red-100 border border-red-200 rounded-lg">
+        <div className="p-4 text-sm border rounded-lg"
+             style={{
+               color: 'rgb(153, 27, 27)',
+               backgroundColor: 'rgb(254, 226, 226)',
+               borderColor: 'rgb(252, 165, 165)'
+             }}>
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <FormField 
             label="Profile Name" 
             name="profile_name" 
@@ -182,8 +189,8 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
           />
           
           <div className="md:col-span-2">
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-              Description *
+            <label htmlFor="description" className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+              Description <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>
             </label>
             <textarea
               id="description"
@@ -191,14 +198,26 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
               value={formData.description}
               onChange={handleChange}
               rows={3}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+              className="mt-1 block w-full rounded-md shadow-sm disabled:bg-gray-50 disabled:text-gray-500"
+              style={{
+                borderColor: 'rgb(196, 127, 254, 0.3)'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--purple-secondary)';
+                e.target.style.boxShadow = '0 0 0 3px rgb(81, 77, 223, 0.1)';
+                e.target.style.outline = 'none';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgb(196, 127, 254, 0.3)';
+                e.target.style.boxShadow = 'none';
+              }}
               required
               disabled={isLoading}
             />
           </div>
           
           <div className="md:col-span-2">
-            <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="tags" className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
               Tags (comma-separated)
             </label>
             <input
@@ -207,10 +226,22 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
               value={formData.tags.join(', ')}
               onChange={handleTagsChange}
               placeholder="e.g., technology, consulting, enterprise"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+              className="mt-1 block w-full rounded-md shadow-sm disabled:bg-gray-50 disabled:text-gray-500"
+              style={{
+                borderColor: 'rgb(196, 127, 254, 0.3)'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--purple-secondary)';
+                e.target.style.boxShadow = '0 0 0 3px rgb(81, 77, 223, 0.1)';
+                e.target.style.outline = 'none';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgb(196, 127, 254, 0.3)';
+                e.target.style.boxShadow = 'none';
+              }}
               disabled={isLoading}
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs" style={{ color: 'var(--purple-accent)' }}>
               Separate multiple tags with commas
             </p>
           </div>
@@ -221,14 +252,39 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
             type="button"
             onClick={onCancel}
             disabled={isLoading}
-            className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: 'rgb(196, 127, 254, 0.1)',
+              color: 'var(--purple-secondary)'
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.2)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.1)';
+              }
+            }}
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isLoading || !formData.profile_name || !formData.contact_email || !formData.contact_person}
-            className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            style={{ backgroundColor: 'var(--purple-secondary)' }}
+            onMouseEnter={(e) => {
+              if (!e.currentTarget.disabled) {
+                e.currentTarget.style.backgroundColor = 'var(--purple-secondary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!e.currentTarget.disabled) {
+                e.currentTarget.style.backgroundColor = 'var(--purple-secondary)';
+              }
+            }}
           >
             {isLoading && (
               <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
@@ -265,8 +321,8 @@ const FormField = ({
   placeholder?: string;
 }) => (
   <div>
-    <label htmlFor={name} className="block text-sm font-medium text-gray-700">
-      {label} {required && <span className="text-red-500">*</span>}
+    <label htmlFor={name} className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+      {label} {required && <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>}
     </label>
     <input
       id={name}
@@ -275,7 +331,19 @@ const FormField = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+      className="mt-1 block w-full rounded-md shadow-sm disabled:bg-gray-50 disabled:text-gray-500"
+      style={{
+        borderColor: 'rgb(196, 127, 254, 0.3)'
+      }}
+      onFocus={(e) => {
+        e.target.style.borderColor = 'var(--purple-secondary)';
+        e.target.style.boxShadow = '0 0 0 3px rgb(81, 77, 223, 0.1)';
+        e.target.style.outline = 'none';
+      }}
+      onBlur={(e) => {
+        e.target.style.borderColor = 'rgb(196, 127, 254, 0.3)';
+        e.target.style.boxShadow = 'none';
+      }}
       required={required}
       disabled={disabled}
     />
