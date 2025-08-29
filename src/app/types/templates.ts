@@ -1,3 +1,32 @@
+export interface Template {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+  visibility: 'Public' | 'Private';
+  status: 'active' | 'beta';
+  uses: number;
+  assignedProfiles: number;
+  icon: string;
+  color: string;
+  analysisPrompt?: string;
+  created?: string;
+  rating?: number;
+}
+
+export interface FormData {
+  templateName: string;
+  description: string;
+  analysisPrompt: string;
+  makePublic: boolean;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+}
+
+
 export interface ChartConfig {
   chart_type: string;
   title: string;

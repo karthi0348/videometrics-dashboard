@@ -16,19 +16,19 @@
 h1 { 
   font-size: 30px;
   font-weight: bold;
-  color: var(--purple-primary);
+  color: var(--purple-secondary);
 }
 
 h2 {
   font-size: 20px;
   font-weight: bold;
-  color: var(--purple-secondary);
+  color: var(--purple-tertiary);
 }
 
 h3 {
   font-size: 15px;
   font-weight: bold;
-  color: var(--purple-tertiary);
+  color: var(--purple-primary);
 }
 
 @theme inline {

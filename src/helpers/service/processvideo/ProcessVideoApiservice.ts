@@ -40,7 +40,6 @@ interface GetAnalyticsResponse {
     profile_id: number;
     sub_profile_id: number;
     template_id: number;
-    status: string;
     original_video_url: string;
     processed_metadata: any[];
     generated_charts: any[];

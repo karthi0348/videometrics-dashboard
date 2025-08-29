@@ -6,7 +6,8 @@ import VideoTable from './components/Videos/VideoTable';
 import Header from './components/Videos/Videos';
 import ProfilesPage from './components/Profiles/ProfilesPage';
 import TemplatesPage from './components/Templates/TemplatesPage';
-import ProcessVideoPage from './components/ProcessVideo/ProcessVideo'; // Import the new component
+import ProcessVideoPage from './components/ProcessVideo/ProcessVideoPage';
+import SettingsPage from './components/Settings/SettingsPage'; 
 import { Video, ViewMode } from './types';
 
 // Placeholder components for other pages
@@ -62,49 +63,6 @@ const ProcessedVideosPage = () => (
   </div>
 );
 
-const SettingsPage = () => (
-  <div className="p-4 sm:p-6">
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Settings</h2>
-        <p className="text-sm sm:text-base text-gray-600">Manage your account and application preferences</p>
-      </div>
-      <div className="space-y-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Account Settings</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-              <input type="text" defaultValue="Ganta Kaushik" className="w-full p-3 border border-gray-300 rounded-lg text-sm sm:text-base" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <input type="email" defaultValue="kaushik@example.com" className="w-full p-3 border border-gray-300 rounded-lg text-sm sm:text-base" />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Processing Preferences</h3>
-          <div className="space-y-4">
-            <label className="flex items-center">
-              <input type="checkbox" className="mr-3" defaultChecked />
-              <span className="text-sm sm:text-base">Auto-process uploaded videos</span>
-            </label>
-            <label className="flex items-center">
-              <input type="checkbox" className="mr-3" />
-              <span className="text-sm sm:text-base">Send email notifications</span>
-            </label>
-            <label className="flex items-center">
-              <input type="checkbox" className="mr-3" defaultChecked />
-              <span className="text-sm sm:text-base">Generate thumbnails automatically</span>
-            </label>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
 const HelpPage = () => (
   <div className="p-4 sm:p-6">
     <div className="max-w-4xl mx-auto">
@@ -155,6 +113,10 @@ const HelpPage = () => (
   </div>
 );
 
+interface HomeProps {
+  propVideos?: Video[];
+}
+
 const Home: React.FC = () => {
   const [videos, setVideos] = useState<Video[]>([
     {
@@ -191,7 +153,7 @@ const Home: React.FC = () => {
       case 'processed':
         return <ProcessedVideosPage />;
       case 'process':
-        return <ProcessVideoPage videos={videos} />; // Use the new component and pass videos
+        return <ProcessVideoPage videos={videos} />;
       case 'templates':
         return <TemplatesPage />;
       case 'profiles':
@@ -201,7 +163,7 @@ const Home: React.FC = () => {
       case 'help':
         return <HelpPage />;
       default:
-        return <VideoTable videos={videos} viewMode={viewMode} />; // Default to videos page
+       return <DashboardPage />;
     }
   };
 
@@ -243,17 +205,9 @@ const Home: React.FC = () => {
     return null;
   };
 
-  // Special handling for templates page to not have container padding
+  // Special handling for pages that need full-width layout
   const renderContentWithLayout = () => {
-    if (activePage === 'templates') {
-      return renderMainContent();
-    }
-    
-    if (activePage === 'profiles') {
-      return renderMainContent();
-    }
-
-    if (activePage === 'videos') {
+    if (['templates', 'profiles', 'videos', 'settings'].includes(activePage)) {
       return renderMainContent();
     }
 
@@ -288,7 +242,7 @@ const Home: React.FC = () => {
           
           {/* Desktop Main Content */}
           <main className="flex-1 overflow-auto">
-            {activePage === 'templates' || activePage === 'profiles' || activePage === 'videos' ? (
+            {['templates', 'profiles', 'videos', 'settings'].includes(activePage) ? (
               renderContentWithLayout()
             ) : (
               <div className="px-6 py-8">
@@ -318,7 +272,7 @@ const Home: React.FC = () => {
         {/* Mobile Main Content */}
         <main className="flex-1 overflow-auto bg-gray-50 min-h-0">
           <div className="h-full">
-            {activePage === 'profiles' || activePage === 'videos' || activePage === 'templates' ? (
+            {['profiles', 'videos', 'templates', 'settings'].includes(activePage) ? (
               <div className="h-full">
                 {renderMainContent()}
               </div>

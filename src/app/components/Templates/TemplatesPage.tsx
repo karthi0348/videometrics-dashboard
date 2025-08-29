@@ -10,34 +10,7 @@ import DeleteModal from '../Common/DeleteModal';
 import { toast } from 'react-toastify';
 import EditTemplateModal from '../Modal/Template/EditTemplateModal';
 import moment from 'moment';
-
-interface Template {
-  id: string;
-  name: string;
-  description: string;
-  tags: string[];
-  visibility: 'Public' | 'Private';
-  status: 'active' | 'beta';
-  uses: number;
-  assignedProfiles: number;
-  icon: string;
-  color: string;
-  analysisPrompt?: string;
-  created?: string;
-  rating?: number;
-}
-
-interface FormData {
-  templateName: string;
-  description: string;
-  analysisPrompt: string;
-  makePublic: boolean;
-}
-
-interface Profile {
-  id: string;
-  name: string;
-}
+import {Template,FormData,Profile,ChartConfig,ChartConfigurationProps,TabType} from '@/app/types/templates'
 
 // Template Settings Modal Component
 const TemplateSettingsModal = ({
