@@ -10,7 +10,7 @@ class VideoApiService {
   // Get all videos
   getAllVideos = async (url: string) => {
     try {
-      const data: any = await this.httpClientWrapper.get(`/video-urls${url}`);
+      const data: any = await this.httpClientWrapper.get(`/video-urls`+url);
       return data;
     } catch (error) {
       throw error;

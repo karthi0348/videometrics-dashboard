@@ -9,7 +9,7 @@ import {
 } from "./types/types";
 
 interface ProcessVideoFormProps {
-  videos: Video[];
+  videos: any;
   profiles: Profile[];
   subProfiles: SubProfile[];
   onProcessVideo: (payload: any) => Promise<void>;
@@ -119,7 +119,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
     (subProfile) => subProfile.profile_id === selectedProfileId
   );
 
-  const selectedVideo = videos.find((video) => video.id === selectedVideoId);
+  // const selectedVideo = videos.find((video) => video.id === selectedVideoId);
 
   const handleProcessVideo = async () => {
     if (!selectedVideoId || !selectedTemplateId) {
@@ -127,7 +127,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
       return;
     }
 
-    const video = videos.find((v) => v.id === selectedVideoId);
+    const video = videos.find((v:any) => v.id === selectedVideoId);
     if (!video) {
       setError("Selected video not found");
       return;
@@ -238,18 +238,18 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
                 ? "No videos available"
                 : "Select a video"}
             </option>
-            {videos.map((video) => (
+            {videos.map((video:any) => (
               <option key={video.id} value={video.id}>
-                {video.name ?? `Video ${video.id}`}
+                {video.video_name}
               </option>
             ))}
           </select>
 
-          {selectedVideo && (
+          {/* {selectedVideo && (
             <p className="text-xs text-gray-500 mt-1">
               Uploaded: {selectedVideo.uploaded}
             </p>
-          )}
+          )} */}
         </div>
 
         {/* Select Profile */}

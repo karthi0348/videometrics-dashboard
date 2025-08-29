@@ -24,7 +24,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
   templates: propTemplates,
 }) => {
   // State for API data
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [videos, setVideos] = useState<any>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [subProfiles, setSubProfiles] = useState<SubProfile[]>([]);
 
@@ -45,28 +45,9 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
   // Load videos from API
   const loadVideos = async () => {
-    if (propVideos) {
-      setVideos(propVideos);
-      return;
-    }
-
     try {
-      const videoApiService = new VideoApiService();
-
       const data = await videoApiService.getAllVideos("");
-
-      const videosArray = Array.isArray(data.results) ? data.results : [];
-
-      const transformedVideos: Video[] = videosArray.map((item: any) => ({
-        id: Number(item.id) || Date.now(),
-        name: item.video_name || item.name || "Untitled Video",
-        url: item.url || item.video_url || "",
-        size: item.file_size || item.size || "Unknown",
-        uploaded:
-          item.created_at || item.uploaded || new Date().toLocaleDateString(),
-      }));
-
-      setVideos(transformedVideos);
+      setVideos(data);
     } catch (err) {
       console.error("Error loading videos:", err);
       setError(err instanceof Error ? err.message : "Failed to load videos");
@@ -123,8 +104,8 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
           item.isActive !== undefined
             ? item.isActive
             : item.is_active !== undefined
-            ? item.is_active
-            : true,
+              ? item.is_active
+              : true,
       }));
 
       // Filter out duplicates and add new ones
@@ -145,7 +126,8 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       setError("");
       setSubProfiles([]); // Clear sub-profiles before loading
       try {
-        await Promise.all([loadVideos(), loadProfiles()]);
+        loadVideos();
+        loadProfiles()
       } catch (err) {
         console.error("Error loading initial data:", err);
         setError(
@@ -504,13 +486,12 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                       </div>
                       <div className="flex items-center space-x-2">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            video.priority === "high"
-                              ? "bg-red-100 text-red-800"
-                              : video.priority === "low"
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${video.priority === "high"
+                            ? "bg-red-100 text-red-800"
+                            : video.priority === "low"
                               ? "bg-gray-100 text-gray-800"
                               : "bg-purple-100 text-purple-800"
-                          }`}
+                            }`}
                         >
                           {video.priority}
                         </span>
