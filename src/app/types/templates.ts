@@ -1,3 +1,11 @@
+export interface FormData {
+    templateName: string;
+    description: string;
+    tags: string[];
+    analysisPrompt: string;
+    makePublic: boolean;
+}
+
 export interface Template {
   id: string;
   name: string;
@@ -14,12 +22,7 @@ export interface Template {
   rating?: number;
 }
 
-export interface FormData {
-  templateName: string;
-  description: string;
-  analysisPrompt: string;
-  makePublic: boolean;
-}
+
 
 export interface Profile {
   id: string;
@@ -40,6 +43,17 @@ export interface ChartConfig {
     label: string;
   };
 }
+
+
+
+export interface SummaryConfig {
+  summary_type: string;
+  sections: string[];
+  metrics_to_highlight: string[];
+  format: string;
+  include_recommendations: boolean;
+}
+
 
 export interface ChartConfigurationProps {
   isExpanded?: boolean;

@@ -119,17 +119,41 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
     (subProfile) => subProfile.profile_id === selectedProfileId
   );
 
-  // const selectedVideo = videos.find((video) => video.id === selectedVideoId);
-
   const handleProcessVideo = async () => {
-    if (!selectedVideoId || !selectedTemplateId) {
-      setError("Please select both a video and a template");
+    // Enhanced validation with specific error messages
+    const validationErrors: string[] = [];
+
+    if (!selectedVideoId) {
+      validationErrors.push("Please select a video");
+    }
+
+    if (!selectedProfileId) {
+      validationErrors.push("Please select a profile");
+    }
+
+    if (!selectedSubProfileId) {
+      validationErrors.push("Please select a sub-profile");
+    }
+
+    if (!selectedTemplateId) {
+      validationErrors.push("Please select a template");
+    }
+
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(", "));
       return;
     }
 
-    const video = videos.find((v:any) => v.id === selectedVideoId);
+    const video = videos.find((v: any) => v.id === selectedVideoId);
     if (!video) {
       setError("Selected video not found");
+      return;
+    }
+
+    // Validate video URL exists - check multiple possible URL field names
+    const videoUrl = video.url || video.video_url || video.file_url;
+    if (!videoUrl) {
+      setError("Selected video does not have a valid URL");
       return;
     }
 
@@ -145,19 +169,38 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
         }
       }
 
+      // Convert to numbers and validate they're valid positive integers
+      const profileId = Number(selectedProfileId);
+      const subProfileId = Number(selectedSubProfileId);
+      const templateId = Number(selectedTemplateId);
+
+      // Validate all IDs are valid positive numbers
+      if (isNaN(profileId) || profileId <= 0) {
+        throw new Error("Invalid profile ID");
+      }
+      if (isNaN(subProfileId) || subProfileId <= 0) {
+        throw new Error("Invalid sub-profile ID");
+      }
+      if (isNaN(templateId) || templateId <= 0) {
+        throw new Error("Invalid template ID");
+      }
+
       const payload = {
-        video_url: video.url,
-        profile_id: selectedProfileId || 0,
-        sub_profile_id: selectedSubProfileId ? Number(selectedSubProfileId) : 0,
-        template_id: Number(selectedTemplateId),
+        video_url: videoUrl,
+        profile_id: profileId,
+        sub_profile_id: subProfileId,
+        template_id: templateId,
         priority,
         custom_parameters: parsedCustomParameters,
       };
+
+      console.log("Sending payload:", payload); // Debug log
 
       await onProcessVideo(payload);
 
       // Reset form
       setSelectedVideoId("");
+      setSelectedProfileId("");
       setSelectedTemplateId("");
       setSelectedSubProfileId("");
       setCustomParameters("{}");
@@ -238,18 +281,12 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
                 ? "No videos available"
                 : "Select a video"}
             </option>
-            {videos.map((video:any) => (
+            {videos.map((video: any) => (
               <option key={video.id} value={video.id}>
                 {video.video_name}
               </option>
             ))}
           </select>
-
-          {/* {selectedVideo && (
-            <p className="text-xs text-gray-500 mt-1">
-              Uploaded: {selectedVideo.uploaded}
-            </p>
-          )} */}
         </div>
 
         {/* Select Profile */}
@@ -284,7 +321,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
         {/* Select Sub-Profile */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Sub-Profile (Optional)
+            Select Sub-Profile *
           </label>
           <select
             value={selectedSubProfileId}
@@ -303,7 +340,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
                 ? "Select a profile first"
                 : availableSubProfiles.length === 0
                 ? "No sub-profiles available"
-                : "Select a sub-profile (optional)"}
+                : "Select a sub-profile"}
             </option>
             {availableSubProfiles.map((subProfile) => (
               <option key={subProfile.id} value={subProfile.id}>
@@ -382,6 +419,8 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
           disabled={
             isProcessing ||
             !selectedVideoId ||
+            !selectedProfileId ||
+            !selectedSubProfileId ||
             !selectedTemplateId ||
             videos.length === 0 ||
             templates.length === 0

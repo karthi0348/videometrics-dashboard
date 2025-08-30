@@ -4,35 +4,7 @@ import ChartConfiguration from "./ChartConfiguration/ChartConfiguration";
 import SummaryConfiguration from "./SummaryConfiguration/SummaryConfiguration";
 import TemplateApiService from "@/helpers/service/templates/template-api-service";
 import ErrorHandler from "@/helpers/ErrorHandler";
-
-interface FormData {
-  templateName: string;
-  description: string;
-  analysisPrompt: string;
-  makePublic: boolean;
-}
-
-interface ChartConfig {
-  chart_type: string;
-  title: string;
-  data_source: string;
-  x_axis: {
-    field: string;
-    label: string;
-  };
-  y_axis: {
-    field: string;
-    label: string;
-  };
-}
-
-interface SummaryConfig {
-  summary_type: string;
-  sections: string[];
-  metrics_to_highlight: string[];
-  format: string;
-  include_recommendations: boolean;
-}
+import { FormData, ChartConfig, SummaryConfig } from "@/app/types/templates";
 
 interface NewTemplateModalProps {
   isOpen: boolean;
@@ -43,16 +15,19 @@ interface NewTemplateModalProps {
 const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
   isOpen,
   onClose,
-  refresh
+  refresh,
 }) => {
   const templateApiService: TemplateApiService = new TemplateApiService();
 
   const [formData, setFormData] = useState<FormData>({
     templateName: "",
     description: "",
+    tags: [],
     analysisPrompt: "",
     makePublic: false,
   });
+
+  const [tagInput, setTagInput] = useState("");
 
   const [jsonContent, setJsonContent] = useState(`{
   "total_customers": "integer",
@@ -62,7 +37,9 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
 }`);
 
   const [chartConfigs, setChartConfigs] = useState<ChartConfig[]>([]);
-  const [summaryConfig, setSummaryConfig] = useState<SummaryConfig | null>(null);
+  const [summaryConfig, setSummaryConfig] = useState<SummaryConfig | null>(
+    null
+  );
 
   const [expandedSections, setExpandedSections] = useState({
     metricStructure: true,
@@ -72,6 +49,24 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      const tag = tagInput.trim().toLowerCase();
+      if (tag && !formData.tags.includes(tag)) {
+        setFormData({ ...formData, tags: [...formData.tags, tag] });
+        setTagInput("");
+      }
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData({
+      ...formData,
+      tags: formData.tags.filter((tag) => tag !== tagToRemove),
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -80,10 +75,10 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
       const payload = {
         template_name: formData.templateName,
         description: formData.description,
-        tags: [], // you can add tag input later
+        tags: formData.tags,
         version: "1.0.0",
         analysis_prompt: formData.analysisPrompt,
-        metric_structure: JSON.parse(jsonContent),  // JSON structure
+        metric_structure: JSON.parse(jsonContent), // JSON structure
         chart_config: chartConfigs.length > 0 ? chartConfigs : [],
         summary_config: summaryConfig || null,
         gui_config: {
@@ -97,15 +92,17 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
       };
 
       await templateApiService.createTemplate(payload);
-      refresh()
+      refresh();
       onClose();
       // Reset form
       setFormData({
         templateName: "",
         description: "",
+        tags: [],
         analysisPrompt: "",
         makePublic: false,
       });
+      setTagInput("");
       setJsonContent(`{
   "total_customers": "integer",
   "average_wait_time": "float",
@@ -120,7 +117,7 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
         summaryConfiguration: false,
       });
     } catch (error: any) {
-      return ErrorHandler(error)
+      return ErrorHandler(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -271,6 +268,56 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
 
                 <div className="lg:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tags (comma separated)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="E.g., retail, queue, analytics"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={handleAddTag}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-colors"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Press Enter or comma to add tags
+                    </div>
+                  </div>
+                  {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {formData.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-teal-100 text-teal-700 text-sm rounded-full"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveTag(tag)}
+                            className="ml-1 text-teal-500 hover:text-teal-700 focus:outline-none"
+                          >
+                            <svg
+                              className="w-3 h-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="lg:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Analysis Prompt <span className="text-red-500">*</span>
                   </label>
                   <textarea
@@ -364,8 +411,9 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
                   </span>
                 </h3>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transform transition-transform ${expandedSections.metricStructure ? "rotate-180" : ""
-                    }`}
+                  className={`w-5 h-5 text-gray-500 transform transition-transform ${
+                    expandedSections.metricStructure ? "rotate-180" : ""
+                  }`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

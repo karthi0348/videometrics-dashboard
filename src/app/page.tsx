@@ -7,6 +7,8 @@ import Header from './components/Videos/Videos';
 import ProfilesPage from './components/Profiles/ProfilesPage';
 import TemplatesPage from './components/Templates/TemplatesPage';
 import ProcessVideoPage from './components/ProcessVideo/ProcessVideoPage';
+import ProcessedVideosPage from './components/ProcessedVideos/ProcessedVideosPage';
+
 import SettingsPage from './components/Settings/SettingsPage'; 
 import { Video, ViewMode } from './types';
 
@@ -41,27 +43,6 @@ const DashboardPage = () => (
   </div>
 );
 
-const ProcessedVideosPage = () => (
-  <div className="p-4 sm:p-6">
-    <div className="text-center">
-      <div className="mb-6">
-        <div className="mx-auto w-16 h-16 sm:w-24 sm:h-24 bg-green-100 rounded-full flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 sm:w-12 sm:h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 3l14 9-14 9V3z" />
-          </svg>
-        </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Processed Videos</h2>
-        <p className="text-sm sm:text-base text-gray-600">View and manage your processed video content</p>
-      </div>
-      <div className="max-w-2xl mx-auto bg-gray-50 rounded-lg p-6 sm:p-8">
-        <p className="text-gray-500 mb-4">No processed videos yet. Start by uploading and processing some videos!</p>
-        <button className="w-full sm:w-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-          Process Videos
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 const HelpPage = () => (
   <div className="p-4 sm:p-6">
@@ -119,12 +100,7 @@ interface HomeProps {
 
 const Home: React.FC = () => {
   const [videos, setVideos] = useState<Video[]>([
-    {
-      id: 1,
-      name: 'test',
-      size: '',
-      uploaded: '8/11/2025'
-    }
+
   ]);
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -163,7 +139,6 @@ const Home: React.FC = () => {
       case 'help':
         return <HelpPage />;
       default:
-       return <DashboardPage />;
     }
   };
 

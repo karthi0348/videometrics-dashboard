@@ -1,35 +1,47 @@
-import { useState, useEffect } from 'react';
+import { useState } from "react";
 
+// Type definitions for ResetPasswordModal
+interface ResetPasswordFormData {
+  email: string;
+  verificationCode: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+interface ResetPasswordErrors {
+  email?: string;
+  verificationCode?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+  general?: string;
+}
 
 interface ResetPasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userEmail: string;
-  onSendCode: (email: string) => Promise<void>;
-  onResetPassword: (email: string, code: string, password: string) => Promise<void>;
+  userEmail?: string;
+  onSendCode: (email: string) => Promise<void> | void;
+  onResetPassword: (email: string, verificationCode: string, newPassword: string) => Promise<void> | void;
 }
 
-const ResetPasswordModal = ({ 
+const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({ 
   isOpen, 
   onClose, 
   userEmail,
   onSendCode,
   onResetPassword 
-}: ResetPasswordModalProps) => {
-
-
-
-  const [step, setStep] = useState(1); // 1: send code, 2: verify and reset
-  const [formData, setFormData] = useState({
+}) => {
+  const [step, setStep] = useState<1 | 2>(1); // 1: send code, 2: verify and reset
+  const [formData, setFormData] = useState<ResetPasswordFormData>({
     email: userEmail || '',
     verificationCode: '',
     newPassword: '',
     confirmPassword: ''
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errors, setErrors] = useState<ResetPasswordErrors>({});
 
-  const handleSendCode = async () => {
+  const handleSendCode = async (): Promise<void> => {
     if (!formData.email) {
       setErrors({ email: 'Email is required' });
       return;
@@ -47,8 +59,8 @@ const ResetPasswordModal = ({
     }
   };
 
-  const handleResetPassword = async () => {
-    const newErrors = {};
+  const handleResetPassword = async (): Promise<void> => {
+    const newErrors: ResetPasswordErrors = {};
 
     if (!formData.verificationCode) {
       newErrors.verificationCode = 'Verification code is required';
@@ -84,7 +96,7 @@ const ResetPasswordModal = ({
     }
   };
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     setStep(1);
     setFormData({
       email: userEmail || '',
@@ -97,7 +109,7 @@ const ResetPasswordModal = ({
     onClose();
   };
 
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field: keyof ResetPasswordFormData, value: string): void => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -151,7 +163,7 @@ const ResetPasswordModal = ({
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('email', e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                     errors.email ? 'border-red-300' : 'border-gray-300'
                   }`}
@@ -226,7 +238,7 @@ const ResetPasswordModal = ({
                   <input
                     type="text"
                     value={formData.verificationCode}
-                    onChange={(e) => handleInputChange('verificationCode', e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('verificationCode', e.target.value)}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                       errors.verificationCode ? 'border-red-300' : 'border-gray-300'
                     }`}
@@ -245,7 +257,7 @@ const ResetPasswordModal = ({
                   <input
                     type="password"
                     value={formData.newPassword}
-                    onChange={(e) => handleInputChange('newPassword', e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('newPassword', e.target.value)}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                       errors.newPassword ? 'border-red-300' : 'border-gray-300'
                     }`}
@@ -264,7 +276,7 @@ const ResetPasswordModal = ({
                   <input
                     type="password"
                     value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('confirmPassword', e.target.value)}
                     className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
                       errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
                     }`}

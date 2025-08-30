@@ -20,14 +20,19 @@ class UserApiService {
   };
 
   // Update Current User Info
-  updateCurrentUser = async (payload: any) => {
-    try {
-      const data: any = await this.httpClientWrapper.put("auth/me", payload);
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  };
+updateCurrentUser = async (payload: {
+  email: string;
+  full_name: string;
+  current_password?: string;
+  new_password?: string;
+}) => {
+  try {
+    const data: any = await this.httpClientWrapper.put("auth/me", payload);
+    return data; // ✅ backend already returns full updated user object
+  } catch (error) {
+    throw error;
+  }
+};
 
   // Send Code (POST /auth/send-code)
   sendCode = async (email: string) => {

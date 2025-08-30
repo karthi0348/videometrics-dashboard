@@ -70,6 +70,15 @@ interface AnalyticsInsightsResponse {
 // Interface for Analytics List Response
 interface AnalyticsListResponse {
     data: Array<{
+        error_message: any;
+        profile_name: string;
+        sub_profile_name: string;
+        template_name: string;
+        processing_duration: any;
+        file_size: any;
+        video_duration: any;
+        video_url: any;
+        thumbnail_url: any;
         id: number;
         analytics_id: string;
         video_title: string;

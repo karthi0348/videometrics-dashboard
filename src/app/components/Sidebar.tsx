@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import "../styles/Sidebar.css";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import UserApiService from "@/helpers/service/user/user-api-service";
 
 interface MenuItem {
   name: string;
@@ -26,9 +28,16 @@ const Sidebar: React.FC<SidebarProps> = ({
   onNavigate,
   activePage = "videos",
 }) => {
+  const router = useRouter();
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [activeItem, setActiveItem] = useState<string>(activePage);
+  const [user, setUser] = useState<User>({
+    name: "Loading...",
+    username: "@loading",
+    avatar: "",
+  });
+  const [userLoading, setUserLoading] = useState<boolean>(true);
 
   const menuItems: MenuItem[] = [
     { name: "Dashboard", icon: "📊", key: "dashboard" },
@@ -41,12 +50,35 @@ const Sidebar: React.FC<SidebarProps> = ({
     { name: "Help", icon: "💬", key: "help" },
   ];
 
-  const user: User = {
-    name: "Ganta Kaushik",
-    username: "@kaushik123",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-  };
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setUserLoading(true);
+        const userApiService = new UserApiService();
+        const userData = await userApiService.getCurrentUser();
+        
+        // Map the API response to your User interface
+        setUser({
+          name: userData.full_name || userData.name || "Unknown User",
+          username: userData.username ? `@${userData.username}` : "@user",
+          avatar: userData.avatar || userData.profile_picture || ""
+        });
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        // Fallback to default user or handle error
+        setUser({
+          name: "User",
+          username: "@user",
+          avatar: ""
+        });
+      } finally {
+        setUserLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   // Check for mobile screen size
   useEffect(() => {
@@ -78,8 +110,21 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const handleLogout = () => {
     console.log("Logging out...");
-    // Handle logout logic here
-    // You can use router.push('/login') to redirect after logout
+    
+    localStorage.removeItem('authToken');
+    sessionStorage.clear();
+    
+
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage({
+        type: 'LOGOUT'
+      }, 'http://localhost:3000'); 
+      
+      window.opener.focus();
+      window.close();
+    } else {
+      window.location.href = 'http://localhost:3000/auth/login';
+    }
   };
 
   const toggleMobileMenu = () => {
@@ -190,7 +235,11 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="sidebar-footer">
           <div className="user-profile">
             <div className="user-avatar">
-              {user.avatar ? (
+              {userLoading ? (
+                <div className="avatar-placeholder">
+                  <span>...</span>
+                </div>
+              ) : user.avatar ? (
                 <img src={user.avatar} alt={user.name} />
               ) : (
                 <div className="avatar-placeholder">
@@ -201,7 +250,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     .toUpperCase()}
                 </div>
               )}
-              <div className="status-indicator online" />
+              {!userLoading && <div className="status-indicator online" />}
             </div>
 
             <div className="user-info">
@@ -214,6 +263,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 className="logout-btn"
                 onClick={handleLogout}
                 title="Logout"
+                disabled={userLoading}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path
