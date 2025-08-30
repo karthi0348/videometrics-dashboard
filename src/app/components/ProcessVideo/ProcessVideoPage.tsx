@@ -195,7 +195,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
           if (response?.data?.length > 0) {
             // Use the correct property name
             console.log(`Looking for UUID: ${video.uuid}`);
-            console.log(`Available UUIDs:`, response.data.map(v => v.uuid));
+            console.log(`Available UUIDs:`, response.data.map((v:any) => v.uuid));
             const matchingVideo = response.data.find(
             (analyticsVideo: AnalyticsVideo) =>
               analyticsVideo.uuid === video.uuid || // Changed from analytics_id to uuid

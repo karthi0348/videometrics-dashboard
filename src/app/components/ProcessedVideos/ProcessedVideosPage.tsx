@@ -42,52 +42,52 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
 
   // NEW: Load processed videos with better error handling and caching
   const loadProcessedVideos = useCallback(async (page: number = 1, showLoading: boolean = true) => {
-    if (mockMode) {
-      const mockData: ProcessedVideo[] = [
-        {
-          id: 1,
-          analytics_id: "550e8400-e29b-41d4-a716-446655440000",
-          video_title: "test template",
-          processing_status: 'completed',
-          confidence_score: 75.0,
-          created_at: "2025-08-30T11:55:07.000Z",
-          updated_at: "2025-08-30T11:57:22.000Z",
-          profile_name: "profile22",
-          sub_profile_name: "demo",
-          template_name: "test template",
-          processing_duration: "2m 15s",
-          file_size: "45.2 MB",
-          video_duration: "3:24"
-        },
-        {
-          id: 2,
-          analytics_id: "550e8400-e29b-41d4-a716-446655440001",
-          video_title: "test template",
-          processing_status: 'failed',
-          confidence_score: 0,
-          created_at: "2025-08-30T11:49:54.000Z",
-          updated_at: "2025-08-30T11:51:24.000Z",
-          profile_name: "profile22",
-          sub_profile_name: "demo",
-          template_name: "test template",
-          error_message: "Processing failed due to invalid video format",
-          processing_duration: "1m 30s",
-          file_size: "32.1 MB",
-          video_duration: "2:45"
-        },
+    // if (mockMode) {
+    //   const mockData: ProcessedVideo[] = [
+    //     {
+    //       id: 1,
+    //       analytics_id: "550e8400-e29b-41d4-a716-446655440000",
+    //       video_title: "test template",
+    //       processing_status: 'completed',
+    //       confidence_score: 75.0,
+    //       created_at: "2025-08-30T11:55:07.000Z",
+    //       updated_at: "2025-08-30T11:57:22.000Z",
+    //       profile_name: "profile22",
+    //       sub_profile_name: "demo",
+    //       template_name: "test template",
+    //       processing_duration: "2m 15s",
+    //       file_size: "45.2 MB",
+    //       video_duration: "3:24"
+    //     },
+    //     {
+    //       id: 2,
+    //       analytics_id: "550e8400-e29b-41d4-a716-446655440001",
+    //       video_title: "test template",
+    //       processing_status: 'failed',
+    //       confidence_score: 0,
+    //       created_at: "2025-08-30T11:49:54.000Z",
+    //       updated_at: "2025-08-30T11:51:24.000Z",
+    //       profile_name: "profile22",
+    //       sub_profile_name: "demo",
+    //       template_name: "test template",
+    //       error_message: "Processing failed due to invalid video format",
+    //       processing_duration: "1m 30s",
+    //       file_size: "32.1 MB",
+    //       video_duration: "2:45"
+    //     },
        
-      ];
-      setProcessedVideos(mockData);
-      setTotalCount(mockData.length);
-      setTotalPages(Math.ceil(mockData.length / pageSize));
-      return;
-    }
+    //   ];
+    //   setProcessedVideos(mockData);
+    //   setTotalCount(mockData.length);
+    //   setTotalPages(Math.ceil(mockData.length / pageSize));
+    //   return;
+    // }
 
     try {
       if (showLoading) setLoading(true);
       setError("");
       
-      const response = await apiService.getAnalyticsList({
+      const response:any = await apiService.getAnalyticsList({
         status: undefined,
         page: page,
         page_size: pageSize,
@@ -97,16 +97,16 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
 
       console.log("Analytics list response:", response);
 
-      if (response && response.data) {
-        const filteredVideos = response.data.filter(video => 
-          video.processing_status === 'completed' || video.processing_status === 'failed'
+      if (response) {
+        const filteredVideos = response.filter((video:any) => 
+          video.status === 'completed' || video.status === 'failed'
         );
 
-        const transformedVideos: ProcessedVideo[] = filteredVideos.map((video) => ({
+        const transformedVideos: ProcessedVideo[] = filteredVideos.map((video:any) => ({
           id: video.id,
           analytics_id: video.analytics_id,
-          video_title: video.video_title || 'Untitled Video',
-          processing_status: video.processing_status,
+          video_title: video.template_name || 'Untitled Video',
+          processing_status: video.status,
           confidence_score: video.confidence_score || 0,
           created_at: video.created_at,
           updated_at: video.updated_at,
@@ -270,7 +270,7 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status) {
       case 'completed':
         return 'text-green-600 bg-green-50 border-green-200';
       case 'failed':
@@ -353,11 +353,11 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
           <div><span className="font-medium">Sub-Profile:</span> {video.sub_profile_name}</div>
         )}
         
-        {video.processing_status.toLowerCase() === 'completed' && video.confidence_score > 0 && (
+        {video.processing_status === 'completed' && video.confidence_score > 0 && (
           <div><span className="font-medium">Confidence:</span> {video.confidence_score}%</div>
         )}
         
-        {video.processing_status.toLowerCase() === 'failed' && video.error_message && (
+        {video.processing_status === 'failed' && video.error_message && (
           <div className="text-red-600"><span className="font-medium">Error:</span> {video.error_message}</div>
         )}
 
@@ -366,7 +366,7 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
         )}
 
         <div className="pt-2 border-t border-gray-100">
-          {video.processing_status.toLowerCase() === 'completed' ? (
+          {video.processing_status === 'completed' ? (
             <button
               onClick={() => handleViewMetrics(video.analytics_id)}
               className="text-xs bg-teal-50 text-teal-700 px-3 py-1 rounded-md hover:bg-teal-100 transition-colors"
