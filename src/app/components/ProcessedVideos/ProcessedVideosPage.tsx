@@ -2,14 +2,14 @@ import React, { useState, useEffect, useCallback } from "react";
 import ProcessVideoApiService from "../../../helpers/service/processvideo/ProcessVideoApiservice";
 import ProfileApiService from "../../../helpers/service/profile/profile-api-service";
 import SubProfileApiService from "../../../helpers/service/subprofile/subprofile-api-service";
-import {ProcessedVideo} from "./types/types"
-
+import {ProcessedVideo} from "./types/types";
+import VideoMetricsModal from "./modal/VideoMetricsModal";
 
 type ViewMode = 'grid' | 'list' | 'compact';
 
 interface ProcessedVideosPageProps {
-  newProcessedVideo?: ProcessedVideo; // NEW: For receiving newly processed videos
-  onNewVideoReceived?: () => void;    // NEW: Callback when new video is received
+  newProcessedVideo?: ProcessedVideo;
+  onNewVideoReceived?: () => void;
 }
 
 const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
@@ -23,11 +23,19 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
   const [mockMode, setMockMode] = useState(false);
   const [selectedVideos, setSelectedVideos] = useState<Set<number>>(new Set());
 
-  // NEW: State for auto-refresh
+  // Auto-refresh state
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [newVideoAlert, setNewVideoAlert] = useState<string>("");
+
+  // Bulk delete state
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkDeleteResult, setBulkDeleteResult] = useState<string>("");
+
+  // Modal state
+  const [selectedAnalyticsId, setSelectedAnalyticsId] = useState<string | null>(null);
+  const [isMetricsModalOpen, setIsMetricsModalOpen] = useState(false);
 
   // Services
   const [apiService] = useState(new ProcessVideoApiService());
@@ -40,48 +48,46 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize] = useState(12);
 
-  // NEW: Load processed videos with better error handling and caching
   const loadProcessedVideos = useCallback(async (page: number = 1, showLoading: boolean = true) => {
-    // if (mockMode) {
-    //   const mockData: ProcessedVideo[] = [
-    //     {
-    //       id: 1,
-    //       analytics_id: "550e8400-e29b-41d4-a716-446655440000",
-    //       video_title: "test template",
-    //       processing_status: 'completed',
-    //       confidence_score: 75.0,
-    //       created_at: "2025-08-30T11:55:07.000Z",
-    //       updated_at: "2025-08-30T11:57:22.000Z",
-    //       profile_name: "profile22",
-    //       sub_profile_name: "demo",
-    //       template_name: "test template",
-    //       processing_duration: "2m 15s",
-    //       file_size: "45.2 MB",
-    //       video_duration: "3:24"
-    //     },
-    //     {
-    //       id: 2,
-    //       analytics_id: "550e8400-e29b-41d4-a716-446655440001",
-    //       video_title: "test template",
-    //       processing_status: 'failed',
-    //       confidence_score: 0,
-    //       created_at: "2025-08-30T11:49:54.000Z",
-    //       updated_at: "2025-08-30T11:51:24.000Z",
-    //       profile_name: "profile22",
-    //       sub_profile_name: "demo",
-    //       template_name: "test template",
-    //       error_message: "Processing failed due to invalid video format",
-    //       processing_duration: "1m 30s",
-    //       file_size: "32.1 MB",
-    //       video_duration: "2:45"
-    //     },
-       
-    //   ];
-    //   setProcessedVideos(mockData);
-    //   setTotalCount(mockData.length);
-    //   setTotalPages(Math.ceil(mockData.length / pageSize));
-    //   return;
-    // }
+    if (mockMode) {
+      const mockData: ProcessedVideo[] = [
+        {
+          id: 1,
+          analytics_id: "550e8400-e29b-41d4-a716-446655440000",
+          video_title: "test template",
+          processing_status: 'completed',
+          confidence_score: 75.0,
+          created_at: "2025-08-30T11:55:07.000Z",
+          updated_at: "2025-08-30T11:57:22.000Z",
+          profile_name: "profile22",
+          sub_profile_name: "demo",
+          template_name: "test template",
+          processing_duration: "2m 15s",
+          file_size: "45.2 MB",
+          video_duration: "3:24"
+        },
+        {
+          id: 2,
+          analytics_id: "550e8400-e29b-41d4-a716-446655440001",
+          video_title: "test template 2",
+          processing_status: 'failed',
+          confidence_score: 0,
+          created_at: "2025-08-30T11:49:54.000Z",
+          updated_at: "2025-08-30T11:51:24.000Z",
+          profile_name: "profile22",
+          sub_profile_name: "demo",
+          template_name: "test template",
+          error_message: "Processing failed due to invalid video format",
+          processing_duration: "1m 30s",
+          file_size: "32.1 MB",
+          video_duration: "2:45"
+        },
+      ];
+      setProcessedVideos(mockData);
+      setTotalCount(mockData.length);
+      setTotalPages(Math.ceil(mockData.length / pageSize));
+      return;
+    }
 
     try {
       if (showLoading) setLoading(true);
@@ -91,11 +97,9 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
         status: undefined,
         page: page,
         page_size: pageSize,
-        sort_by: 'updated_at',
+        sort_by: 'processing_completed_at',
         sort_order: 'desc'
       });
-
-      console.log("Analytics list response:", response);
 
       if (response) {
         const filteredVideos = response.filter((video:any) => 
@@ -109,7 +113,7 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
           processing_status: video.status,
           confidence_score: video.confidence_score || 0,
           created_at: video.created_at,
-          updated_at: video.updated_at,
+          updated_at: video.processing_completed_at,
           error_message: video.error_message,
           profile_name: video.profile_name || "Unknown Profile",
           sub_profile_name: video.sub_profile_name || "Unknown Sub-Profile",
@@ -121,7 +125,6 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
           thumbnail_url: video.thumbnail_url
         }));
 
-        // Check for new videos (only if not the initial load)
         if (!showLoading && processedVideos.length > 0) {
           const newVideos = transformedVideos.filter(newVideo => 
             !processedVideos.some(existingVideo => existingVideo.analytics_id === newVideo.analytics_id)
@@ -155,12 +158,8 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
     }
   }, [mockMode, processedVideos.length, apiService, pageSize]);
 
-  // NEW: Handle new processed video from parent component
   useEffect(() => {
     if (newProcessedVideo) {
-      console.log("Received new processed video:", newProcessedVideo);
-      
-      // Add to the list if not already present
       setProcessedVideos(prev => {
         const exists = prev.some(video => video.analytics_id === newProcessedVideo.analytics_id);
         if (!exists) {
@@ -171,20 +170,17 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
         return prev;
       });
 
-      // Notify parent that we've received the video
       if (onNewVideoReceived) {
         onNewVideoReceived();
       }
     }
   }, [newProcessedVideo, onNewVideoReceived]);
 
-  // NEW: Auto-refresh functionality
   useEffect(() => {
     if (autoRefresh && processedVideos.length > 0) {
       const interval = setInterval(() => {
-        console.log("Auto-refreshing processed videos...");
-        loadProcessedVideos(currentPage, false); // Don't show loading spinner for auto-refresh
-      }, 30000); // Auto-refresh every 30 seconds
+        loadProcessedVideos(currentPage, false);
+      }, 30000);
 
       setRefreshInterval(interval);
       
@@ -199,12 +195,10 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
     }
   }, [autoRefresh, processedVideos.length, currentPage, loadProcessedVideos]);
 
-  // Initial load
   useEffect(() => {
     loadProcessedVideos(1);
   }, [mockMode]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (refreshInterval) {
@@ -225,7 +219,13 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
   };
 
   const handleViewMetrics = (analyticsId: string) => {
-    console.log(`Navigate to analytics/metrics for analytics ID: ${analyticsId}`);
+    setSelectedAnalyticsId(analyticsId);
+    setIsMetricsModalOpen(true);
+  };
+
+  const handleCloseMetricsModal = () => {
+    setIsMetricsModalOpen(false);
+    setSelectedAnalyticsId(null);
   };
 
   const handlePlayVideo = (videoUrl?: string) => {
@@ -243,11 +243,67 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
 
     try {
       await apiService.deleteAnalytics(analyticsId);
-      console.log(`Deleted analytics: ${analyticsId}`);
       handleRefresh();
     } catch (error) {
       console.error("Error deleting analytics:", error);
       setError("Failed to delete video analytics");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedVideos.size === 0) {
+      setError("Please select videos to delete");
+      return;
+    }
+
+    const selectedCount = selectedVideos.size;
+    const confirmMessage = `Are you sure you want to delete ${selectedCount} selected video${selectedCount > 1 ? 's' : ''}? This action cannot be undone.`;
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setBulkDeleting(true);
+    setBulkDeleteResult("");
+    setError("");
+
+    try {
+      if (mockMode) {
+        setTimeout(() => {
+          setProcessedVideos(prev => prev.filter(video => !selectedVideos.has(video.id)));
+          setSelectedVideos(new Set());
+          setBulkDeleteResult(`Successfully deleted ${selectedCount} video${selectedCount > 1 ? 's' : ''}`);
+          setTimeout(() => setBulkDeleteResult(""), 5000);
+          setBulkDeleting(false);
+        }, 1500);
+        return;
+      }
+
+      const response = await apiService.bulkDelete({
+        entity_type: "analytics",
+        entity_ids: Array.from(selectedVideos),
+        confirm: true
+      });
+
+      if (response.successful > 0) {
+        setBulkDeleteResult(
+          `Successfully deleted ${response.successful} video${response.successful > 1 ? 's' : ''}` +
+          (response.failed > 0 ? `. Failed to delete ${response.failed} video${response.failed > 1 ? 's' : ''}.` : '')
+        );
+        
+        setSelectedVideos(new Set());
+        handleRefresh();
+      } else {
+        setError(`Failed to delete videos. ${response.errors?.[0]?.msg || 'Unknown error occurred'}`);
+      }
+
+      setTimeout(() => setBulkDeleteResult(""), 5000);
+      
+    } catch (error) {
+      console.error("Error during bulk delete:", error);
+      setError(error instanceof Error ? error.message : "Failed to delete selected videos");
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -292,9 +348,17 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
   };
 
   const renderVideoCard = (video: ProcessedVideo) => (
-    <div key={video.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div key={video.id} className={`bg-white border rounded-lg p-4 hover:shadow-md transition-all duration-200 ${
+      selectedVideos.has(video.id) ? 'border-teal-500 bg-teal-50' : 'border-gray-200'
+    }`}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-2 flex-1 min-w-0">
+          <input
+            type="checkbox"
+            checked={selectedVideos.has(video.id)}
+            onChange={() => handleSelectVideo(video.id)}
+            className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+          />
           <h3 className="font-medium text-gray-900 truncate">{video.video_title}</h3>
           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(video.processing_status)}`}>
             {video.processing_status}
@@ -416,7 +480,6 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
                 <p className="text-gray-600 mt-1">
                   View and manage your processed video analytics
                 </p>
-                {/* NEW: Last refresh time and auto-refresh status */}
                 <p className="text-xs text-gray-500 mt-1">
                   Last updated: {lastRefresh.toLocaleTimeString()}
                   {autoRefresh && refreshInterval && (
@@ -429,7 +492,6 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
             </div>
 
             <div className="flex flex-wrap items-center space-x-3">
-              {/* NEW: Auto-refresh toggle */}
               <label className="flex items-center space-x-2 text-sm">
                 <input
                   type="checkbox"
@@ -470,7 +532,7 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
             </div>
           </div>
 
-          {/* View Mode Controls */}
+          {/* View Mode Controls and Bulk Actions */}
           <div className="flex items-center justify-between pb-4">
             <div className="flex items-center space-x-4">
               <div className="flex items-center bg-gray-100 rounded-lg p-1">
@@ -517,6 +579,33 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
             </div>
 
             <div className="flex items-center space-x-4">
+              {selectedVideos.size > 0 && (
+                <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+                  <span className="text-sm text-gray-700 font-medium">
+                    {selectedVideos.size} selected
+                  </span>
+                  <button
+                    onClick={handleBulkDelete}
+                    disabled={bulkDeleting}
+                    className="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {bulkDeleting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b border-white mr-2"></div>
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
               <button
                 onClick={handleSelectAll}
                 className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors"
@@ -524,14 +613,14 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                Select Videos
+                {selectedVideos.size === processedVideos.length ? 'Deselect All' : 'Select All'}
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* NEW: New video alert */}
+      {/* Alerts */}
       {newVideoAlert && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -545,7 +634,19 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
         </div>
       )}
 
-      {/* Error Alert */}
+      {bulkDeleteResult && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex">
+              <svg className="w-5 h-5 text-blue-400 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div className="text-blue-800">{bulkDeleteResult}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -581,6 +682,48 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
           </div>
         ) : (
           <>
+            {selectedVideos.size > 0 && (
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-teal-800 font-medium">
+                      {selectedVideos.size} video{selectedVideos.size > 1 ? 's' : ''} selected
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setSelectedVideos(new Set())}
+                      className="text-teal-700 hover:text-teal-800 text-sm font-medium"
+                    >
+                      Clear selection
+                    </button>
+                    <button
+                      onClick={handleBulkDelete}
+                      disabled={bulkDeleting}
+                      className="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {bulkDeleting ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b border-white mr-2"></div>
+                          Deleting...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete Selected
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className={`grid gap-6 ${
               viewMode === 'grid' 
                 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' 
@@ -591,7 +734,6 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
               {processedVideos.map(renderVideoCard)}
             </div>
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 mt-8 rounded-lg">
                 <div className="flex flex-1 justify-between sm:hidden">
@@ -682,6 +824,15 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
           </>
         )}
       </div>
+
+      {/* Video Metrics Modal */}
+      <VideoMetricsModal
+        isOpen={isMetricsModalOpen}
+        onClose={handleCloseMetricsModal}
+        analyticsId={selectedAnalyticsId}
+        apiService={apiService}
+        mockMode={mockMode}
+      />
     </div>
   );
 };

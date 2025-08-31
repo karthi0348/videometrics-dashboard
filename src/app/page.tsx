@@ -9,39 +9,9 @@ import TemplatesPage from './components/Templates/TemplatesPage';
 import ProcessVideoPage from './components/ProcessVideo/ProcessVideoPage';
 import ProcessedVideosPage from './components/ProcessedVideos/ProcessedVideosPage';
 import SettingsPage from './components/Settings/SettingsPage'; 
-import HelpPage from './components/Help/HelpPage'; // Import the new HelpPage component
+import HelpPage from './components/Help/HelpPage';
+import DashboardPage from './components/Dashboard/DashboardPage'; // Import the new DashboardPage
 import { Video, ViewMode } from './types';
-
-// Placeholder components for other pages
-const DashboardPage = () => (
-  <div className="p-4 sm:p-6">
-    <div className="text-center">
-      <div className="mb-6">
-        <div className="mx-auto w-16 h-16 sm:w-24 sm:h-24 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 sm:w-12 sm:h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-        </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Dashboard</h2>
-        <p className="text-sm sm:text-base text-gray-600">Welcome to your video analytics dashboard</p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 sm:p-6 rounded-xl border border-blue-200">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Total Videos</h3>
-          <p className="text-2xl sm:text-3xl font-bold text-blue-600">24</p>
-        </div>
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 sm:p-6 rounded-xl border border-green-200">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Processed</h3>
-          <p className="text-2xl sm:text-3xl font-bold text-green-600">18</p>
-        </div>
-        <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 sm:p-6 rounded-xl border border-purple-200 sm:col-span-2 lg:col-span-1">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Analytics</h3>
-          <p className="text-2xl sm:text-3xl font-bold text-purple-600">12k</p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 interface HomeProps {
   propVideos?: Video[];
@@ -70,7 +40,7 @@ const Home: React.FC = () => {
   const renderMainContent = () => {
     switch (activePage) {
       case 'dashboard':
-        return <DashboardPage />;
+        return <DashboardPage videos={videos} onNavigate={handleNavigation} />;
       case 'processed':
         return <ProcessedVideosPage />;
       case 'process':
@@ -132,7 +102,7 @@ const Home: React.FC = () => {
 
   // Special handling for pages that need full-width layout
   const renderContentWithLayout = () => {
-    if (['templates', 'profiles', 'videos', 'settings', 'help'].includes(activePage)) {
+    if (['templates', 'profiles', 'videos', 'settings', 'help', 'dashboard'].includes(activePage)) {
       return renderMainContent();
     }
 
@@ -167,7 +137,7 @@ const Home: React.FC = () => {
           
           {/* Desktop Main Content */}
           <main className="flex-1 overflow-auto">
-            {['templates', 'profiles', 'videos', 'settings', 'help'].includes(activePage) ? (
+            {['templates', 'profiles', 'videos', 'settings', 'help', 'dashboard'].includes(activePage) ? (
               renderContentWithLayout()
             ) : (
               <div className="px-6 py-8">
@@ -197,7 +167,7 @@ const Home: React.FC = () => {
         {/* Mobile Main Content */}
         <main className="flex-1 overflow-auto bg-gray-50 min-h-0">
           <div className="h-full">
-            {['profiles', 'videos', 'templates', 'settings', 'help'].includes(activePage) ? (
+            {['profiles', 'videos', 'templates', 'settings', 'help', 'dashboard'].includes(activePage) ? (
               <div className="h-full">
                 {renderMainContent()}
               </div>

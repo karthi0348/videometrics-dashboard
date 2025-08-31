@@ -16,3 +16,46 @@ export interface ProcessedVideo {
   file_size?: string;
   video_duration?: string;
 }
+
+// types.ts
+
+export interface AnalyticsData {
+  id: number;
+  uuid: string;
+  video_id: number;
+  profile_id: number;
+  sub_profile_id: number;
+  template_id: number;
+  original_video_url: string;
+  processed_metadata: any[];
+  generated_charts: any[];
+  insights: any[];
+  confidence_scores: number[];
+  timestamp: string;
+  status: string;
+  error_message: string;
+  processing_started_at: string;
+  processing_completed_at: string;
+  processing_duration_seconds: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InsightData {
+  insight_type: string;
+  title: string;
+  description: string;
+  confidence: string;
+  severity: string;
+  data: any;
+  action_items: string[];
+  timestamp: string;
+}
+
+export interface VideoMetricsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  analyticsId: string | null;
+  apiService?: any;
+  mockMode?: boolean;
+}

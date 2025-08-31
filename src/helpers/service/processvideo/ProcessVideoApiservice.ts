@@ -1,7 +1,7 @@
 import HttpClientWrapper from "@/helpers/http-client-wrapper";
 
 // Interface for Process Video Request
-interface ProcessVideoRequest {
+export interface ProcessVideoRequest {
     video_url: string;
     profile_id: number;
     sub_profile_id: number;
@@ -11,7 +11,7 @@ interface ProcessVideoRequest {
 }
 
 // Interface for Process Video Success Response
-interface ProcessVideoResponse {
+export interface ProcessVideoResponse {
     video_id: number;
     uuid: string;
     status: string;
@@ -24,7 +24,7 @@ interface ProcessVideoResponse {
 }
 
 // Interface for Validation Error Response
-interface ValidationErrorResponse {
+export interface ValidationErrorResponse {
     detail: Array<{
         loc: string[];
         msg: string;
@@ -33,7 +33,7 @@ interface ValidationErrorResponse {
 }
 
 // Interface for Get Analytics Response
-interface GetAnalyticsResponse {
+export interface GetAnalyticsResponse {
     id: number;
     uuid: string;
     video_id: number;
@@ -56,7 +56,7 @@ interface GetAnalyticsResponse {
 }
 
 // Interface for Analytics Insights Response
-interface AnalyticsInsightsResponse {
+export interface AnalyticsInsightsResponse {
     insight_type: string;
     title: string;
     description: string;
@@ -68,7 +68,7 @@ interface AnalyticsInsightsResponse {
 }
 
 // Interface for Analytics List Response
-interface AnalyticsListResponse {
+export interface AnalyticsListResponse {
     data: Array<{
         error_message: any;
         profile_name: string;
@@ -94,7 +94,7 @@ interface AnalyticsListResponse {
 }
 
 // Interface for Analytics List Query Parameters
-interface AnalyticsListParams {
+export interface AnalyticsListParams {
     status?: string;
     date_from?: string;
     date_to?: string;
@@ -103,6 +103,36 @@ interface AnalyticsListParams {
     sort_by?: string;
     sort_order?: string;
 }
+
+// Interface for Bulk Delete Request
+export interface BulkDeleteRequest {
+    entity_type: string;
+    entity_ids: number[];
+    confirm: boolean;
+}
+
+// Interface for Bulk Delete Response (from screenshot: 200 and 422 cases)
+export interface BulkDeleteResponse {
+    operation: string;
+    total_requested: number;
+    successful: number;
+    failed: number;
+    errors: Array<{
+        loc?: string[];
+        msg?: string;
+        type?: string;
+    }>;
+}
+
+export interface ChartData {
+  title: string;
+  image_url: string;
+  summary: string;
+}
+
+
+
+export type AnalyticsChartsResponse = ChartData[];
 
 class ProcessVideoApiService {
 
@@ -116,17 +146,17 @@ class ProcessVideoApiService {
     processVideo = async (payload: ProcessVideoRequest): Promise<ProcessVideoResponse> => {
         try {
             let data: ProcessVideoResponse = await this.httpClientWrapper.post('process-video', payload);
-            return (data);
+            return data;
         } catch (error) {
             throw error;
         }
     }
 
     // GET /analytics/{analytics_id} - Get Analytics
-    getAnalytics = async (analyticsId: string): Promise<GetAnalyticsResponse> => {
+    getAnalytics = async (analyticsId: string | number): Promise<GetAnalyticsResponse> => {
         try {
             let data: GetAnalyticsResponse = await this.httpClientWrapper.get(`analytics/${analyticsId}`);
-            return (data);
+            return data;
         } catch (error) {
             throw error;
         }
@@ -136,7 +166,7 @@ class ProcessVideoApiService {
     deleteAnalytics = async (analyticsId: string): Promise<string> => {
         try {
             let data: string = await this.httpClientWrapper.delete(`analytics/${analyticsId}`);
-            return (data);
+            return data;
         } catch (error) {
             throw error;
         }
@@ -146,27 +176,27 @@ class ProcessVideoApiService {
     getAnalyticsInsights = async (analyticsId: string): Promise<AnalyticsInsightsResponse> => {
         try {
             let data: AnalyticsInsightsResponse = await this.httpClientWrapper.get(`analytics/${analyticsId}/insights`);
-            return (data);
+            return data;
         } catch (error) {
             throw error;
         }
     }
 
     // GET /analytics/{analytics_id}/charts - Get Analytics Charts
-    getAnalyticsCharts = async (analyticsId: string): Promise<string> => {
-        try {
-            let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/charts`);
-            return (data);
-        } catch (error) {
-            throw error;
+        getAnalyticsCharts = async (analyticsId: string): Promise<string> => {
+            try {
+                let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/charts`);
+                return data;
+            } catch (error) {
+                throw error;
+            }
         }
-    }
 
     // GET /analytics/{analytics_id}/summary - Get Analytics Summary
     getAnalyticsSummary = async (analyticsId: string): Promise<string> => {
         try {
             let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/summary`);
-            return (data);
+            return data;
         } catch (error) {
             throw error;
         }
@@ -189,12 +219,21 @@ class ProcessVideoApiService {
                 }
             }
             let data: AnalyticsListResponse = await this.httpClientWrapper.get(endpoint);
-            return (data);
+            return data;
         } catch (error) {
             throw error;
         }
     }
 
+    // POST /bulk/delete - Bulk Delete
+    bulkDelete = async (payload: BulkDeleteRequest): Promise<BulkDeleteResponse> => {
+        try {
+            let data: BulkDeleteResponse = await this.httpClientWrapper.post('bulk/delete', payload);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export default ProcessVideoApiService;

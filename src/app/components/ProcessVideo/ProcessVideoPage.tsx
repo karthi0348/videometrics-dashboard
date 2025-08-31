@@ -29,6 +29,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
   subProfiles: propSubProfiles,
   templates: propTemplates,
   onVideoProcessed,
+  onRedirectToNextPage, // Add this prop for redirect callback
 }) => {
   // State for API data
   const [videos, setVideos] = useState<any[]>([]);
@@ -159,8 +160,59 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
     }
   };
 
-  // Updated checkProcessingStatus function with proper typing
+  // New function to check processing queue and redirect if empty
+  const checkProcessingQueue = useCallback(async (): Promise<boolean> => {
+    try {
+      console.log("Checking processing queue...");
+      
+      const response: AnalyticsResponse = await apiService.getAnalyticsList({
+        page: 1,
+        page_size: 50,
+        sort_by: "created_at",
+        sort_order: "desc",
+        status: "processing",
+      });
+
+      console.log("Processing queue response:", response);
+
+      // Check if the response data is empty
+      const hasProcessingVideos = response?.data && response.data.length > 0;
+      
+      if (!hasProcessingVideos) {
+        console.log("No videos in processing queue - triggering redirect");
+        
+        // Clear any existing processing queue
+        setProcessingQueue([]);
+        
+        // Trigger redirect to next page
+        if (onRedirectToNextPage) {
+          onRedirectToNextPage();
+        } else {
+          // Fallback redirect logic if no callback provided
+          console.log("No redirect callback provided, implement fallback redirect here");
+          // You can implement a fallback redirect here, for example:
+          // window.location.href = '/next-page';
+          // or use react-router navigation
+        }
+        
+        return true; // Indicates redirect was triggered
+      }
+
+      return false; // No redirect needed
+    } catch (error) {
+      console.error("Error checking processing queue:", error);
+      return false;
+    }
+  }, [apiService, onRedirectToNextPage]);
+
+  // Updated checkProcessingStatus function with queue check and redirect
   const checkProcessingStatus = useCallback(async () => {
+    // First check if processing queue is empty and redirect if needed
+    const shouldRedirect = await checkProcessingQueue();
+    if (shouldRedirect) {
+      return; // Stop processing if we redirected
+    }
+
     if (processingQueue.length === 0) return;
 
     try {
@@ -187,6 +239,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
               page_size: 50,
               sort_by: "updated_at",
               sort_order: "desc",
+              status: "processing",
             }
           );
 
@@ -195,7 +248,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
           if (response?.data?.length > 0) {
             // Use the correct property name
             console.log(`Looking for UUID: ${video.uuid}`);
-            console.log(`Available UUIDs:`, response.data.map((v:any) => v.uuid));
+            console.log(`Available UUIDs:`, response.data.map(v => v.uuid));
             const matchingVideo = response.data.find(
             (analyticsVideo: AnalyticsVideo) =>
               analyticsVideo.uuid === video.uuid || // Changed from analytics_id to uuid
@@ -246,6 +299,9 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                 };
               }
             }
+          } else {
+            // If no processing videos found, this might indicate all processing is complete
+            console.log("No processing videos found in response");
           }
           return null;
         } catch (error: any) {
@@ -317,7 +373,18 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
     } catch (error) {
       console.error("Error in status polling:", error);
     }
-  }, [processingQueue, apiService, onVideoProcessed]);
+  }, [processingQueue, apiService, onVideoProcessed, checkProcessingQueue]);
+
+  // Initial queue check on component mount
+  useEffect(() => {
+    const initialQueueCheck = async () => {
+      if (!loading) {
+        await checkProcessingQueue();
+      }
+    };
+
+    initialQueueCheck();
+  }, [loading, checkProcessingQueue]);
 
   // Start status polling when there are videos in queue
   useEffect(() => {
@@ -463,6 +530,8 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
     try {
       await Promise.all([loadVideos(), loadProfiles()]);
+      // Also check queue after refresh
+      await checkProcessingQueue();
     } catch (err) {
       console.error("Error refreshing data:", err);
       setError("Failed to refresh data. Please try again.");
