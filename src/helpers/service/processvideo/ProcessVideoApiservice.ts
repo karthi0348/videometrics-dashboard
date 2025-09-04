@@ -153,16 +153,62 @@ class ProcessVideoApiService {
     }
 
     // GET /analytics/{analytics_id} - Get Analytics
-    getAnalytics = async (analyticsId: string | number): Promise<GetAnalyticsResponse> => {
-        try {
-            let data: GetAnalyticsResponse = await this.httpClientWrapper.get(`analytics/${analyticsId}`);
-            return data;
-        } catch (error) {
-            throw error;
-        }
+ getAnalytics = async (analyticsId: string): Promise<string> => {
+    try {
+      let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}`);
+      return data;
+    } catch (error) {
+      throw error;
     }
+  }
+// Chart API Service Methods - Add these to your existing API service class
 
-    // DELETE /analytics/{analytics_id} - Delete Analytics
+// GET /analytics/{analytics_id}/charts - Get Charts for Analytics
+getCharts = async (analyticsId: string): Promise<string> => {
+  try {
+    let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/charts`);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+getSummary = async (analyticsId: string): Promise<string> => {
+  try {
+    let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/summary`);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+// GET /analytics/{analytics_id}/charts/{chart_id} - Get Specific Chart
+getChart = async (analyticsId: string, chartId: string): Promise<string> => {
+  try {
+    let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/charts/${chartId}`);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// POST /analytics/{analytics_id}/charts/{chart_id}/refresh - Refresh Specific Chart
+refreshChart = async (analyticsId: string, chartId: string): Promise<string> => {
+  try {
+    let data: string = await this.httpClientWrapper.post(`analytics/${analyticsId}/charts/${chartId}/refresh`, {});
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// POST /analytics/{analytics_id}/charts/refresh - Refresh All Charts
+refreshAllCharts = async (analyticsId: string): Promise<string> => {
+  try {
+    let data: string = await this.httpClientWrapper.post(`analytics/${analyticsId}/charts/refresh`, {});
+    return data;
+  } catch (error) {
+    throw error;
+  }
+} 
     deleteAnalytics = async (analyticsId: string): Promise<string> => {
         try {
             let data: string = await this.httpClientWrapper.delete(`analytics/${analyticsId}`);

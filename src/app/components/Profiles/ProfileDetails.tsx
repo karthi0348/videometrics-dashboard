@@ -33,21 +33,27 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h2 className="text-2xl font-bold" style={{ color: 'var(--purple-primary)' }}>
+    <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 space-y-4 sm:space-y-0">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate" style={{ color: 'var(--purple-primary)' }}>
             Profile Details
           </h2>
-          <p className="text-gray-600 mt-1">
-            View and manage the details of <span style={{ color: 'var(--purple-secondary)', fontWeight: '500' }}>{profile.name}</span>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
+            View and manage the details of{' '}
+            <span className="truncate inline-block max-w-full sm:max-w-xs lg:max-w-none" style={{ color: 'var(--purple-secondary)', fontWeight: '500' }}>
+              {profile.name}
+            </span>
           </p>
         </div>
-        <div className="flex gap-2">
+        
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 w-full sm:w-auto">
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg shadow transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-white rounded-lg shadow transition-colors w-full sm:w-auto"
               style={{ backgroundColor: 'var(--purple-primary)' }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'var(--purple-secondary)';
@@ -57,13 +63,13 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
               }}
             >
               <Edit className="w-4 h-4" />
-              Edit
+              <span className="sm:inline">Edit</span>
             </button>
           )}
           {isEditing && (
             <button
               onClick={handleSave}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg shadow transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium text-white rounded-lg shadow transition-colors w-full sm:w-auto"
               style={{ backgroundColor: 'rgb(34, 197, 94)' }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgb(22, 163, 74)';
@@ -72,12 +78,12 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 e.currentTarget.style.backgroundColor = 'rgb(34, 197, 94)';
               }}
             >
-              Save
+              <span className="sm:inline">Save</span>
             </button>
           )}
           <button
             onClick={() => onDelete(profile.id)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg shadow transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-sm font-medium rounded-lg shadow transition-colors w-full sm:w-auto"
             style={{
               color: 'rgb(185, 28, 28)',
               backgroundColor: 'rgb(254, 226, 226)'
@@ -90,20 +96,21 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
             }}
           >
             <Trash2 className="w-4 h-4" />
-            Delete
+            <span className="sm:inline">Delete</span>
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border p-6 space-y-4"
+      {/* Main Content */}
+      <div className="bg-white rounded-lg border p-4 sm:p-6 space-y-4"
            style={{ 
              borderColor: 'rgb(196, 127, 254, 0.3)',
              boxShadow: '0 4px 6px -1px rgb(81, 77, 223, 0.05), 0 2px 4px -1px rgb(81, 77, 223, 0.03)'
            }}>
         {isEditing ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 gap-4 sm:gap-6">
+            <div className="sm:col-span-2 lg:col-span-3 xl:col-span-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Name
               </label>
               <input 
@@ -111,7 +118,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 name="name" 
                 value={editedProfile.name} 
                 onChange={handleChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -126,8 +133,8 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 }}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+            <div className="sm:col-span-2 lg:col-span-3 xl:col-span-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Email
               </label>
               <input 
@@ -135,7 +142,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 name="email" 
                 value={editedProfile.email} 
                 onChange={handleChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -150,8 +157,8 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 }}
               />
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+            <div className="sm:col-span-2 lg:col-span-3 xl:col-span-2">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Description
               </label>
               <textarea 
@@ -159,7 +166,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 value={editedProfile.description} 
                 onChange={handleChange} 
                 rows={3} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm resize-y"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -175,7 +182,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
               />
             </div>
             <div>
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Contact Person
               </label>
               <input 
@@ -183,7 +190,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 name="contactPerson" 
                 value={editedProfile.contactPerson} 
                 onChange={handleChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -199,7 +206,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
               />
             </div>
             <div>
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Contact Email
               </label>
               <input 
@@ -207,7 +214,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 name="contactEmail" 
                 value={editedProfile.contactEmail} 
                 onChange={handleChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -223,7 +230,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
               />
             </div>
             <div>
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Phone Number
               </label>
               <input 
@@ -231,7 +238,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 name="phoneNumber" 
                 value={editedProfile.phoneNumber} 
                 onChange={handleChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -247,7 +254,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
               />
             </div>
             <div>
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Location
               </label>
               <input 
@@ -255,7 +262,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 name="location" 
                 value={editedProfile.location} 
                 onChange={handleChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -271,7 +278,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
               />
             </div>
             <div>
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Industry
               </label>
               <input 
@@ -279,7 +286,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 name="industry" 
                 value={editedProfile.industry} 
                 onChange={handleChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -295,7 +302,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
               />
             </div>
             <div>
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Business Type
               </label>
               <input 
@@ -303,7 +310,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 name="businessType" 
                 value={editedProfile.businessType} 
                 onChange={handleChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -319,14 +326,14 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
               />
             </div>
             <div>
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Status
               </label>
               <select 
                 name="status" 
                 value={editedProfile.status} 
                 onChange={handleChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm bg-white"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -344,15 +351,15 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
                 <option value="Inactive">Inactive</option>
               </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+            <div className="sm:col-span-2 lg:col-span-3 xl:col-span-1">
+              <label className="block text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Tags (comma-separated)
               </label>
               <input 
                 type="text" 
                 value={editedProfile.tags.join(', ')} 
                 onChange={handleTagsChange} 
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                className="block w-full rounded-md border shadow-sm px-3 py-2 text-sm"
                 style={{
                   borderColor: 'rgb(196, 127, 254, 0.3)'
                 }}
@@ -369,7 +376,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-2 gap-4 sm:gap-6">
             <InfoItem label="Profile Name" value={profile.name} />
             <InfoItem label="Email" value={profile.email} />
             <InfoItem label="Contact Person" value={profile.contactPerson} />
@@ -380,21 +387,23 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
             <InfoItem label="Business Type" value={profile.businessType} />
             <InfoItem label="Status" value={profile.status} />
             <InfoItem label="Tags" value={profile.tags.join(', ')} />
-            <div className="md:col-span-2">
-              <p className="text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+            <div className="sm:col-span-2 lg:col-span-3 xl:col-span-2">
+              <p className="text-sm font-medium mb-1" style={{ color: 'var(--purple-secondary)' }}>
                 Description
               </p>
-              <p className="mt-1 text-sm" style={{ color: 'var(--purple-primary)' }}>
+              <p className="text-sm break-words" style={{ color: 'var(--purple-primary)' }}>
                 {profile.description}
               </p>
             </div>
           </div>
         )}
       </div>
-      <div className="flex gap-2 justify-end">
+      
+      {/* View Sub-profiles Button */}
+      <div className="flex justify-center sm:justify-end">
         <button
           onClick={onViewSubProfiles}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg shadow transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2 text-sm font-medium rounded-lg shadow transition-colors w-full sm:w-auto max-w-xs sm:max-w-none"
           style={{
             backgroundColor: 'rgb(196, 127, 254, 0.1)',
             color: 'var(--purple-secondary)'
@@ -407,7 +416,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
           }}
         >
           <Eye className="w-4 h-4" />
-          View Sub-profiles
+          <span>View Sub-profiles</span>
         </button>
       </div>
     </div>
@@ -416,11 +425,11 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
 
 // Reusable component for displaying key-value pairs
 const InfoItem = ({ label, value }: { label: string; value: string }) => (
-  <div>
-    <p className="text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
+  <div className="min-w-0">
+    <p className="text-sm font-medium mb-1 truncate" style={{ color: 'var(--purple-secondary)' }}>
       {label}
     </p>
-    <p className="mt-1 text-sm" style={{ color: 'black' }}>
+    <p className="text-sm break-words" style={{ color: 'black' }}>
       {value}
     </p>
   </div>

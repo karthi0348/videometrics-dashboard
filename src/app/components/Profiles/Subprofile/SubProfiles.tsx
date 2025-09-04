@@ -191,7 +191,7 @@ const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 style={{ color: 'var(--purple-secondary)' }} className="text-2xl font-bold">Sub-Profiles</h2>
+          <h2 style={{ color: 'var(--purple-secondary)' }} className="text-3xl font-bold">Sub-Profiles</h2>
           <p className="text-sm text-gray-500 mt-1">
             Manage sub-profiles for {profile.name} ({filteredSubProfiles.length} of {subProfiles.length})
           </p>
@@ -352,10 +352,7 @@ const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
                   <button
                     onClick={() => handleViewSubProfile(subProfile.id)}
                     className="p-2 text-gray-400 rounded transition-colors"
-                    style={{ 
-                      '--hover-bg': 'var(--purple-accent)',
-                      '--hover-text': 'white'
-                    }}
+                
                     onMouseOver={(e) => {
                       e.currentTarget.style.backgroundColor = 'var(--purple-accent)';
                       e.currentTarget.style.color = 'white';

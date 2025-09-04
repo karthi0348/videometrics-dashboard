@@ -97,7 +97,7 @@ const AssignmentModal = ({
                             <select
                                 value={selectedProfile}
                                 onChange={(e) => setSelectedProfile(e.target.value)}
-                                className="w-full px-3 py-2 border-2 border-teal-500 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 appearance-none bg-white"
+                                className="w-full px-3 py-2 border-2 border-purple-500 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 appearance-none bg-white"
                             >
                                 <option value="">Select a profile</option>
                                 {profile.map((profile: any) => (
@@ -123,7 +123,7 @@ const AssignmentModal = ({
                             <select
                                 value={selectedPriority}
                                 onChange={(e) => setSelectedPriority(e.target.value as '1' | '2' | '3')}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 appearance-none bg-white"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 appearance-none bg-white"
                             >
                                 <option value="1">High (1)</option>
                                 <option value="2">Medium (2)</option>
@@ -150,7 +150,7 @@ const AssignmentModal = ({
                         onClick={handleAssign}
                         disabled={!selectedProfile}
                         className={`px-4 py-2 text-white rounded-lg transition-colors ${selectedProfile
-                            ? 'bg-teal-500 hover:bg-teal-600'
+                            ? 'bg-purple-500 hover:bg-purple'
                             : 'bg-gray-300 cursor-not-allowed'
                             }`}
                     >

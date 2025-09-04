@@ -59,3 +59,50 @@ export interface VideoMetricsModalProps {
   apiService?: any;
   mockMode?: boolean;
 }
+
+// Add these TypeScript declarations at the top of your VideoMetricsModal file
+// or in a separate types file
+
+declare global {
+  interface Window {
+    jsPDF: {
+      jsPDF: new (options?: {
+        orientation?: 'portrait' | 'landscape';
+        unit?: 'mm' | 'pt' | 'px' | 'in' | 'ex' | 'em' | 'pc';
+        format?: string | [number, number];
+      }) => {
+        setFontSize: (size: number) => void;
+        setTextColor: (r: number, g: number, b: number) => void;
+        text: (text: string, x: number, y: number, options?: { align?: string }) => void;
+        addImage: (
+          imageData: string,
+          format: string,
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+          alias?: string,
+          compression?: string,
+          rotation?: number,
+          offsetY?: number
+        ) => void;
+        addPage: () => void;
+        getNumberOfPages: () => number;
+        setPage: (page: number) => void;
+        save: (filename: string) => void;
+      };
+    };
+    html2canvas: (
+      element: HTMLElement,
+      options?: {
+        scale?: number;
+        useCORS?: boolean;
+        allowTaint?: boolean;
+        backgroundColor?: string;
+        width?: number;
+        scrollX?: number;
+        scrollY?: number;
+      }
+    ) => Promise<HTMLCanvasElement>;
+  }
+}

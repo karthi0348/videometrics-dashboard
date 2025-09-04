@@ -6,13 +6,14 @@ import {
   SubProfile,
   Template,
   Priority,
+  ProcessVideoRequest,
 } from "./types/types";
 
 interface ProcessVideoFormProps {
   videos: any;
   profiles: Profile[];
   subProfiles: SubProfile[];
-  onProcessVideo: (payload: any) => Promise<void>;
+  onProcessVideo: (payload: ProcessVideoRequest) => Promise<void>;
   isProcessing: boolean;
 }
 
@@ -86,7 +87,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
 
       const transformedTemplates: Template[] = validTemplates.map(
         (template: any, index: number) => ({
-          id: Number(template.id) || Date.now() + index, // Add index to ensure uniqueness
+          id: Number(template.id) || Date.now() + index,
           name:
             template.template_name ||
             template.name ||
@@ -185,7 +186,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
         throw new Error("Invalid template ID");
       }
 
-      const payload = {
+      const payload: ProcessVideoRequest = {
         video_url: videoUrl,
         profile_id: profileId,
         sub_profile_id: subProfileId,
@@ -218,9 +219,9 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
       <div className="flex items-center mb-4">
-        <div className="w-6 h-6 text-teal-500 mr-3">
+        <div className="w-6 h-6 text-teal-500 mr-3 flex-shrink-0">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
@@ -230,20 +231,20 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
             />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-900">
           Process Video Form
         </h2>
       </div>
-      <p className="text-gray-600 text-sm mb-6">
+      <p className="text-gray-600 text-sm mb-4 sm:mb-6">
         Choose a video to process with the selected analytics profile
       </p>
 
       {/* Error Alert */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4">
           <div className="flex">
             <svg
-              className="w-5 h-5 text-red-400 mt-0.5 mr-3"
+              className="w-5 h-5 text-red-400 mt-0.5 mr-3 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -255,12 +256,12 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
                 d="M6 18L18 6M6 6l12 12"
               />
             </svg>
-            <div className="text-red-800">{error}</div>
+            <div className="text-red-800 text-sm break-words">{error}</div>
           </div>
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Select Video */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -273,7 +274,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
                 e.target.value ? Number(e.target.value) : ""
               )
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none text-sm sm:text-base"
             disabled={videos.length === 0}
           >
             <option value="">
@@ -302,7 +303,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
               );
               setSelectedSubProfileId("");
             }}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none text-sm sm:text-base"
             disabled={profiles.length === 0}
           >
             <option value="">
@@ -330,7 +331,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
                 e.target.value ? Number(e.target.value) : ""
               )
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none text-sm sm:text-base"
             disabled={
               !selectedProfileId || availableSubProfiles.length === 0
             }
@@ -362,7 +363,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
                 e.target.value ? Number(e.target.value) : ""
               )
             }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none text-sm sm:text-base"
             disabled={!selectedSubProfileId || templates.length === 0}
           >
             <option value="">
@@ -388,7 +389,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
           <select
             value={priority}
             onChange={(e) => setPriority(e.target.value as Priority)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none"
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none text-sm sm:text-base"
           >
             <option value="normal">Normal</option>
             <option value="high">High</option>
@@ -406,7 +407,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
             onChange={(e) => setCustomParameters(e.target.value)}
             placeholder='{"key": "value"}'
             rows={3}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none font-mono text-sm"
+            className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none font-mono text-sm resize-y min-h-[80px]"
           />
           <p className="text-xs text-gray-500 mt-1">
             Optional JSON object for custom processing parameters
@@ -425,12 +426,12 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
             videos.length === 0 ||
             templates.length === 0
           }
-          className="w-full bg-gradient-to-r from-teal-500 to-blue-500 text-white py-3 px-6 rounded-lg font-medium hover:from-teal-600 hover:to-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full bg-gradient-to-r from-teal-500 to-blue-500 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:from-teal-600 hover:to-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
         >
           {isProcessing ? (
             <>
               <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                className="animate-spin -ml-1 mr-2 sm:mr-3 h-4 w-4 sm:h-5 sm:w-5 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
               >
@@ -448,12 +449,12 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 ></path>
               </svg>
-              Processing...
+              <span className="whitespace-nowrap">Processing...</span>
             </>
           ) : (
             <>
               <svg
-                className="w-5 h-5 mr-2"
+                className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -465,7 +466,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
                   d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-7 4h12a3 3 0 003-3V7a3 3 0 00-3-3H6a3 3 0 00-3 3v4a3 3 0 003 3z"
                 />
               </svg>
-              Process Video
+              <span className="whitespace-nowrap">Process Video</span>
             </>
           )}
         </button>

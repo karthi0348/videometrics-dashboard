@@ -1,15 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, ChevronDown, ChevronRight, Code, Edit, Eye, Copy, RotateCcw, AlertCircle } from 'lucide-react';
 
+type DataType = 'string' | 'number' | 'boolean' | 'array' | 'object';
+
+interface DataTypeConfig {
+  icon: string;
+  color: string;
+  bgColor: string;
+  label: string;
+  defaultValue: any;
+}
+
 const FormEditor = () => {
-  const [data, setData] = useState({});
-  const [configurationMode, setConfigurationMode] = useState('form');
+  const [data, setData] = useState<any>({});
+  const [configurationMode, setConfigurationMode] = useState<'form' | 'json' | 'tree'>('form');
   const [jsonValue, setJsonValue] = useState('{}');
   const [jsonError, setJsonError] = useState('');
   const [expandedObjects, setExpandedObjects] = useState(new Set(['root']));
 
   // Data type configurations with icons and colors
-  const dataTypes = {
+  const dataTypes: Record<DataType, DataTypeConfig> = {
     string: { 
       icon: '📄', 
       color: 'text-green-600', 
@@ -64,7 +74,7 @@ const FormEditor = () => {
     updateJsonFromData(sampleData);
   }, []);
 
-  const updateJsonFromData = (newData:any) => {
+  const updateJsonFromData = (newData: any) => {
     setJsonValue(JSON.stringify(newData, null, 2));
   };
 
@@ -78,13 +88,14 @@ const FormEditor = () => {
     }
   };
 
-  const getDataType = (value:any) => {
+  const getDataType = (value: any): DataType => {
     if (Array.isArray(value)) return 'array';
     if (value === null) return 'string';
-    return typeof value;
+    const type = typeof value;
+    return (type as DataType) || 'string';
   };
 
-  const handleValueChange = (path:any, newValue:any, newType = null) => {
+  const handleValueChange = (path: string, newValue: any, newType: DataType | null = null) => {
     const pathArray = path.split('.');
     const newData = JSON.parse(JSON.stringify(data)); // Deep clone to avoid mutations
     
@@ -122,7 +133,7 @@ const FormEditor = () => {
     updateJsonFromData(newData);
   };
 
-  const handleKeyRename = (oldPath:any, newKey:any) => {
+  const handleKeyRename = (oldPath: string, newKey: string) => {
     if (!newKey.trim()) return; // Don't rename to empty key
     
     const pathArray = oldPath.split('.');
@@ -168,7 +179,7 @@ const FormEditor = () => {
     handleValueChange(fullPath, '', 'string');
   };
 
-  const removeProperty = (path:any) => {
+  const removeProperty = (path: string) => {
     const pathArray = path.split('.');
     const newData = JSON.parse(JSON.stringify(data));
     
@@ -188,7 +199,7 @@ const FormEditor = () => {
     updateJsonFromData(newData);
   };
 
-  const toggleObjectExpansion = (key:any) => {
+  const toggleObjectExpansion = (key: string) => {
     const newExpanded = new Set(expandedObjects);
     if (newExpanded.has(key)) {
       newExpanded.delete(key);
@@ -198,16 +209,16 @@ const FormEditor = () => {
     setExpandedObjects(newExpanded);
   };
 
-  const renderFormField = (key:any, value:any, path = '', depth = 0) => {
+  const renderFormField = (key: string, value: any, path = '', depth = 0) => {
     const currentPath = path ? `${path}.${key}` : key;
     const dataType = getDataType(value);
-    const typeConfig = dataTypes[dataType] || dataTypes.string;
+    const typeConfig = dataTypes[dataType];
 
     return (
       <div key={currentPath} className="space-y-3" style={{ marginLeft: `${depth * 20}px` }}>
-        <div className="border rounded-lg p-4 bg-gray-50">
+        <div className="border rounded-lg p-3 sm:p-4 bg-gray-50">
           {/* Field Header */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -219,11 +230,11 @@ const FormEditor = () => {
                     handleKeyRename(currentPath, e.target.value);
                   }
                 }}
-                className="bg-white px-2 py-1 text-sm rounded border focus:ring-2 focus:ring-purple-500"
+                className="bg-white px-2 py-1 text-sm rounded border focus:ring-2 focus:ring-purple-500 min-w-0 flex-1 sm:flex-initial"
               />
               <button
                 onClick={() => removeProperty(currentPath)}
-                className="p-1 text-red-500 hover:bg-red-50 rounded"
+                className="p-1 text-red-500 hover:bg-red-50 rounded flex-shrink-0"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -232,17 +243,17 @@ const FormEditor = () => {
 
           {/* Type Selector and Value Editor */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <span className={`font-mono text-sm ${typeConfig.color}`}>{typeConfig.icon}</span>
-              <span className="text-gray-700 font-medium text-sm">{key}</span>
+              <span className="text-gray-700 font-medium text-sm truncate">{key}</span>
               <select 
                 value={dataType}
                 onChange={(e) => {
-                  const newType = e.target.value;
+                  const newType = e.target.value as DataType;
                   const defaultValue = dataTypes[newType].defaultValue;
                   handleValueChange(currentPath, defaultValue, newType);
                 }}
-                className="text-xs border rounded px-2 py-1 text-gray-600 focus:ring-1 focus:ring-purple-500"
+                className="text-xs border rounded px-2 py-1 text-gray-600 focus:ring-1 focus:ring-purple-500 sm:ml-auto"
               >
                 {Object.entries(dataTypes).map(([type, config]) => (
                   <option key={type} value={type}>{config.label}</option>
@@ -294,14 +305,14 @@ const FormEditor = () => {
                         newArray[index] = e.target.value;
                         handleValueChange(currentPath, newArray);
                       }}
-                      className="flex-1 p-2 border rounded text-sm focus:ring-1 focus:ring-purple-500"
+                      className="flex-1 p-2 border rounded text-sm focus:ring-1 focus:ring-purple-500 min-w-0"
                     />
                     <button
                       onClick={() => {
-                        const newArray = (value || []).filter((_, i) => i !== index);
+                        const newArray = (value || []).filter((_: any, i: number) => i !== index);
                         handleValueChange(currentPath, newArray);
                       }}
-                      className="p-1 text-red-500 hover:bg-red-50 rounded"
+                      className="p-1 text-red-500 hover:bg-red-50 rounded flex-shrink-0"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -309,8 +320,7 @@ const FormEditor = () => {
                 ))}
                 <button
                   onClick={() => handleValueChange(currentPath, [...(value || []), ''])}
-                  className="text-sm hover:bg-purple-50 px-2 py-1 rounded flex items-center gap-1"
-                  style={{ color: 'var(--purple-secondary)' }}
+                  className="text-sm text-purple-600 hover:bg-purple-50 px-2 py-1 rounded flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" />
                   Add item
@@ -320,7 +330,7 @@ const FormEditor = () => {
 
             {dataType === 'object' && typeof value === 'object' && !Array.isArray(value) && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <button
                     onClick={() => toggleObjectExpansion(currentPath)}
                     className="flex items-center gap-1 text-sm text-gray-600"
@@ -334,8 +344,7 @@ const FormEditor = () => {
                   </button>
                   <button
                     onClick={() => addProperty(currentPath)}
-                    className="text-sm hover:bg-purple-50 px-2 py-1 rounded flex items-center gap-1"
-                    style={{ color: 'var(--purple-secondary)' }}
+                    className="text-sm text-purple-600 hover:bg-purple-50 px-2 py-1 rounded flex items-center gap-1"
                   >
                     <Plus className="w-3 h-3" />
                     Add property
@@ -343,7 +352,7 @@ const FormEditor = () => {
                 </div>
 
                 {expandedObjects.has(currentPath) && (
-                  <div className="space-y-3 pl-4 border-l-2" style={{ borderColor: 'var(--purple-accent)' }}>
+                  <div className="space-y-3 pl-4 border-l-2 border-purple-200">
                     {Object.entries(value || {}).map(([subKey, subValue]) => 
                       renderFormField(subKey, subValue, currentPath, depth + 1)
                     )}
@@ -400,12 +409,12 @@ const FormEditor = () => {
   const objectSize = Object.keys(data).length;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-3 sm:p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <h2 style={{ color: 'var(--purple-tertiary)' }} className="text-lg font-bold">Camera Locations Configuration</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+            <h2 className="text-lg font-bold text-purple-700">Camera Locations Configuration</h2>
             <div className="flex items-center gap-2">
               <span className={`px-2 py-1 rounded text-xs font-medium ${
                 isValidJson ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -424,49 +433,37 @@ const FormEditor = () => {
       </div>
 
       {/* Mode Tabs */}
-      <div className="border-b border-gray-200">
-        <nav className="flex space-x-8">
+      <div className="border-b border-gray-200 overflow-x-auto">
+        <nav className="flex space-x-4 sm:space-x-8 min-w-max">
           <button
             onClick={() => setConfigurationMode('json')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
+            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 whitespace-nowrap ${
               configurationMode === 'json'
-                ? 'text-purple-700'
+                ? 'border-purple-600 text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
-            style={{
-              borderColor: configurationMode === 'json' ? 'var(--purple-secondary)' : 'transparent',
-              color: configurationMode === 'json' ? 'var(--purple-secondary)' : undefined
-            }}
           >
             <Code className="w-4 h-4" />
             JSON Editor
           </button>
           <button
             onClick={() => setConfigurationMode('form')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
+            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 whitespace-nowrap ${
               configurationMode === 'form'
-                ? 'text-purple-700'
+                ? 'border-purple-600 text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
-            style={{
-              borderColor: configurationMode === 'form' ? 'var(--purple-secondary)' : 'transparent',
-              color: configurationMode === 'form' ? 'var(--purple-secondary)' : undefined
-            }}
           >
             <Edit className="w-4 h-4" />
             Form Editor
           </button>
           <button
             onClick={() => setConfigurationMode('tree')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
+            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 whitespace-nowrap ${
               configurationMode === 'tree'
-                ? 'text-purple-700'
+                ? 'border-purple-600 text-purple-700'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
-            style={{
-              borderColor: configurationMode === 'tree' ? 'var(--purple-secondary)' : 'transparent',
-              color: configurationMode === 'tree' ? 'var(--purple-secondary)' : undefined
-            }}
           >
             <Eye className="w-4 h-4" />
             Tree View
@@ -477,8 +474,8 @@ const FormEditor = () => {
       {/* JSON Editor Mode */}
       {configurationMode === 'json' && (
         <div className="space-y-4">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
               <div className="flex items-center gap-2">
                 <Code className="w-5 h-5 text-gray-600" />
                 <h3 className="font-medium text-gray-900">JSON Text Editor</h3>
@@ -501,11 +498,10 @@ const FormEditor = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
               <button
                 onClick={formatJson}
-                className="px-3 py-1 text-sm text-white rounded hover:opacity-90"
-                style={{ backgroundColor: 'var(--purple-secondary)' }}
+                className="px-3 py-1 text-sm text-white bg-purple-600 rounded hover:bg-purple-700"
               >
                 Format
               </button>
@@ -541,9 +537,9 @@ const FormEditor = () => {
             </div>
 
             {jsonError && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                <AlertCircle className="w-4 h-4" />
-                {jsonError}
+              <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm mt-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span className="break-words">{jsonError}</span>
               </div>
             )}
 
@@ -551,8 +547,7 @@ const FormEditor = () => {
               <div className="mt-4">
                 <button
                   onClick={applyJsonChanges}
-                  className="px-4 py-2 text-white rounded-lg hover:opacity-90"
-                  style={{ backgroundColor: 'green' }}
+                  className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
                 >
                   Apply Changes
                 </button>
@@ -565,16 +560,15 @@ const FormEditor = () => {
       {/* Form Editor Mode */}
       {configurationMode === 'form' && (
         <div className="space-y-6">
-          <div className="bg-white border rounded-lg p-6">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-white border rounded-lg p-3 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
               <div className="flex items-center gap-2">
                 <Edit className="w-5 h-5 text-gray-600" />
                 <h4 className="font-medium text-gray-900">Interactive Form Editor</h4>
               </div>
               <button
                 onClick={() => addProperty()}
-                className="px-3 py-1 text-white text-sm rounded hover:opacity-90 flex items-center gap-1"
-                style={{ backgroundColor: 'var(--purple-secondary)' }}
+                className="px-3 py-1 text-white text-sm bg-purple-600 rounded hover:bg-purple-700 flex items-center gap-1 justify-center sm:justify-start"
               >
                 <Plus className="w-4 h-4" />
                 Add Property
@@ -591,8 +585,7 @@ const FormEditor = () => {
                   <p className="mb-4">No properties defined yet.</p>
                   <button
                     onClick={() => addProperty()}
-                    className="px-4 py-2 text-white rounded hover:opacity-90"
-                    style={{ backgroundColor: 'var(--purple-secondary)' }}
+                    className="px-4 py-2 text-white bg-purple-600 rounded hover:bg-purple-700"
                   >
                     Add Your First Property
                   </button>
@@ -605,7 +598,7 @@ const FormEditor = () => {
 
       {/* Tree View */}
       {configurationMode === 'tree' && (
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-4 h-4 border border-gray-400 rounded-sm flex items-center justify-center">
               <span className="text-xs text-gray-600">△</span>
@@ -614,11 +607,11 @@ const FormEditor = () => {
           </div>
           
           <div className="bg-white border rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+            <div className="px-3 sm:px-4 py-3 bg-gray-50 border-b">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-3">
                   <span className="text-sm font-medium text-gray-700">Data Structure</span>
-                  <span className="px-2 py-1 text-white text-xs font-medium rounded" style={{ backgroundColor: 'var(--purple-secondary)' }}>
+                  <span className="px-2 py-1 text-white text-xs font-medium bg-purple-600 rounded">
                     object
                   </span>
                   <span className="text-xs text-gray-500">
@@ -629,7 +622,7 @@ const FormEditor = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between mt-4 px-1 py-2 bg-gray-100 rounded text-sm text-gray-600">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 px-3 sm:px-1 py-2 bg-gray-100 rounded text-sm text-gray-600 gap-2">
             <span>Data Type: <span className="font-medium text-gray-800">Object</span></span>
             <span>Size: <span className="font-medium text-gray-800">{objectSize} properties</span></span>
             <span className="text-gray-500">{JSON.stringify(data).length} characters</span>
@@ -638,10 +631,10 @@ const FormEditor = () => {
       )}
 
       {/* Status Bar */}
-      <div className="bg-gray-50 px-4 py-3 rounded-lg">
-        <div className="flex items-center justify-between text-sm">
-          <span>Data Type: <span className="font-medium" style={{ color: 'var(--purple-secondary)' }}>Object</span></span>
-          <span>Size: <span className="font-medium" style={{ color: 'var(--purple-secondary)' }}>{objectSize} properties</span></span>
+      <div className="bg-gray-50 px-3 sm:px-4 py-3 rounded-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between text-sm gap-2">
+          <span>Data Type: <span className="font-medium text-purple-600">Object</span></span>
+          <span>Size: <span className="font-medium text-purple-600">{objectSize} properties</span></span>
           <span className="text-gray-500">{JSON.stringify(data).length} characters</span>
         </div>
       </div>

@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import "../styles/Sidebar.css";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -10,7 +9,7 @@ import UserApiService from "@/helpers/service/user/user-api-service";
 interface MenuItem {
   name: string;
   icon: string;
-  key: string; // Use key instead of href for state navigation
+  key: string;
 }
 
 interface User {
@@ -24,12 +23,44 @@ interface SidebarProps {
   activePage?: string;
 }
 
+// Custom hook for responsive behavior
+const useResponsive = () => {
+  const [screenSize, setScreenSize] = useState({
+    isMobile: false,
+    isTablet: false,
+    isDesktop: false,
+    width: 0,
+    height: 0,
+  });
+
+  useEffect(() => {
+    const updateScreenSize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      setScreenSize({
+        isMobile: width < 768,
+        isTablet: width >= 768 && width < 1024,
+        isDesktop: width >= 1024,
+        width,
+        height,
+      });
+    };
+
+    updateScreenSize();
+    window.addEventListener("resize", updateScreenSize);
+    return () => window.removeEventListener("resize", updateScreenSize);
+  }, []);
+
+  return screenSize;
+};
+
 const Sidebar: React.FC<SidebarProps> = ({
   onNavigate,
   activePage = "videos",
 }) => {
   const router = useRouter();
-  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const { isMobile, isTablet, isDesktop, width } = useResponsive();
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [activeItem, setActiveItem] = useState<string>(activePage);
   const [user, setUser] = useState<User>({
@@ -57,20 +88,18 @@ const Sidebar: React.FC<SidebarProps> = ({
         setUserLoading(true);
         const userApiService = new UserApiService();
         const userData = await userApiService.getCurrentUser();
-        
-        // Map the API response to your User interface
+
         setUser({
           name: userData.full_name || userData.name || "Unknown User",
           username: userData.username ? `@${userData.username}` : "@user",
-          avatar: userData.avatar || userData.profile_picture || ""
+          avatar: userData.avatar || userData.profile_picture || "",
         });
       } catch (error) {
         console.error("Failed to fetch user data:", error);
-        // Fallback to default user or handle error
         setUser({
           name: "User",
           username: "@user",
-          avatar: ""
+          avatar: "",
         });
       } finally {
         setUserLoading(false);
@@ -80,73 +109,131 @@ const Sidebar: React.FC<SidebarProps> = ({
     fetchUserData();
   }, []);
 
-  // Check for mobile screen size
+  // Auto-close mobile menu when screen size changes
   useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (mobile) {
-        setMobileMenuOpen(false);
-      }
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+    if (!isMobile && mobileMenuOpen) {
+      setMobileMenuOpen(false);
+    }
+  }, [isMobile, mobileMenuOpen]);
 
   // Update active item when activePage prop changes
   useEffect(() => {
     setActiveItem(activePage);
   }, [activePage]);
 
-  const handleMenuClick = (item: MenuItem) => {
-    setActiveItem(item.name);
-    onNavigate?.(item.key);
-    // Auto-close mobile menu after selection
-    if (isMobile) {
-      setMobileMenuOpen(false);
+  // Handle clicks outside sidebar on mobile
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMobile && mobileMenuOpen) {
+        const sidebar = document.querySelector('[data-sidebar="true"]');
+        const menuBtn = document.querySelector('[data-mobile-menu="true"]');
+
+        if (
+          sidebar &&
+          !sidebar.contains(event.target as Node) &&
+          menuBtn &&
+          !menuBtn.contains(event.target as Node)
+        ) {
+          setMobileMenuOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isMobile, mobileMenuOpen]);
+
+  // Handle escape key to close mobile menu
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && isMobile && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isMobile, mobileMenuOpen]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobile && mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
     }
-  };
 
-  const handleLogout = () => {
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isMobile, mobileMenuOpen]);
+
+  const handleMenuClick = useCallback(
+    (item: MenuItem) => {
+      setActiveItem(item.name);
+      onNavigate?.(item.key);
+
+      // Auto-close mobile menu after selection
+      if (isMobile) {
+        setMobileMenuOpen(false);
+      }
+    },
+    [isMobile, onNavigate]
+  );
+
+  const handleLogout = useCallback(() => {
     console.log("Logging out...");
-    
-    localStorage.removeItem('authToken');
-    sessionStorage.clear();
-    
 
+    // Handle window closing or redirect
     if (window.opener && !window.opener.closed) {
-      window.opener.postMessage({
-        type: 'LOGOUT'
-      }, 'http://localhost:3000'); 
-      
+      window.opener.postMessage(
+        {
+          type: "LOGOUT",
+        },
+        "http://localhost:3000"
+      );
+
       window.opener.focus();
       window.close();
     } else {
-      window.location.href = 'http://localhost:3000/auth/login';
+      window.location.href = "http://localhost:3000/auth/login";
     }
-  };
+  }, []);
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
+  const toggleMobileMenu = useCallback(() => {
+    setMobileMenuOpen((prev) => !prev);
+  }, []);
 
   return (
-    <div className="sidebar-container">
+    <div className="relative">
+      {/* Mobile spacing div to prevent content collision */}
+      {isMobile && !mobileMenuOpen && <div className="h-20 w-full md:hidden" />}
+
       {/* Mobile Overlay */}
       {isMobile && mobileMenuOpen && (
         <div
-          className="sidebar-overlay"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={() => setMobileMenuOpen(false)}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setMobileMenuOpen(false);
+            }
+          }}
+          aria-label="Close menu overlay"
         />
       )}
 
       {/* Mobile Menu Button */}
       {isMobile && !mobileMenuOpen && (
         <button
-          className="mobile-menu-btn"
+          data-mobile-menu="true"
+          className="fixed top-4 left-4 z-50 bg-white shadow-lg border border-gray-200 rounded-lg p-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200 md:hidden"
           onClick={toggleMobileMenu}
-          aria-label="Open menu"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path
@@ -161,34 +248,80 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar */}
       <div
-        className={`sidebar ${isMobile ? "mobile" : ""} ${
-          mobileMenuOpen ? "mobile-open" : ""
-        }`}
+        data-sidebar="true"
+        className={`
+          ${isMobile ? "fixed" : "fixed"} 
+          ${
+            isMobile && !mobileMenuOpen ? "-translate-x-full" : "translate-x-0"
+          } 
+          ${isMobile ? "top-0 left-0 w-80 z-50" : "top-0 left-0 w-64"} 
+          border-r border-gray-200 flex flex-col 
+          transition-transform duration-300 ease-in-out 
+          shadow-xl md:shadow-none
+        `}
+        style={{
+          background:
+            "linear-gradient(135deg, #f5f3ff 0%, #d0d0d8 50%, #8870c2 100%)",
+          height: "100vh",
+          minHeight: "100vh",
+          maxHeight: "100vh",
+        }}
+        role="navigation"
+        aria-label="Main navigation"
       >
         {/* Header with Logo */}
-        <div className="sidebar-header">
-              <Link href="/" className="logo-brand">
-                <Image
-                  src="/Videometrics.png" // place your logo in /public/logo.png
-                  alt="Videometrics Logo"
-                  width={200} // adjust size
-                  height={60}
-                  priority
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
+          <Link href="/" className="block">
+            <Image
+              src="/Videometrics.png"
+              alt="Videometrics Logo"
+              width={width < 480 ? 160 : width < 768 ? 180 : 200}
+              height={width < 480 ? 48 : width < 768 ? 54 : 60}
+              priority
+              className="max-w-full h-auto"
+            />
+          </Link>
+
+          {/* Close button for mobile */}
+          {isMobile && mobileMenuOpen && (
+            <button
+              className="ml-4 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              onClick={() => setMobileMenuOpen(false)}
+              aria-label="Close navigation menu"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 6L6 18M6 6L18 18"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                 />
-              </Link>
+              </svg>
+            </button>
+          )}
         </div>
 
-        {/* Navigation */}
-        <nav className="sidebar-nav">
-          <div className="nav-section">
-            <div className="nav-section-title">Main Menu</div>
+        {/* Navigation - Takes up all available space between header and footer */}
+        <nav className="flex-1 overflow-y-auto py-6 custom-scrollbar">
+          <div className="mb-8">
+            <div className="px-6 mb-3 text-xs font-semibold text-purple-800 uppercase tracking-wider">
+              Main Menu
+            </div>
 
             {menuItems.slice(0, 4).map((item: MenuItem) => (
               <div
                 key={item.name}
-                className={`nav-item ${
-                  activeItem === item.name ? "active" : ""
-                }`}
+                className={`
+                  relative mx-3 mb-1 px-3 py-3 rounded-lg cursor-pointer
+                  transition-all duration-200 ease-in-out
+                  hover:bg-gray-50 active:bg-gray-100
+                  ${
+                    activeItem === item.name
+                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
+                      : "text-gray-700 hover:text-gray-900"
+                  }
+                  flex items-center group
+                `}
                 onClick={() => handleMenuClick(item)}
                 role="button"
                 tabIndex={0}
@@ -198,22 +331,46 @@ const Sidebar: React.FC<SidebarProps> = ({
                     handleMenuClick(item);
                   }
                 }}
+                aria-pressed={activeItem === item.name}
+                aria-label={`Navigate to ${item.name}`}
               >
-                <span className="nav-icon">{item.icon}</span>
-                <span className="nav-label">{item.name}</span>
+                <span
+                  className="text-xl mr-3 group-hover:scale-110 transition-transform duration-200"
+                  role="img"
+                  aria-label={`${item.name} icon`}
+                >
+                  {item.icon}
+                </span>
+                <span className="font-medium">{item.name}</span>
+                {activeItem === item.name && (
+                  <div
+                    className="absolute right-3 w-2 h-2 bg-blue-500 rounded-full"
+                    aria-hidden="true"
+                  />
+                )}
               </div>
             ))}
           </div>
 
-          <div className="nav-section">
-            <div className="nav-section-title">Tools & Settings</div>
+          <div>
+            <div className="px-6 mb-3 text-xs font-semibold text-purple-800 uppercase tracking-wider">
+              Tools & Settings
+            </div>
 
             {menuItems.slice(4).map((item: MenuItem) => (
               <div
                 key={item.name}
-                className={`nav-item ${
-                  activeItem === item.name ? "active" : ""
-                }`}
+                className={`
+                  relative mx-3 mb-1 px-3 py-3 rounded-lg cursor-pointer
+                  transition-all duration-200 ease-in-out
+                  hover:bg-gray-50 active:bg-gray-100
+                  ${
+                    activeItem === item.name
+                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
+                      : "text-gray-700 hover:text-gray-900"
+                  }
+                  flex items-center group
+                `}
                 onClick={() => handleMenuClick(item)}
                 role="button"
                 tabIndex={0}
@@ -223,72 +380,119 @@ const Sidebar: React.FC<SidebarProps> = ({
                     handleMenuClick(item);
                   }
                 }}
+                aria-pressed={activeItem === item.name}
+                aria-label={`Navigate to ${item.name}`}
               >
-                <span className="nav-icon">{item.icon}</span>
-                <span className="nav-label">{item.name}</span>
+                <span
+                  className="text-xl mr-3 group-hover:scale-110 transition-transform duration-200"
+                  role="img"
+                  aria-label={`${item.name} icon`}
+                >
+                  {item.icon}
+                </span>
+                <span className="font-medium">{item.name}</span>
+                {activeItem === item.name && (
+                  <div
+                    className="absolute right-3 w-2 h-2 bg-blue-500 rounded-full"
+                    aria-hidden="true"
+                  />
+                )}
               </div>
             ))}
           </div>
         </nav>
 
-        {/* User Profile */}
-        <div className="sidebar-footer">
-          <div className="user-profile">
-            <div className="user-avatar">
+        {/* User Profile - Fixed at bottom */}
+        <div className="border-t border-gray-100 p-4 flex-shrink-0 mt-auto">
+          <div className="flex items-center space-x-3">
+            <div className="relative flex-shrink-0">
               {userLoading ? (
-                <div className="avatar-placeholder">
-                  <span>...</span>
+                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center animate-pulse">
+                  <span className="text-gray-500 text-xs">...</span>
                 </div>
               ) : user.avatar ? (
-                <img src={user.avatar} alt={user.name} />
+                <img
+                  src={user.avatar}
+                  alt={`${user.name} profile picture`}
+                  loading="lazy"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                />
               ) : (
-                <div className="avatar-placeholder">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
                   {user.name
                     .split(" ")
                     .map((n) => n.charAt(0))
                     .join("")
+                    .slice(0, 2)
                     .toUpperCase()}
                 </div>
               )}
-              {!userLoading && <div className="status-indicator online" />}
+              {!userLoading && (
+                <div
+                  className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"
+                  aria-label="Online status"
+                />
+              )}
             </div>
 
-            <div className="user-info">
-              <div className="user-name">{user.name}</div>
-              <div className="user-username">{user.username}</div>
-            </div>
-
-            <div className="user-actions">
-              <button
-                className="logout-btn"
-                onClick={handleLogout}
-                title="Logout"
-                disabled={userLoading}
+            <div className="flex-1 min-w-0">
+              <div
+                className="text-sm font-medium text-gray-900 truncate"
+                title={user.name}
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path
-                    d="M6 2H3C2.45 2 2 2.45 2 3V13C2 13.55 2.45 14 3 14H6"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M10 11L13 8L10 5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M13 8H6"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span>Logout</span>
-              </button>
+                {user.name}
+              </div>
+              <div
+                className="text-xs text-gray-500 truncate"
+                title={user.username}
+              >
+                {user.username}
+              </div>
             </div>
+
+            <button
+              className={`
+                flex items-center space-x-1 px-3 py-2 text-xs font-medium
+                text-red-600 hover:text-white hover:bg-red-500 hover:bg-opacity-80
+                rounded-lg transition-all duration-200
+                disabled:opacity-50 disabled:cursor-not-allowed
+                group
+              `}
+              onClick={handleLogout}
+              title="Logout"
+              disabled={userLoading}
+              aria-label="Logout from account"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+                className="group-hover:scale-110 transition-transform duration-200"
+              >
+                <path
+                  d="M6 2H3C2.45 2 2 2.45 2 3V13C2 13.55 2.45 14 3 14H6"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M10 11L13 8L10 5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M13 8H6"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              {width >= 360 && <span>Logout</span>}
+            </button>
           </div>
         </div>
       </div>

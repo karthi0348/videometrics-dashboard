@@ -1,639 +1,457 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, ChevronDown, ChevronRight, Code, Edit, Eye, Copy, RotateCcw, AlertCircle, Calendar, Clock, Globe, Flag, Play } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { ChevronDown, ChevronRight, Plus, RotateCcw, FileText, Code, Eye, AlertTriangle } from 'lucide-react';
 
-const MonitoringScheduleEditor = () => {
-  const [monitoringSchedules, setMonitoringSchedules] = useState([]);
-  const [configurationMode, setConfigurationMode] = useState('form');
-  const [jsonValue, setJsonValue] = useState('[]');
-  const [jsonError, setJsonError] = useState('');
-  const [expandedSchedules, setExpandedSchedules] = useState(new Set(['root']));
+const JSONEditor = () => {
+  const [activeTab, setActiveTab] = useState('form');
+  const [jsonData, setJsonData] = useState({});
+  const [expandedNodes, setExpandedNodes] = useState(new Set(['root']));
+  const [jsonString, setJsonString] = useState('{}');
+  const [isValidJson, setIsValidJson] = useState(true);
 
-  // Days of the week options
-  const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  const priorityOptions = ['low', 'medium', 'high'];
-  const timezones = [
-    'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
-    'Europe/London', 'Europe/Berlin', 'Europe/Paris', 'Asia/Tokyo', 'Asia/Shanghai'
-  ];
-
-  // Initialize with sample data
-  useEffect(() => {
-    const sampleSchedules = [
-      {
-        name: "Weekday Business Hours",
-        days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-        startTime: '09:00',
-        endTime: '17:00',
-        timezone: 'UTC',
-        isActive: true,
-        priority: 'high'
-      },
-      {
-        name: "Weekend Monitoring",
-        days: ['saturday', 'sunday'],
-        startTime: '10:00',
-        endTime: '16:00',
-        timezone: 'America/New_York',
-        isActive: false,
-        priority: 'medium'
-      }
-    ];
-    setMonitoringSchedules(sampleSchedules);
-    updateJsonFromSchedules(sampleSchedules);
+  // Update JSON string when data changes
+  const updateJsonString = useCallback((data) => {
+    setJsonString(JSON.stringify(data, null, 2));
   }, []);
 
-  const updateJsonFromSchedules = (schedules) => {
-    setJsonValue(JSON.stringify(schedules, null, 2));
-  };
-
-  const updateSchedulesFromJson = () => {
-    try {
-      const parsed = JSON.parse(jsonValue);
-      if (Array.isArray(parsed)) {
-        setMonitoringSchedules(parsed);
-        setJsonError('');
-      } else {
-        setJsonError('Data must be an array of monitoring schedules');
-      }
-    } catch (error) {
-      setJsonError('Invalid JSON format');
+  // Add property to object at specified path
+  const addProperty = useCallback((path = []) => {
+    const newData = { ...jsonData };
+    let current = newData;
+    
+    for (const key of path.slice(0, -1)) {
+      if (!current[key]) current[key] = {};
+      current = current[key];
     }
-  };
+    
+    const newKey = `property${Object.keys(current).length + 1}`;
+    current[newKey] = '';
+    
+    setJsonData(newData);
+    updateJsonString(newData);
+  }, [jsonData, updateJsonString]);
 
-  const addMonitoringSchedule = () => {
-    const newSchedule = {
-      name: `New Schedule ${monitoringSchedules.length + 1}`,
-      days: ['monday'],
-      startTime: '09:00',
-      endTime: '17:00',
-      timezone: 'UTC',
-      isActive: true,
-      priority: 'medium'
-    };
-    const newSchedules = [...monitoringSchedules, newSchedule];
-    setMonitoringSchedules(newSchedules);
-    updateJsonFromSchedules(newSchedules);
-  };
+  // Remove property from object
+  const removeProperty = useCallback((path) => {
+    const newData = { ...jsonData };
+    let current = newData;
+    
+    for (const key of path.slice(0, -1)) {
+      current = current[key];
+    }
+    
+    delete current[path[path.length - 1]];
+    
+    setJsonData(newData);
+    updateJsonString(newData);
+  }, [jsonData, updateJsonString]);
 
-  const updateMonitoringSchedule = (index, field, value) => {
-    const newSchedules = monitoringSchedules.map((schedule, i) => 
-      i === index ? { ...schedule, [field]: value } : schedule
-    );
-    setMonitoringSchedules(newSchedules);
-    updateJsonFromSchedules(newSchedules);
-  };
-
-  const removeMonitoringSchedule = (index) => {
-    const newSchedules = monitoringSchedules.filter((_, i) => i !== index);
-    setMonitoringSchedules(newSchedules);
-    updateJsonFromSchedules(newSchedules);
-  };
-
-  const toggleScheduleExpansion = (index) => {
-    const key = `schedule-${index}`;
-    const newExpanded = new Set(expandedSchedules);
-    if (newExpanded.has(key)) {
-      newExpanded.delete(key);
+  // Update property value
+  const updateProperty = useCallback((path, newValue, newKey = null) => {
+    const newData = { ...jsonData };
+    let current = newData;
+    
+    // Navigate to parent
+    for (const key of path.slice(0, -1)) {
+      current = current[key];
+    }
+    
+    const oldKey = path[path.length - 1];
+    
+    if (newKey && newKey !== oldKey) {
+      // Key changed - remove old and add new
+      delete current[oldKey];
+      current[newKey] = newValue;
     } else {
-      newExpanded.add(key);
+      // Just value changed
+      current[oldKey] = newValue;
     }
-    setExpandedSchedules(newExpanded);
-  };
+    
+    setJsonData(newData);
+    updateJsonString(newData);
+  }, [jsonData, updateJsonString]);
 
-  const formatJson = () => {
+  // Reset to empty object
+  const resetData = useCallback(() => {
+    setJsonData({});
+    setJsonString('{}');
+    setExpandedNodes(new Set(['root']));
+  }, []);
+
+  // Toggle node expansion in tree view
+  const toggleExpansion = useCallback((nodeId) => {
+    const newExpanded = new Set(expandedNodes);
+    if (newExpanded.has(nodeId)) {
+      newExpanded.delete(nodeId);
+    } else {
+      newExpanded.add(nodeId);
+    }
+    setExpandedNodes(newExpanded);
+  }, [expandedNodes]);
+
+  // Handle JSON text changes
+  const handleJsonChange = useCallback((value) => {
+    setJsonString(value);
     try {
-      const parsed = JSON.parse(jsonValue);
-      setJsonValue(JSON.stringify(parsed, null, 2));
-      setJsonError('');
-    } catch (error) {
-      setJsonError('Invalid JSON format');
+      const parsed = JSON.parse(value);
+      if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+        setJsonData(parsed);
+        setIsValidJson(true);
+      } else {
+        setIsValidJson(false);
+      }
+    } catch {
+      setIsValidJson(false);
     }
-  };
+  }, []);
 
-  const minifyJson = () => {
-    try {
-      const parsed = JSON.parse(jsonValue);
-      setJsonValue(JSON.stringify(parsed));
-      setJsonError('');
-    } catch (error) {
-      setJsonError('Invalid JSON format');
-    }
-  };
+  // Render form editor for object properties
+  const renderFormEditor = () => {
+    const renderObjectFields = (obj, path = [], level = 0) => {
+      if (!obj || typeof obj !== 'object') return null;
 
-  const clearJson = () => {
-    setJsonValue('[]');
-    setMonitoringSchedules([]);
-    setJsonError('');
-  };
-
-  const copyJson = () => {
-    navigator.clipboard.writeText(jsonValue);
-  };
-
-  const resetToFormData = () => {
-    updateJsonFromSchedules(monitoringSchedules);
-  };
-
-  const applyJsonChanges = () => {
-    updateSchedulesFromJson();
-    setConfigurationMode('form');
-  };
-
-  const isValidJson = !jsonError && jsonValue.trim() !== '';
-  const schedulesCount = monitoringSchedules.length;
-  const activeSchedules = monitoringSchedules.filter(s => s.isActive).length;
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-50';
-      case 'medium': return 'text-yellow-600 bg-yellow-50';
-      case 'low': return 'text-green-600 bg-green-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  const renderFormField = (schedule, index) => {
-    return (
-      <div key={index} className="border border-purple-200 rounded-lg p-6 bg-white shadow-sm hover:shadow-md transition-shadow">
-        {/* Schedule Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${schedule.isActive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-            <h4 className="text-lg font-medium text-gray-900">{schedule.name || `Schedule ${index + 1}`}</h4>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(schedule.priority)}`}>
-              {schedule.priority}
-            </span>
-          </div>
-          <button
-            onClick={() => removeMonitoringSchedule(index)}
-            className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Schedule Name */}
-          <div className="md:col-span-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Edit className="w-4 h-4 text-purple-500" />
-              Schedule Name
-            </label>
-            <input
-              type="text"
-              value={schedule.name}
-              onChange={(e) => updateMonitoringSchedule(index, 'name', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-              placeholder="Enter schedule name"
-            />
-          </div>
-
-          {/* Priority */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Flag className="w-4 h-4 text-purple-500" />
-              Priority
-            </label>
-            <select
-              value={schedule.priority}
-              onChange={(e) => updateMonitoringSchedule(index, 'priority', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-            >
-              {priorityOptions.map(priority => (
-                <option key={priority} value={priority}>
-                  {priority.charAt(0).toUpperCase() + priority.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Active Status */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Play className="w-4 h-4 text-purple-500" />
-              Status
-            </label>
-            <select
-              value={schedule.isActive.toString()}
-              onChange={(e) => updateMonitoringSchedule(index, 'isActive', e.target.value === 'true')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-            >
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
-            </select>
-          </div>
-
-          {/* Start Time */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Clock className="w-4 h-4 text-purple-500" />
-              Start Time
-            </label>
-            <input
-              type="time"
-              value={schedule.startTime}
-              onChange={(e) => updateMonitoringSchedule(index, 'startTime', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-            />
-          </div>
-
-          {/* End Time */}
-          <div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Clock className="w-4 h-4 text-purple-500" />
-              End Time
-            </label>
-            <input
-              type="time"
-              value={schedule.endTime}
-              onChange={(e) => updateMonitoringSchedule(index, 'endTime', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-            />
-          </div>
-
-          {/* Timezone */}
-          <div className="md:col-span-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-              <Globe className="w-4 h-4 text-purple-500" />
-              Timezone
-            </label>
-            <select
-              value={schedule.timezone}
-              onChange={(e) => updateMonitoringSchedule(index, 'timezone', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
-            >
-              {timezones.map(tz => (
-                <option key={tz} value={tz}>{tz}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Days */}
-          <div className="md:col-span-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
-              <Calendar className="w-4 h-4 text-purple-500" />
-              Active Days
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-              {daysOfWeek.map(day => (
-                <label key={day} className="flex items-center space-x-2 cursor-pointer">
+      return Object.entries(obj).map(([key, value]) => {
+        const currentPath = [...path, key];
+        const isObject = typeof value === 'object' && value !== null && !Array.isArray(value);
+        
+        return (
+          <div key={currentPath.join('.')} className="mb-4">
+            {/* Property Row */}
+            <div className="flex items-center gap-3 p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Key Input */}
+                <div>
                   <input
-                    type="checkbox"
-                    checked={schedule.days.includes(day)}
-                    onChange={(e) => {
-                      const newDays = e.target.checked
-                        ? [...schedule.days, day]
-                        : schedule.days.filter(d => d !== day);
-                      updateMonitoringSchedule(index, 'days', newDays);
-                    }}
-                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                    type="text"
+                    value={key}
+                    onChange={(e) => updateProperty(currentPath, value, e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Property name"
                   />
-                  <span className="text-sm text-gray-700 capitalize">
-                    {day.substring(0, 3)}
-                  </span>
-                </label>
-              ))}
+                </div>
+                
+                {/* Value Input */}
+                <div className="flex gap-2">
+                  {isObject ? (
+                    <div className="flex-1 px-3 py-2 text-sm text-gray-500 bg-gray-50 rounded border border-gray-300">
+                      Object ({Object.keys(value).length} properties)
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={typeof value === 'string' ? value : JSON.stringify(value)}
+                      onChange={(e) => {
+                        let newValue;
+                        try {
+                          newValue = JSON.parse(e.target.value);
+                        } catch {
+                          newValue = e.target.value;
+                        }
+                        updateProperty(currentPath, newValue);
+                      }}
+                      className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Property value"
+                    />
+                  )}
+                  <button
+                    onClick={() => removeProperty(currentPath)}
+                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                    title="Remove property"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="mt-2 text-xs text-gray-500">
-              Selected: {schedule.days.length} day{schedule.days.length !== 1 ? 's' : ''}
-            </div>
+            
+            {/* Nested object properties */}
+            {isObject && (
+              <div className="ml-6 mt-3 space-y-3">
+                {renderObjectFields(value, currentPath, level + 1)}
+                <button
+                  onClick={() => addProperty(currentPath)}
+                  className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Property
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-      </div>
-    );
-  };
+        );
+      });
+    };
 
-  const renderTreeView = () => {
+    const propertyCount = Object.keys(jsonData).length;
+
     return (
-      <div className="space-y-4">
-        {monitoringSchedules.map((schedule, index) => {
-          const scheduleKey = `schedule-${index}`;
-          const isExpanded = expandedSchedules.has(scheduleKey);
-          
-          return (
-            <div key={index} className="border border-purple-200 rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
-              <div 
-                className="px-4 py-3 bg-purple-50 border-b border-purple-100 cursor-pointer hover:bg-purple-100 transition-colors"
-                onClick={() => toggleScheduleExpansion(index)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {isExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-purple-600" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-purple-600" />
-                    )}
-                    <div className={`w-3 h-3 rounded-full ${schedule.isActive ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                    <span className="font-medium text-gray-900">{schedule.name}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(schedule.priority)}`}>
-                      {schedule.priority}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span>{schedule.days.length} days</span>
-                    <span>{schedule.startTime} - {schedule.endTime}</span>
-                    <span>{schedule.timezone}</span>
-                  </div>
-                </div>
-              </div>
-              
-              {isExpanded && (
-                <div className="p-4 space-y-3">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Status:</span>
-                      <span className={`ml-2 font-medium ${schedule.isActive ? 'text-green-600' : 'text-gray-600'}`}>
-                        {schedule.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Priority:</span>
-                      <span className="ml-2 font-medium">{schedule.priority}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Start:</span>
-                      <span className="ml-2 font-medium">{schedule.startTime}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">End:</span>
-                      <span className="ml-2 font-medium">{schedule.endTime}</span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <span className="text-gray-500 text-sm">Days:</span>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {schedule.days.map(day => (
-                        <span key={day} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full capitalize">
-                          {day}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <span className="text-gray-500 text-sm">Timezone:</span>
-                    <span className="ml-2 font-medium text-sm">{schedule.timezone}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6" style={{ fontFamily: 'Gotham, Arial, Helvetica, sans-serif' }}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Calendar className="w-6 h-6" style={{ color: 'rgb(81, 77, 223)' }} />
-            <h2 className="text-sm " style={{ color: 'var(--purple-tertiary)' }}>Monitoring Schedule Editor</h2>
-            <div className="flex items-center gap-2">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                isValidJson ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-              }`}>
-                {isValidJson ? 'Valid JSON' : 'Invalid JSON'}
-              </span>
-              <span className="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-                {schedulesCount} schedule{schedulesCount !== 1 ? 's' : ''}
-              </span>
-              <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                {activeSchedules} active
-              </span>
-            </div>
-          </div>
-          <p className="text-sm text-gray-600">
-            Create and manage monitoring schedules with flexible time ranges and day selections.
-          </p>
-        </div>
-      </div>
-
-      {/* Mode Tabs */}
-      <div className="border-b border-purple-200">
-        <nav className="flex space-x-8">
-          <button
-            onClick={() => setConfigurationMode('json')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
-              configurationMode === 'json'
-                ? 'text-purple-600 border-purple-500'
-                : 'border-transparent text-gray-500 hover:text-purple-600'
-            }`}
-          >
-            <Code className="w-4 h-4" />
-            JSON Editor
-          </button>
-          <button
-            onClick={() => setConfigurationMode('form')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
-              configurationMode === 'form'
-                ? 'text-purple-600 border-purple-500'
-                : 'border-transparent text-gray-500 hover:text-purple-600'
-            }`}
-          >
-            <Edit className="w-4 h-4" />
-            Form Editor
-          </button>
-          <button
-            onClick={() => setConfigurationMode('tree')}
-            className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors flex items-center gap-2 ${
-              configurationMode === 'tree'
-                ? 'text-purple-600 border-purple-500'
-                : 'border-transparent text-gray-500 hover:text-purple-600'
-            }`}
-          >
-            <Eye className="w-4 h-4" />
-            Tree View
-          </button>
-        </nav>
-      </div>
-
-      {/* JSON Editor Mode */}
-      {configurationMode === 'json' && (
-        <div className="space-y-4">
-          <div className="bg-purple-50 p-6 rounded-lg border border-purple-100">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Code className="w-5 h-5 text-purple-600" />
-                <h2 className="font-medium text-purple-800">JSON Configuration Editor</h2>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={copyJson}
-                  className="p-2 text-purple-600 hover:bg-purple-200 rounded transition-colors"
-                  title="Copy JSON"
-                >
-                  <Copy className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={resetToFormData}
-                  className="p-2 text-purple-600 hover:bg-purple-200 rounded transition-colors"
-                  title="Reset to Form Data"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 mb-4">
-              <button
-                onClick={formatJson}
-                className="px-4 py-2 text-sm text-white rounded-lg transition-colors"
-                style={{ backgroundColor: 'rgb(81, 77, 223)' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(120, 37, 195)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(81, 77, 223)'}
-              >
-                Format
-              </button>
-              <button
-                onClick={minifyJson}
-                className="px-4 py-2 text-sm text-white rounded-lg transition-colors"
-                style={{ backgroundColor: 'rgb(100, 33, 172)' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(61, 24, 129)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(100, 33, 172)'}
-              >
-                Minify
-              </button>
-              <button
-                onClick={clearJson}
-                className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Clear All
-              </button>
-            </div>
-
-            <div className="border border-purple-200 rounded-lg overflow-hidden bg-white">
-              <textarea
-                value={jsonValue}
-                onChange={(e) => {
-                  setJsonValue(e.target.value);
-                  try {
-                    const parsed = JSON.parse(e.target.value);
-                    if (Array.isArray(parsed)) {
-                      setJsonError('');
-                    } else {
-                      setJsonError('Data must be an array of monitoring schedules');
-                    }
-                  } catch (error) {
-                    setJsonError('Invalid JSON format');
-                  }
-                }}
-                className="w-full h-80 p-4 font-mono text-sm border-none focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
-                placeholder="Enter monitoring schedule JSON configuration..."
-              />
-            </div>
-
-            {jsonError && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mt-4">
-                <AlertCircle className="w-4 h-4" />
-                {jsonError}
-              </div>
-            )}
-
-            {isValidJson && (
-              <div className="mt-4 flex items-center gap-3">
-                <button
-                  onClick={applyJsonChanges}
-                  className="px-6 py-2 text-white rounded-lg transition-colors"
-                  style={{ backgroundColor: 'rgb(81, 77, 223)' }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(120, 37, 195)'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(81, 77, 223)'}
-                >
-                  Apply Changes
-                </button>
-                <span className="text-sm text-gray-600">
-                  Changes will be applied to the form editor
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Form Editor Mode */}
-      {configurationMode === 'form' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Edit className="w-5 h-5 text-purple-600" />
-              <h2 className="font-medium text-purple-700">Interactive Schedule Editor</h2>
-            </div>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <FileText className="w-5 h-5 text-gray-600" />
+            <span className="text-lg font-medium">Interactive Form Editor</span>
             <button
-              onClick={addMonitoringSchedule}
-              className="px-4 py-2 text-white rounded-lg transition-colors flex items-center gap-2"
-              style={{ backgroundColor: 'rgb(120, 37, 195)' }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(120, 37, 195)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(81, 77, 223)'}
+              onClick={resetData}
+              className="flex items-center gap-2 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              title="Reset"
             >
-              <Plus className="w-4 h-4" />
-              Add Schedule
+              <RotateCcw className="w-4 h-4" />
+              Reset
             </button>
           </div>
-
-          <div className="space-y-6">
-            {monitoringSchedules.map((schedule, index) => 
-              renderFormField(schedule, index)
-            )}
-
-            {monitoringSchedules.length === 0 && (
-              <div className="text-center py-16 text-gray-500 bg-purple-50 rounded-lg border border-purple-100">
-                <Calendar className="w-16 h-16 mx-auto mb-4 text-purple-300" />
-                <h3 className="text-lg font-medium mb-2 text-purple-700">No Monitoring Schedules</h3>
-                <p className="mb-6">Create your first monitoring schedule to get started.</p>
-                <button
-                  onClick={addMonitoringSchedule}
-                  className="px-6 py-3 text-white rounded-lg transition-colors"
-                  style={{ backgroundColor: 'rgb(81, 77, 223)' }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = 'rgb(120, 37, 195)'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'rgb(81, 77, 223)'}
-                >
-                  Add Your First Schedule
-                </button>
-              </div>
-            )}
-          </div>
         </div>
-      )}
 
-      {/* Tree View Mode */}
-      {configurationMode === 'tree' && (
-        <div className="bg-purple-50 p-6 rounded-lg border border-purple-100">
-          <div className="flex items-center gap-2 mb-6">
-            <Eye className="w-5 h-5 text-purple-600" />
-            <h2 className="font-medium text-purple-800">Schedule Tree View</h2>
-            <span className="text-sm text-purple-600">
-              Expandable view of all monitoring schedules
-            </span>
+        {/* Subtitle */}
+        <p className="text-sm text-gray-600 -mt-4">
+          Edit your data using form fields with automatic type detection and validation.
+        </p>
+
+        {/* Object Container */}
+        <div className="border-2 border-dashed border-gray-200 rounded-lg p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <ChevronDown className="w-4 h-4 text-gray-600" />
+            <span className="font-mono text-sm">{ }</span>
+            <span className="text-sm font-medium">Object</span>
           </div>
-          
-          {monitoringSchedules.length > 0 ? (
-            renderTreeView()
+
+          {propertyCount === 0 ? (
+            <div className="py-8 text-center">
+              <button
+                onClick={() => addProperty()}
+                className="flex items-center gap-2 mx-auto px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Property
+              </button>
+            </div>
           ) : (
-            <div className="text-center py-12 text-purple-500 bg-white rounded-lg border-2 border-dashed border-purple-200">
-              <Calendar className="w-12 h-12 mx-auto mb-4 text-purple-300" />
-              <p className="text-lg font-medium mb-2">No Schedules to Display</p>
-              <p className="text-sm">Switch to Form Editor to create schedules</p>
+            <div className="space-y-3">
+              {renderObjectFields(jsonData)}
+              <button
+                onClick={() => addProperty()}
+                className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Property
+              </button>
             </div>
           )}
         </div>
-      )}
 
-      {/* Status Bar */}
-      <div className="bg-purple-50 px-6 py-4 rounded-lg border border-purple-100">
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-6">
-            <span>Total: <span className="text-purple-600 font-medium">{schedulesCount} schedule{schedulesCount !== 1 ? 's' : ''}</span></span>
-            <span>Active: <span className="text-green-600 font-medium">{activeSchedules}</span></span>
-            <span>Inactive: <span className="text-gray-600 font-medium">{schedulesCount - activeSchedules}</span></span>
+        {/* Footer Info */}
+        <div className="flex items-center justify-between text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded">
+          <span>Data Type: Object</span>
+          <span>Size: {propertyCount} properties</span>
+          <span>{jsonString.length} characters</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Render tree view
+  const renderTreeView = () => {
+    const renderTreeNode = (obj, path = [], level = 0) => {
+      if (!obj || typeof obj !== 'object') return null;
+
+      return Object.entries(obj).map(([key, value]) => {
+        const currentPath = [...path, key];
+        const nodeId = currentPath.join('.');
+        const isExpanded = expandedNodes.has(nodeId);
+        const isObject = typeof value === 'object' && value !== null && !Array.isArray(value);
+        const hasChildren = isObject && Object.keys(value).length > 0;
+
+        return (
+          <div key={nodeId} className="text-sm">
+            <div 
+              className={`flex items-center gap-2 py-1 px-2 hover:bg-gray-50 rounded cursor-pointer ${level > 0 ? 'ml-' + (level * 4) : ''}`}
+              onClick={() => hasChildren && toggleExpansion(nodeId)}
+            >
+              {hasChildren ? (
+                isExpanded ? (
+                  <ChevronDown className="w-4 h-4 text-gray-600" />
+                ) : (
+                  <ChevronRight className="w-4 h-4 text-gray-600" />
+                )
+              ) : (
+                <div className="w-4 h-4" />
+              )}
+              
+              <span className="font-mono text-blue-600">{key}</span>
+              <span className="text-gray-400">:</span>
+              
+              {isObject ? (
+                <span className="text-gray-500">
+                  Object ({Object.keys(value).length} properties)
+                </span>
+              ) : (
+                <span className="text-gray-800 font-mono">
+                  {JSON.stringify(value)}
+                </span>
+              )}
+            </div>
+            
+            {hasChildren && isExpanded && (
+              <div className="ml-4">
+                {renderTreeNode(value, currentPath, level + 1)}
+              </div>
+            )}
           </div>
-          <span className="text-purple-500">{JSON.stringify(monitoringSchedules).length} characters</span>
+        );
+      });
+    };
+
+    const propertyCount = Object.keys(jsonData).length;
+
+    return (
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <AlertTriangle className="w-5 h-5 text-gray-600" />
+          <span className="text-lg font-medium">Object Tree View</span>
+        </div>
+
+        {/* Tree Container */}
+        <div className="bg-white border border-gray-200 rounded-lg">
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Data Structure</span>
+              <span className="font-mono text-sm text-gray-600">object</span>
+              <span className="text-sm text-gray-500">{propertyCount} properties</span>
+            </div>
+          </div>
+          
+          <div className="p-4">
+            {propertyCount === 0 ? (
+              <div className="py-8 text-center text-gray-500">
+                <p>No properties to display</p>
+                <p className="text-xs mt-1">Use Form Editor to add properties</p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {renderTreeNode(jsonData)}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer Info */}
+        <div className="flex items-center justify-between text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded">
+          <span>Data Type: Object</span>
+          <span>Size: 0 properties</span>
+          <span>2 characters</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Calculate stats
+  const propertyCount = Object.keys(jsonData).length;
+  const characterCount = jsonString.length;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto p-4 md:p-6">
+        {/* Header */}
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">JSON Editor</h1>
+              <p className="text-gray-600 mt-1">Edit and visualize your JSON data structure.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 mb-6">
+          <nav className="flex space-x-8 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab('json')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex items-center gap-2 ${
+                activeTab === 'json'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Code className="w-4 h-4" />
+              JSON Editor
+            </button>
+            <button
+              onClick={() => setActiveTab('form')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex items-center gap-2 ${
+                activeTab === 'form'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              Form Editor
+            </button>
+            <button
+              onClick={() => setActiveTab('tree')}
+              className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex items-center gap-2 ${
+                activeTab === 'tree'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <Eye className="w-4 h-4" />
+              Tree View
+            </button>
+          </nav>
+        </div>
+
+        {/* Content */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-4 md:p-6">
+            {activeTab === 'json' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">JSON Source</h3>
+                  <button
+                    onClick={resetData}
+                    className="flex items-center gap-2 px-3 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Reset
+                  </button>
+                </div>
+                <textarea
+                  value={jsonString}
+                  onChange={(e) => handleJsonChange(e.target.value)}
+                  className={`w-full h-96 p-4 font-mono text-sm border rounded-lg resize-none ${
+                    isValidJson 
+                      ? 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500' 
+                      : 'border-red-300 bg-red-50'
+                  }`}
+                  placeholder="Enter JSON here..."
+                />
+                {!isValidJson && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                    <AlertTriangle className="w-4 h-4" />
+                    Invalid JSON format
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'form' && renderFormEditor()}
+            {activeTab === 'tree' && renderTreeView()}
+          </div>
+        </div>
+
+        {/* Footer Stats */}
+        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-4">
+              <span>Data Type: <span className="font-medium text-gray-900">Object</span></span>
+              <span>Size: <span className="font-medium text-gray-900">{propertyCount} properties</span></span>
+            </div>
+            <span><span className="font-medium text-gray-900">{characterCount}</span> characters</span>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default MonitoringScheduleEditor;
+export default JSONEditor;

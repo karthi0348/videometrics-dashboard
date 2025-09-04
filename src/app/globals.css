@@ -43,3 +43,29 @@ body {
   color: var(--foreground);
   font-family: "Gotham", Arial, Helvetica, sans-serif;
 }
+
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;   /* decrease width */
+  height: 6px;  /* decrease height */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* or any bg color */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #8b5cf6; /* purple-ish */
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #6d28d9; /* darker purple on hover */
+}
+
+/* For Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;         /* decrease width */
+  scrollbar-color: #8b5cf6 transparent; /* thumb + track */
+}

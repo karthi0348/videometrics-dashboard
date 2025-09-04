@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, Loader2, Calendar, Camera, Bell, AlertCircle } from 'lucide-react';
+import { X, Save, Loader2, Calendar, Camera, Bell, AlertCircle, Menu } from 'lucide-react';
 import { SubProfile, UpdateSubProfileAPIRequest, CameraLocation, MonitoringSchedule, AlertSettings } from '@/app/types/subprofiles';
 import CameraLocations from '../../Profiles/Subprofile/CameraLocations';
 import MonitoringScheduleComponent from '../../Profiles/Subprofile/MonitoringScheduleComponent';
@@ -35,6 +35,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [showMobileNav, setShowMobileNav] = useState(false);
 
   const loading = externalLoading || isLoading;
 
@@ -99,6 +100,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
       // If basic info is invalid, switch to basic tab
       if (errors.name || errors.description || errors.areaType) {
         setActiveTab('basic');
+        setShowMobileNav(false);
       }
       return;
     }
@@ -140,6 +142,11 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
     }
   };
 
+  const handleTabChange = (tabId: 'basic' | 'cameras' | 'monitoring' | 'alerts') => {
+    setActiveTab(tabId);
+    setShowMobileNav(false);
+  };
+
   const tabs = [
     { id: 'basic', label: 'Basic Info', icon: null },
     { id: 'cameras', label: 'Camera Locations', icon: Camera },
@@ -148,44 +155,94 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      {/* Container with responsive padding and sizing */}
+      <div className="bg-white rounded-none sm:rounded-2xl shadow-2xl w-full h-full sm:w-[95vw] sm:h-[95vh] md:w-[90vw] md:h-[90vh] lg:w-full lg:max-w-5xl lg:max-h-[90vh] xl:max-w-6xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Edit Sub-Profile</h2>
-            <p className="text-sm text-gray-500 mt-1">Update settings for {subProfile.name}</p>
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Edit Sub-Profile</h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">Update settings for {subProfile.name}</p>
           </div>
           <button
             onClick={onCancel}
             disabled={loading}
-            className="p-2 bg-white rounded-lg transition-colors text-red-500"
+            className="p-2 bg-white rounded-lg transition-colors text-red-500 hover:bg-red-50 flex-shrink-0 ml-4"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
         {/* API Error Display */}
         {apiError && (
-          <div className="mx-6 mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mx-4 sm:mx-6 mt-2 sm:mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-red-500" />
-              <p className="text-sm text-red-700">{apiError}</p>
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
+              <p className="text-xs sm:text-sm text-red-700 break-words">{apiError}</p>
             </div>
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
+        {/* Mobile Navigation Toggle */}
+        <div className="sm:hidden border-b border-gray-200">
+          <button
+            onClick={() => setShowMobileNav(!showMobileNav)}
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50"
+          >
+            <div className="flex items-center gap-2">
+              <Menu className="w-4 h-4" />
+              <span className="font-medium text-sm">
+                {tabs.find(tab => tab.id === activeTab)?.label}
+              </span>
+            </div>
+            <div className={`transform transition-transform ${showMobileNav ? 'rotate-180' : ''}`}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </button>
+        </div>
+
+        {/* Mobile Navigation Dropdown */}
+        {showMobileNav && (
+          <div className="sm:hidden border-b border-gray-200 bg-gray-50">
             {tabs.map(tab => {
               const Icon = tab.icon;
               const hasErrors = tab.id === 'basic' && (errors.name || errors.description || errors.areaType);
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  onClick={() => handleTabChange(tab.id as any)}
+                  className={`w-full flex items-center gap-3 p-4 text-left transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-500'
+                      : hasErrors
+                      ? 'text-red-500 hover:bg-red-50'
+                      : 'text-gray-700 hover:bg-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    {Icon && <Icon className="w-4 h-4" />}
+                    {hasErrors && <AlertCircle className="w-4 h-4" />}
+                    <span className="font-medium text-sm">{tab.label}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Desktop Tabs */}
+        <div className="hidden sm:block border-b border-gray-200">
+          <nav className="flex px-4 sm:px-6 overflow-x-auto scrollbar-hide">
+            {tabs.map(tab => {
+              const Icon = tab.icon;
+              const hasErrors = tab.id === 'basic' && (errors.name || errors.description || errors.areaType);
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id as any)}
+                  className={`py-3 px-4 lg:px-6 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : hasErrors
@@ -196,7 +253,12 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
                   <div className="flex items-center gap-2">
                     {Icon && <Icon className="w-4 h-4" />}
                     {hasErrors && <AlertCircle className="w-4 h-4" />}
-                    {tab.label}
+                    <span className="hidden md:inline">{tab.label}</span>
+                    <span className="md:hidden">
+                      {tab.id === 'basic' ? 'Basic' : 
+                       tab.id === 'cameras' ? 'Cameras' : 
+                       tab.id === 'monitoring' ? 'Schedule' : 'Alerts'}
+                    </span>
                   </div>
                 </button>
               );
@@ -204,187 +266,260 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
           </nav>
         </div>
 
-        {/* Content - Proper flex layout with scrolling */}
-        <div className="flex-1 overflow-y-auto p-6 min-h-0">
-          {activeTab === 'basic' && (
-            <div className="space-y-6">
-              {/* Name */}
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Sub-Profile Name *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.name ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter sub-profile name"
-                  disabled={loading}
-                  required
-                />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.name}
-                  </p>
-                )}
-              </div>
-
-              {/* Description */}
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  rows={4}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
-                    errors.description ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Enter description (optional)"
-                  disabled={loading}
-                />
-                <div className="flex justify-between items-center mt-1">
-                  {errors.description && (
-                    <p className="text-sm text-red-600 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.description}
+        {/* Content - Scrollable area */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-4 sm:p-6">
+            {activeTab === 'basic' && (
+              <div className="space-y-4 sm:space-y-6 max-w-2xl">
+                {/* Name */}
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Sub-Profile Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${
+                      errors.name ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter sub-profile name"
+                    disabled={loading}
+                    required
+                  />
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span className="break-words">{errors.name}</span>
                     </p>
                   )}
-                  <p className="text-xs text-gray-500 ml-auto">
-                    {formData.description.length}/500 characters
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    rows={3}
+                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm sm:text-base ${
+                      errors.description ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Enter description (optional)"
+                    disabled={loading}
+                  />
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-1 gap-1">
+                    {errors.description && (
+                      <p className="text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        <span className="break-words">{errors.description}</span>
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-500 sm:ml-auto">
+                      {formData.description.length}/500 characters
+                    </p>
+                  </div>
+                </div>
+
+                {/* Area Type */}
+                <div>
+                  <label htmlFor="areaType" className="block text-sm font-medium text-gray-700 mb-2">
+                    Area Type *
+                  </label>
+                  <select
+                    id="areaType"
+                    value={formData.areaType}
+                    onChange={(e) => handleInputChange('areaType', e.target.value)}
+                    className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${
+                      errors.areaType ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    disabled={loading}
+                    required
+                  >
+                    <option value="">Select area type</option>
+                    <option value="dining">Dining</option>
+                    <option value="kitchen">Kitchen</option>
+                    <option value="entrance">Entrance</option>
+                    <option value="parking">Parking</option>
+                    <option value="office">Office</option>
+                    <option value="retail">Retail</option>
+                    <option value="warehouse">Warehouse</option>
+                    <option value="outdoor">Outdoor</option>
+                    <option value="other">Other</option>
+                  </select>
+                  {errors.areaType && (
+                    <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span className="break-words">{errors.areaType}</span>
+                    </p>
+                  )}
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
+                    Tags
+                  </label>
+                  <input
+                    type="text"
+                    id="tags"
+                    value={formData.tags}
+                    onChange={(e) => handleInputChange('tags', e.target.value)}
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                    placeholder="Enter tags separated by commas"
+                    disabled={loading}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Separate multiple tags with commas
                   </p>
                 </div>
-              </div>
 
-              {/* Area Type */}
-              <div>
-                <label htmlFor="areaType" className="block text-sm font-medium text-gray-700 mb-2">
-                  Area Type *
-                </label>
-                <select
-                  id="areaType"
-                  value={formData.areaType}
-                  onChange={(e) => handleInputChange('areaType', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.areaType ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  disabled={loading}
-                  required
-                >
-                  <option value="">Select area type</option>
-                  <option value="dining">Dining</option>
-                  <option value="kitchen">Kitchen</option>
-                  <option value="entrance">Entrance</option>
-                  <option value="parking">Parking</option>
-                  <option value="office">Office</option>
-                  <option value="retail">Retail</option>
-                  <option value="warehouse">Warehouse</option>
-                  <option value="outdoor">Outdoor</option>
-                  <option value="other">Other</option>
-                </select>
-                {errors.areaType && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.areaType}
-                  </p>
+                {/* Status Information */}
+                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">Current Status</h3>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium inline-block w-fit ${
+                      subProfile.isActive 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {subProfile.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                    <span className="text-xs sm:text-sm text-gray-500">
+                      Use the toggle in the main list to change status
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'cameras' && (
+              <div className="w-full">
+                {CameraLocations ? (
+                  <CameraLocations 
+                    cameraLocations={cameraLocations}
+                    setCameraLocations={setCameraLocations}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Camera Locations</h3>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5 text-yellow-500" />
+                        <p className="text-sm text-yellow-700">
+                          Camera Locations component is not available. Please ensure the component exists at the correct import path.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p><strong>Current camera locations:</strong> {cameraLocations.length} configured</p>
+                      <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto">
+                        {JSON.stringify(cameraLocations, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
                 )}
               </div>
+            )}
 
-              {/* Tags */}
-              <div>
-                <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
-                  Tags
-                </label>
-                <input
-                  type="text"
-                  id="tags"
-                  value={formData.tags}
-                  onChange={(e) => handleInputChange('tags', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter tags separated by commas (e.g., security, monitoring, main-area)"
-                  disabled={loading}
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Separate multiple tags with commas
-                </p>
+            {activeTab === 'monitoring' && (
+              <div className="w-full">
+                {MonitoringScheduleComponent ? (
+                  <MonitoringScheduleComponent
+                    monitoringSchedules={monitoringSchedules}
+                    setMonitoringSchedules={setMonitoringSchedules}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Monitoring Schedule</h3>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5 text-yellow-500" />
+                        <p className="text-sm text-yellow-700">
+                          Monitoring Schedule component is not available. Please ensure the component exists at the correct import path.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p><strong>Current monitoring schedules:</strong> {monitoringSchedules.length} configured</p>
+                      <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto">
+                        {JSON.stringify(monitoringSchedules, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
               </div>
+            )}
 
-              {/* Status Information */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-900 mb-2">Current Status</h3>
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    subProfile.isActive 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {subProfile.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    Use the toggle in the main list to change status
-                  </span>
-                </div>
+            {activeTab === 'alerts' && (
+              <div className="w-full">
+                {AlertSettingsComponent ? (
+                  <AlertSettingsComponent
+                    alertSettings={alertSettings}
+                    setAlertSettings={setAlertSettings}
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Alert Settings</h3>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5 text-yellow-500" />
+                        <p className="text-sm text-yellow-700">
+                          Alert Settings component is not available. Please ensure the component exists at the correct import path.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p><strong>Current alert settings:</strong> {alertSettings.length} configured</p>
+                      <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto">
+                        {JSON.stringify(alertSettings, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
-
-          {activeTab === 'cameras' && (
-            <CameraLocations 
-              cameraLocations={cameraLocations}
-              setCameraLocations={setCameraLocations}
-            />
-          )}
-
-          {activeTab === 'monitoring' && (
-            <MonitoringScheduleComponent
-              monitoringSchedules={monitoringSchedules}
-              setMonitoringSchedules={setMonitoringSchedules}
-            />
-          )}
-
-          {activeTab === 'alerts' && (
-            <AlertSettingsComponent
-              alertSettings={alertSettings}
-              setAlertSettings={setAlertSettings}
-            />
-          )}
+            )}
+          </div>
         </div>
 
         {/* Footer - Fixed at bottom */}
         <div className="flex-shrink-0 bg-white border-t border-gray-200">
-          <div className="flex items-center justify-between gap-3 p-6 bg-gray-50">
-            <div className="text-sm text-gray-500">
+          <div className="p-4 sm:p-6 bg-gray-50">
+            {/* Required fields note - hidden on mobile to save space */}
+            <div className="hidden sm:block text-xs sm:text-sm text-gray-500 mb-3">
               All required fields marked with * must be filled
             </div>
-            <div className="flex items-center gap-3">
+            
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={onCancel}
                 disabled={loading}
-                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="order-2 sm:order-1 px-4 sm:px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg hover:bg-blue-700 hover:border-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="order-1 sm:order-2 inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg hover:bg-blue-700 hover:border-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
               >
                 {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Saving...
+                    <span className="hidden xs:inline">Saving...</span>
+                    <span className="xs:hidden">Save</span>
                   </>
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Save Changes
+                    <span className="hidden xs:inline">Save Changes</span>
+                    <span className="xs:hidden">Save</span>
                   </>
                 )}
               </button>

@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
-import VideoTable from './components/Videos/VideoTable';
-import Header from './components/Videos/Videos';
+import Videos from './components/Videos/Videos';
 import ProfilesPage from './components/Profiles/ProfilesPage';
 import TemplatesPage from './components/Templates/TemplatesPage';
 import ProcessVideoPage from './components/ProcessVideo/ProcessVideoPage';
 import ProcessedVideosPage from './components/ProcessedVideos/ProcessedVideosPage';
-import SettingsPage from './components/Settings/SettingsPage'; 
+import SettingsPage from './components/Settings/SettingsPage';
 import HelpPage from './components/Help/HelpPage';
-import DashboardPage from './components/Dashboard/DashboardPage'; // Import the new DashboardPage
+import DashboardPage from './components/Dashboard/DashboardPage';
 import { Video, ViewMode } from './types';
 
 interface HomeProps {
@@ -21,14 +20,14 @@ const Home: React.FC = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activePage, setActivePage] = useState<string>('videos');
+  const [activePage, setActivePage] = useState<string>('dashboard');
 
   // Handle navigation from sidebar
   const handleNavigation = (pageKey: string) => {
     setActivePage(pageKey);
     setSidebarOpen(false);
   };
- 
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -41,6 +40,8 @@ const Home: React.FC = () => {
     switch (activePage) {
       case 'dashboard':
         return <DashboardPage videos={videos} onNavigate={handleNavigation} />;
+      case 'videos':
+        return <Videos videos={videos} />;
       case 'processed':
         return <ProcessedVideosPage />;
       case 'process':
@@ -54,58 +55,14 @@ const Home: React.FC = () => {
       case 'help':
         return <HelpPage onNavigate={handleNavigation} />;
       default:
-        return (
-          <div className="bg-white border-b border-gray-200">
-            <VideoTable videos={videos} viewMode={viewMode} />
-          </div>
-        );
+        return <DashboardPage videos={videos} onNavigate={handleNavigation} />;
     }
   };
 
-  const getPageTitle = () => {
-    switch (activePage) {
-      case 'dashboard':
-        return 'Dashboard';
-      case 'videos':
-        return 'Videos';
-      case 'processed':
-        return 'Processed Videos';
-      case 'process':
-        return 'Process Video';
-      case 'templates':
-        return 'Templates';
-      case 'profiles':
-        return 'Profiles';
-      case 'settings':
-        return 'Settings';
-      case 'help':
-        return 'Help';
-      default:
-        return 'Videos';
-    }
-  };
-
-  const renderHeader = () => {
-    if (activePage === 'videos') {
-      return (
-        <div className="bg-white border-b border-gray-200">
-          <Header 
-            videoCount={videos.length}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-          />
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Special handling for pages that need full-width layout
   const renderContentWithLayout = () => {
     if (['templates', 'profiles', 'videos', 'settings', 'help', 'dashboard'].includes(activePage)) {
       return renderMainContent();
     }
-
     return (
       <div className="max-w-7xl mx-auto">
         {renderMainContent()}
@@ -117,33 +74,23 @@ const Home: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Mobile backdrop for sidebar */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={closeSidebar}
         />
       )}
-      
+
       {/* Desktop Layout */}
       <div className="hidden lg:flex min-h-screen">
         {/* Desktop Sidebar */}
         <div className="w-64 flex-shrink-0">
           <Sidebar onNavigate={handleNavigation} activePage={activePage} />
         </div>
-        
+
         {/* Desktop Main Content */}
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-          {/* Desktop Header */}
-          {renderHeader()}
-          
-          {/* Desktop Main Content */}
           <main className="flex-1 overflow-auto">
-            {['templates', 'profiles', 'videos', 'settings', 'help', 'dashboard'].includes(activePage) ? (
-              renderContentWithLayout()
-            ) : (
-              <div className="px-6 py-8">
-                {renderContentWithLayout()}
-              </div>
-            )}
+            {renderContentWithLayout()}
           </main>
         </div>
       </div>
@@ -152,18 +99,18 @@ const Home: React.FC = () => {
       <div className="lg:hidden min-h-screen flex flex-col">
         {/* Mobile Sidebar */}
         <Sidebar onNavigate={handleNavigation} activePage={activePage} />
-        
+
         {/* Mobile Header */}
         {activePage === 'videos' && (
           <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
-            <Header 
+            <Videos
               videoCount={videos.length}
               viewMode={viewMode}
               setViewMode={setViewMode}
             />
           </div>
         )}
-        
+
         {/* Mobile Main Content */}
         <main className="flex-1 overflow-auto bg-gray-50 min-h-0">
           <div className="h-full">

@@ -15,9 +15,11 @@ import {
   Priority,
   ProcessVideoPageProps,
   AnalyticsVideo,
-  AnalyticsResponse,ProcessVideoRequest,ProcessVideoResponse,ProcessedVideoNotification
+  AnalyticsResponse,
+  ProcessVideoRequest,
+  ProcessVideoResponse,
+  ProcessedVideoNotification
 } from "./types/types";
-
 
 interface ExtendedProcessingVideo extends ProcessingVideo {
   created_at?: string;
@@ -29,7 +31,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
   subProfiles: propSubProfiles,
   templates: propTemplates,
   onVideoProcessed,
-  onRedirectToNextPage, // Add this prop for redirect callback
+  onRedirectToNextPage,
 }) => {
   // State for API data
   const [videos, setVideos] = useState<any[]>([]);
@@ -190,9 +192,6 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
         } else {
           // Fallback redirect logic if no callback provided
           console.log("No redirect callback provided, implement fallback redirect here");
-          // You can implement a fallback redirect here, for example:
-          // window.location.href = '/next-page';
-          // or use react-router navigation
         }
         
         return true; // Indicates redirect was triggered
@@ -251,7 +250,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
             console.log(`Available UUIDs:`, response.data.map(v => v.uuid));
             const matchingVideo = response.data.find(
             (analyticsVideo: AnalyticsVideo) =>
-              analyticsVideo.uuid === video.uuid || // Changed from analytics_id to uuid
+              analyticsVideo.uuid === video.uuid ||
               analyticsVideo.id === video.video_id
           );
 
@@ -480,12 +479,12 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
       const processingVideo: ExtendedProcessingVideo = {
         video_id: responseData.video_id,
-        uuid: responseData.uuid, // Make sure this is not undefined
+        uuid: responseData.uuid,
         video_name: videoName,
         status: responseData.status,
         estimated_completion: responseData.estimated_completion,
         priority: responseData.priority as Priority,
-        created_at: new Date().toISOString(), // Add timestamp for timeout checks
+        created_at: new Date().toISOString(),
       };
       console.log("Adding to processing queue:", processingVideo);
       setProcessingQueue((prev) => [...prev, processingVideo]);
@@ -579,8 +578,8 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center">
-        <div className="bg-white rounded-lg shadow-sm border border-purple-200 p-8 max-w-md w-full mx-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center px-4">
+        <div className="bg-white rounded-lg shadow-sm border border-purple-200 p-6 sm:p-8 max-w-md w-full">
           <div className="flex items-center justify-center mb-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
           </div>
@@ -600,19 +599,19 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-purple-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-purple-700">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 sm:py-6 space-y-4 sm:space-y-0">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-purple-700 truncate">
                 Process Video
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 mt-1 text-sm">
                 Upload and analyze your videos with powerful AI-driven metrics
               </p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
               <button
                 onClick={handleRefresh}
-                className="inline-flex items-center px-4 py-2 border border-purple-300 rounded-lg text-sm font-medium text-purple-700 bg-white hover:bg-purple-50 transition-colors"
+                className="inline-flex items-center justify-center px-4 py-2 border border-purple-300 rounded-lg text-sm font-medium text-purple-700 bg-white hover:bg-purple-50 transition-colors"
                 disabled={loading}
               >
                 <svg
@@ -628,11 +627,13 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                {loading ? "Refreshing..." : "Refresh"}
+                <span className="whitespace-nowrap">
+                  {loading ? "Refreshing..." : "Refresh"}
+                </span>
               </button>
               <button
                 onClick={handleAllVideos}
-                className="inline-flex items-center px-4 py-2 border border-purple-300 rounded-lg text-sm font-medium text-purple-700 bg-white hover:bg-purple-50 transition-colors"
+                className="inline-flex items-center justify-center px-4 py-2 border border-purple-300 rounded-lg text-sm font-medium text-purple-700 bg-white hover:bg-purple-50 transition-colors"
               >
                 <svg
                   className="w-4 h-4 mr-2"
@@ -647,7 +648,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10"
                   />
                 </svg>
-                All Videos
+                <span className="whitespace-nowrap">All Videos</span>
               </button>
             </div>
           </div>
@@ -657,16 +658,16 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       {/* Progress Steps */}
       <div className="bg-white border-b border-purple-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center space-x-8">
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-medium">
+          <div className="flex flex-wrap items-center gap-4 lg:gap-8">
+            <div className="flex items-center min-w-0">
+              <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-medium flex-shrink-0">
                 1
               </div>
-              <span className="ml-2 text-sm font-medium text-gray-900">
+              <span className="ml-2 text-sm font-medium text-gray-900 truncate">
                 Select Video
               </span>
               <svg
-                className="w-4 h-4 ml-4 text-gray-400"
+                className="w-4 h-4 ml-2 lg:ml-4 text-gray-400 flex-shrink-0 hidden sm:block"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -680,15 +681,15 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
               </svg>
             </div>
 
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-medium">
+            <div className="flex items-center min-w-0">
+              <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-medium flex-shrink-0">
                 2
               </div>
-              <span className="ml-2 text-sm font-medium text-gray-900">
+              <span className="ml-2 text-sm font-medium text-gray-900 truncate">
                 Select Analytics
               </span>
               <svg
-                className="w-4 h-4 ml-4 text-gray-400"
+                className="w-4 h-4 ml-2 lg:ml-4 text-gray-400 flex-shrink-0 hidden sm:block"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -702,15 +703,15 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
               </svg>
             </div>
 
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-medium">
+            <div className="flex items-center min-w-0">
+              <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-medium flex-shrink-0">
                 3
               </div>
-              <span className="ml-2 text-sm font-medium text-gray-900">
+              <span className="ml-2 text-sm font-medium text-gray-900 truncate">
                 Process
               </span>
               <svg
-                className="w-4 h-4 ml-4 text-gray-400"
+                className="w-4 h-4 ml-2 lg:ml-4 text-gray-400 flex-shrink-0 hidden sm:block"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -724,11 +725,11 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
               </svg>
             </div>
 
-            <div className="flex items-center">
-              <div className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full text-sm font-medium">
+            <div className="flex items-center min-w-0">
+              <div className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full text-sm font-medium flex-shrink-0">
                 4
               </div>
-              <span className="ml-2 text-sm font-medium text-green-600">
+              <span className="ml-2 text-sm font-medium text-green-600 truncate">
                 View Results
               </span>
             </div>
@@ -743,7 +744,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <div className="flex">
                 <svg
-                  className="w-5 h-5 text-green-400 mt-0.5 mr-3"
+                  className="w-5 h-5 text-green-400 mt-0.5 mr-3 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -755,7 +756,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <div className="text-green-800">{success}</div>
+                <div className="text-green-800 text-sm">{success}</div>
               </div>
             </div>
           )}
@@ -763,7 +764,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
               <div className="flex">
                 <svg
-                  className="w-5 h-5 text-red-400 mt-0.5 mr-3"
+                  className="w-5 h-5 text-red-400 mt-0.5 mr-3 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -775,7 +776,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-                <div className="text-red-800">{error}</div>
+                <div className="text-red-800 text-sm">{error}</div>
               </div>
             </div>
           )}
@@ -795,10 +796,10 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                     : "bg-red-50 border-red-200"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                  <div className="flex items-start sm:items-center">
                     <svg
-                      className={`w-5 h-5 mr-3 ${
+                      className={`w-5 h-5 mr-3 mt-0.5 sm:mt-0 flex-shrink-0 ${
                         video.status === "completed"
                           ? "text-green-400"
                           : "text-red-400"
@@ -824,13 +825,13 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                       )}
                     </svg>
                     <div
-                      className={
+                      className={`min-w-0 flex-1 ${
                         video.status === "completed"
                           ? "text-green-800"
                           : "text-red-800"
-                      }
+                      }`}
                     >
-                      <strong>
+                      <strong className="block truncate">
                         Video "{video.video_name}"{" "}
                         {video.status === "completed" ? "completed" : "failed"}{" "}
                         processing!
@@ -841,24 +842,24 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                         </p>
                       )}
                       {video.error_message && (
-                        <p className="text-sm mt-1">
+                        <p className="text-sm mt-1 break-words">
                           Error: {video.error_message}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 sm:ml-4 flex-shrink-0">
                     {video.status === "completed" && (
                       <button
                         onClick={() => handleViewAnalytics(video.uuid)}
-                        className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-md hover:bg-green-200 transition-colors"
+                        className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-center whitespace-nowrap"
                       >
                         View Results
                       </button>
                     )}
                     <button
                       onClick={() => clearCompletedNotification(video.uuid)}
-                      className="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-200 transition-colors"
+                      className="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-200 transition-colors text-center whitespace-nowrap"
                     >
                       Dismiss
                     </button>
@@ -871,139 +872,143 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
           {/* Process Video Form */}
-          <ProcessVideoForm
-            videos={videos}
-            profiles={profiles}
-            subProfiles={subProfiles}
-            onProcessVideo={handleProcessVideo}
-            isProcessing={isProcessing}
-          />
+          <div className="order-1">
+            <ProcessVideoForm
+              videos={videos}
+              profiles={profiles}
+              subProfiles={subProfiles}
+              onProcessVideo={handleProcessVideo}
+              isProcessing={isProcessing}
+            />
+          </div>
 
           {/* Processing Queue */}
-          <div className="bg-white rounded-lg shadow-sm border border-purple-200 p-6">
-            <div className="flex items-center mb-4">
-              <div className="w-6 h-6 text-purple-500 mr-3">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                Processing Queue
-              </h2>
-              {processingQueue.length > 0 && pollingInterval && (
-                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  Auto-updating
-                </span>
-              )}
-            </div>
-            <p className="text-gray-600 text-sm mb-6">
-              Videos currently being processed ({processingQueue.length})
-            </p>
-
-            {processingQueue.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 text-purple-300">
+          <div className="order-2">
+            <div className="bg-white rounded-lg shadow-sm border border-purple-200 p-4 sm:p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-6 h-6 text-purple-500 mr-3 flex-shrink-0">
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth="1.5"
+                      strokeWidth="2"
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No videos currently processing
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  Videos being processed will appear here and auto-update
-                </p>
+                <h2 className="text-lg font-semibold text-gray-900 truncate">
+                  Processing Queue
+                </h2>
+                {processingQueue.length > 0 && pollingInterval && (
+                  <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 whitespace-nowrap">
+                    Auto-updating
+                  </span>
+                )}
               </div>
-            ) : (
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {processingQueue.map((video) => (
-                  <div
-                    key={video.uuid}
-                    className="border border-purple-200 rounded-lg p-4"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center">
-                        <div className="animate-spin w-5 h-5 mr-3 text-purple-500">
-                          <svg fill="none" viewBox="0 0 24 24">
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 truncate">
-                          {video.video_name}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            video.priority === "high"
-                              ? "bg-red-100 text-red-800"
-                              : video.priority === "low"
-                              ? "bg-gray-100 text-gray-800"
-                              : "bg-purple-100 text-purple-800"
-                          }`}
-                        >
-                          {video.priority}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500 mb-3 space-y-1">
-                      <div>
-                        Status:{" "}
-                        <span className="font-medium">{video.status}</span>
-                      </div>
-                      <div>
-                        Estimated completion:{" "}
-                        <span className="font-medium">
-                          {video.estimated_completion}
-                        </span>
-                      </div>
-                      <div className="truncate">
-                        UUID: <span className="font-mono">{video.uuid}</span>
-                      </div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleViewAnalytics(video.uuid)}
-                        className="text-xs bg-purple-50 text-purple-700 px-3 py-1 rounded-md hover:bg-purple-100 transition-colors"
-                      >
-                        View Analytics
-                      </button>
-                      <button
-                        onClick={() => removeFromQueue(video.uuid)}
-                        className="text-xs bg-gray-50 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-100 transition-colors"
-                      >
-                        Remove from Queue
-                      </button>
-                    </div>
+              <p className="text-gray-600 text-sm mb-6">
+                Videos currently being processed ({processingQueue.length})
+              </p>
+
+              {processingQueue.length === 0 ? (
+                <div className="text-center py-8 sm:py-12">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-purple-300">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.5"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
                   </div>
-                ))}
-              </div>
-            )}
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+                    No videos currently processing
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    Videos being processed will appear here and auto-update
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-80 sm:max-h-96 overflow-y-auto">
+                  {processingQueue.map((video) => (
+                    <div
+                      key={video.uuid}
+                      className="border border-purple-200 rounded-lg p-3 sm:p-4"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center min-w-0 flex-1">
+                          <div className="animate-spin w-5 h-5 mr-3 text-purple-500 flex-shrink-0">
+                            <svg fill="none" viewBox="0 0 24 24">
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                          </div>
+                          <span className="text-sm font-medium text-gray-900 truncate">
+                            {video.video_name}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2 flex-shrink-0">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              video.priority === "high"
+                                ? "bg-red-100 text-red-800"
+                                : video.priority === "low"
+                                ? "bg-gray-100 text-gray-800"
+                                : "bg-purple-100 text-purple-800"
+                            }`}
+                          >
+                            {video.priority}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500 mb-3 space-y-1">
+                        <div>
+                          Status:{" "}
+                          <span className="font-medium">{video.status}</span>
+                        </div>
+                        <div>
+                          Estimated completion:{" "}
+                          <span className="font-medium">
+                            {video.estimated_completion}
+                          </span>
+                        </div>
+                        <div className="break-all">
+                          UUID: <span className="font-mono">{video.uuid}</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                        <button
+                          onClick={() => handleViewAnalytics(video.uuid)}
+                          className="text-xs bg-purple-50 text-purple-700 px-3 py-1 rounded-md hover:bg-purple-100 transition-colors text-center"
+                        >
+                          View Analytics
+                        </button>
+                        <button
+                          onClick={() => removeFromQueue(video.uuid)}
+                          className="text-xs bg-gray-50 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-100 transition-colors text-center"
+                        >
+                          Remove from Queue
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

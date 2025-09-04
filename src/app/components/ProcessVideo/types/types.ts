@@ -9,8 +9,6 @@ export interface Video {
   created_at?: string;
 }
 
-
-
 export interface Profile {
   id: number;
   name: string;
@@ -28,7 +26,6 @@ export interface SubProfile {
   areaType?: string;
   isActive?: boolean;
 }
-
 
 export interface Template {
   id: number;
@@ -48,19 +45,16 @@ export interface ProcessingVideo {
 
 export type Priority = 'normal' | 'high' | 'low';
 
-
-
-
-  export interface AnalyticsVideo {
+export interface AnalyticsVideo {
   id: number;
-  analytics_id: string;
+  uuid: string;
+  analytics_id?: string;
   video_title: string;
   processing_status: string;
   confidence_score: number;
   created_at: string;
   updated_at: string;
   error_message?: string;
-  
 }
 
 export interface AnalyticsResponse {
@@ -89,15 +83,15 @@ export interface ProcessVideoResponse {
   template_used: string;
   estimated_completion: string;
   priority: string;
-  data:any;
+  data: any;
 }
-
 
 export interface ProcessedVideoNotification {
   uuid: string;
   video_name: string;
   status: "completed" | "failed";
   error_message?: string;
+  videoData?: AnalyticsVideo | null;
 }
 
 export interface ProcessVideoPageProps {
@@ -106,4 +100,5 @@ export interface ProcessVideoPageProps {
   subProfiles?: SubProfile[];
   templates?: Template[];
   onVideoProcessed?: (video: AnalyticsVideo) => void;
+  onRedirectToNextPage?: () => void;
 }
