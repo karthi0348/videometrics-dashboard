@@ -122,9 +122,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
           Dashboard
         </h1>
-        <p className="text-gray-600">
-          Welcome Gantann! Here's an overview of your video analytics.
-        </p>
+        {/* <p className="text-gray-600">
+          Welcome Gantann! Here is an overview of your video analytics.
+        </p> */}
         {error && (
           <div className="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">
             {error} - Showing cached data

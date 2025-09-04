@@ -37,7 +37,7 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
     }
   ];
 
-  const toggleFaq = (faqId: any) => {
+  const toggleFaq = (faqId) => {
     setExpandedFaq(expandedFaq === faqId ? null : faqId);
   };
 
