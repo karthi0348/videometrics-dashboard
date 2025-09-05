@@ -53,7 +53,20 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         setError(null);
 
         const data = await dashboardApiService.getDashboardStats();
-        setDashboardStats(data);
+        
+        // Transform the API response to match our interface
+        const transformedData: DashboardStats = {
+          total_profiles: data.total_profiles || 0,
+          total_sub_profiles: data.total_sub_profiles || 0,
+          total_templates: data.total_templates || 0,
+          total_analytics: data.total_analytics || 0,
+          processing_analytics: data.processing_analytics || 0,
+          completed_analytics: data.completed_analytics || 0,
+          failed_analytics: data.failed_analytics || 0,
+          recent_activity: data.recent_activity || [],
+        };
+        
+        setDashboardStats(transformedData);
       } catch (err) {
         console.error("Failed to fetch dashboard stats:", err);
         setError("Failed to load dashboard data");
