@@ -18,9 +18,29 @@ import {
   MonitoringSchedule,
   AlertSettings,
 } from "@/app/types/subprofiles";
-import CameraLocations from "../../Profiles/Subprofile/CameraLocations";
-import MonitoringScheduleComponent from "../../Profiles/Subprofile/MonitoringScheduleComponent";
-import AlertSettingsComponent from "../../Profiles/Subprofile/AlertSettingsComponent";
+
+// Import components with error handling
+let CameraLocations: React.ComponentType<any> | null = null;
+let MonitoringScheduleComponent: React.ComponentType<any> | null = null;
+let AlertSettingsComponent: React.ComponentType<any> | null = null;
+
+try {
+  CameraLocations = require("../../Profiles/Subprofile/CameraLocations").default;
+} catch (error) {
+  console.warn("CameraLocations component not found:", error);
+}
+
+try {
+  MonitoringScheduleComponent = require("../../Profiles/Subprofile/MonitoringScheduleComponent").default;
+} catch (error) {
+  console.warn("MonitoringScheduleComponent not found:", error);
+}
+
+try {
+  AlertSettingsComponent = require("../../Profiles/Subprofile/AlertSettingsComponent").default;
+} catch (error) {
+  console.warn("AlertSettingsComponent not found:", error);
+}
 
 interface EditSubProfileModalProps {
   subProfile: SubProfile;
@@ -502,8 +522,8 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               <div className="w-full">
                 {CameraLocations ? (
                   <CameraLocations
-                    cameraLocations={cameraLocations}
-                    setCameraLocations={setCameraLocations}
+                    data={cameraLocations}
+                    onChange={setCameraLocations}
                   />
                 ) : (
                   <div className="space-y-4">
@@ -538,8 +558,8 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               <div className="w-full">
                 {MonitoringScheduleComponent ? (
                   <MonitoringScheduleComponent
-                    monitoringSchedule={monitoringSchedules}
-                    setMonitoringSchedules={setMonitoringSchedules}
+                    data={monitoringSchedules}
+                    onChange={setMonitoringSchedules}
                   />
                 ) : (
                   <div className="space-y-4">
@@ -574,8 +594,8 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               <div className="w-full">
                 {AlertSettingsComponent ? (
                   <AlertSettingsComponent
-                    alertSettings={alertSettings}
-                    setAlertSettings={setAlertSettings}
+                    data={alertSettings}
+                    onChange={setAlertSettings}
                   />
                 ) : (
                   <div className="space-y-4">
