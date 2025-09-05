@@ -47,7 +47,7 @@ const AssignmentModal = ({
                 ],
                 priority: selectedPriority
             };
-            await templateApiService.assignSUbProfile(template.id, payload);
+            await templateApiService.assignSubProfile(template.id, payload);
             toast.success('Assigned Successfully', { containerId: 'TR' });
             onClose();
             setSelectedProfile('');
