@@ -23,10 +23,10 @@ const DeleteSubProfileModal: React.FC<DeleteSubProfileModalProps> = ({
   const loading = externalLoading || isLoading;
 
   // Helper function to extract data from either array or object format
-  const extractArrayData = (data: unknown): unknown[] => {
+  const extractArrayData = (data: any) => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
-    if (typeof data === 'object' && data !== null) return Object.values(data);
+    if (typeof data === 'object') return Object.values(data);
     return [];
   };
 

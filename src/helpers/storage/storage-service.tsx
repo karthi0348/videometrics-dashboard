@@ -1,66 +1,58 @@
-// Define interfaces for better type safety
-export interface UserData {
-    userName?: string;
-    role?: string;
-    [key: string]: unknown; // Allow additional properties
-}
-
 class StorageService {
 
-    public static clear = (): void => {
+    public static clear = () => {
         window.localStorage.clear();
     }
 
-    public static saveUserData(user: UserData): void {
+    public static saveUserData(user: any): void {
         window.localStorage.setItem("user", JSON.stringify(user));
     }
 
-    public static getUserData(): UserData | null {
-        const user: string | null = window.localStorage.getItem("user");
+    public static getUserData(): any {
+        let user: any = window.localStorage.getItem("user");
         if (user) {
-            return JSON.parse(user) as UserData;
+            return JSON.parse(user);
         }
-        return null;
     }
 
-    public static getUserName = (): string | undefined => {
-        const user = this.getUserData();
+    public static getUserName = () => {
+        let user = this.getUserData();
         if (user) {
-            return user.userName;
+            return user['userName'];
         }
-        return undefined;
     }
 
-    public static getRole = (): string | undefined => {
-        const role = this.getUserData();
+    public static getRole = () => {
+        let role = this.getUserData();
         if (role) {
-            return role.role;
+            return role['role'];
         }
-        return undefined;
     }
 
-    public static setToken(token: string): void {
+    public static setToken(token: string) {
         if (!token) {
             return;
         }
         window.localStorage.setItem('token', token);
     }
 
-    public static getToken(): string | null {
+    public static getToken() {
         return window.localStorage.getItem('token');
     }
 
-    public static isLoggedIn(): boolean {
-        const token = this.getToken();
-        return token !== null && token !== '';
+    public static isLoggedIn() {
+        if (this.getToken() || this.getToken() != null) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    public static getUserDataFromSessionStorage(): UserData | null {
-        const user: string | null = sessionStorage.getItem('userData');
+    public static getUserDataFromSessionStorage(): any {
+        let user: any = sessionStorage.getItem('userData');
         if (user) {
-            return JSON.parse(user) as UserData;
+            return JSON.parse(user);
         }
-        return null;
     }
 }
 

@@ -27,15 +27,6 @@ interface DashboardStats {
   }>;
 }
 
-// Interface for API response structure
-interface ApiRecentActivity {
-  id: number;
-  type: string;
-  description: string;
-  timestamp: string;
-  analytics_id?: string;
-}
-
 const DashboardPage: React.FC<DashboardPageProps> = ({
   videos = [],
   onNavigate,
@@ -55,17 +46,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const dashboardApiService = new DashboardApiService();
   const processVideoApiService = new ProcessVideoApiService(); // Add this for the modal
 
-  // Helper function to transform API recent activity to expected format
-  const transformRecentActivity = (apiActivity: ApiRecentActivity[]) => {
-    return apiActivity.map((item) => ({
-      id: item.id,
-      analytics_id: item.analytics_id,
-      status: item.type || 'unknown', // Map type to status
-      created_at: item.timestamp,
-      processing_completed_at: item.timestamp, // Use timestamp for both dates
-    }));
-  };
-
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
@@ -73,20 +53,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         setError(null);
 
         const data = await dashboardApiService.getDashboardStats();
-        
-        // Transform the API response to match our interface
-        const transformedData: DashboardStats = {
-          total_profiles: data.total_profiles || 0,
-          total_sub_profiles: data.total_sub_profiles || 0,
-          total_templates: data.total_templates || 0,
-          total_analytics: data.total_analytics || 0,
-          processing_analytics: data.processing_analytics || 0,
-          completed_analytics: data.completed_analytics || 0,
-          failed_analytics: data.failed_analytics || 0,
-          recent_activity: data.recent_activity ? transformRecentActivity(data.recent_activity) : [],
-        };
-        
-        setDashboardStats(transformedData);
+        setDashboardStats(data);
       } catch (err) {
         console.error("Failed to fetch dashboard stats:", err);
         setError("Failed to load dashboard data");
@@ -155,9 +122,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
           Dashboard
         </h1>
-        {/* <p className="text-gray-600">
-          Welcome Gantann! Here is an overview of your video analytics.
-        </p> */}
+    
         {error && (
           <div className="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">
             {error} - Showing cached data

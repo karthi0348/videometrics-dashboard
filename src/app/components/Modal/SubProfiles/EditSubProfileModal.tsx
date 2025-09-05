@@ -19,53 +19,28 @@ import {
   AlertSettings,
 } from "@/app/types/subprofiles";
 
-// Define proper types for the imported components
-interface CameraLocationsProps {
-  data: Omit<CameraLocation, "id">[];
-  onChange: (data: Omit<CameraLocation, "id">[]) => void;
+// Import components with error handling
+let CameraLocations: React.ComponentType<any> | null = null;
+let MonitoringScheduleComponent: React.ComponentType<any> | null = null;
+let AlertSettingsComponent: React.ComponentType<any> | null = null;
+
+try {
+  CameraLocations = require("../../Profiles/Subprofile/CameraLocations").default;
+} catch (error) {
+  console.warn("CameraLocations component not found:", error);
 }
 
-interface MonitoringScheduleProps {
-  data: Omit<MonitoringSchedule, "id">[];
-  onChange: (data: Omit<MonitoringSchedule, "id">[]) => void;
+try {
+  MonitoringScheduleComponent = require("../../Profiles/Subprofile/MonitoringScheduleComponent").default;
+} catch (error) {
+  console.warn("MonitoringScheduleComponent not found:", error);
 }
 
-interface AlertSettingsProps {
-  data: Omit<AlertSettings, "id">[];
-  onChange: (data: Omit<AlertSettings, "id">[]) => void;
+try {
+  AlertSettingsComponent = require("../../Profiles/Subprofile/AlertSettingsComponent").default;
+} catch (error) {
+  console.warn("AlertSettingsComponent not found:", error);
 }
-
-// Import components with proper typing and error handling
-let CameraLocations: React.ComponentType<CameraLocationsProps> | null = null;
-let MonitoringScheduleComponent: React.ComponentType<MonitoringScheduleProps> | null = null;
-let AlertSettingsComponent: React.ComponentType<AlertSettingsProps> | null = null;
-
-// Use dynamic imports instead of require()
-const loadComponents = async () => {
-  try {
-    const { default: CameraLocationsComponent } = await import("../../Profiles/Subprofile/CameraLocations");
-    CameraLocations = CameraLocationsComponent;
-  } catch (error) {
-    console.warn("CameraLocations component not found:", error);
-  }
-
-  try {
-    const { default: MonitoringScheduleComp } = await import("../../Profiles/Subprofile/MonitoringScheduleComponent");
-    MonitoringScheduleComponent = MonitoringScheduleComp;
-  } catch (error) {
-    console.warn("MonitoringScheduleComponent not found:", error);
-  }
-
-  try {
-    const { default: AlertSettingsComp } = await import("../../Profiles/Subprofile/AlertSettingsComponent");
-    AlertSettingsComponent = AlertSettingsComp;
-  } catch (error) {
-    console.warn("AlertSettingsComponent not found:", error);
-  }
-};
-
-// Load components on module initialization
-loadComponents();
 
 interface EditSubProfileModalProps {
   subProfile: SubProfile;

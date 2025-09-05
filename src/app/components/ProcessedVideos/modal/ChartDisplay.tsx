@@ -1,11 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { GeneratedChart } from "../types/types";
 import { PieChart, CircularGauge } from "./ChartComponents";
+
+// Define API service interface
+interface ApiService {
+  getCharts: (analyticsId: string) => Promise<GeneratedChart[] | string>;
+  refreshChart: (analyticsId: string, chartId: string) => Promise<GeneratedChart | string>;
+}
 
 interface ChartDisplayProps {
   charts?: GeneratedChart[];
   analyticsId?: string;
-  apiService?: any;
+  apiService?: ApiService | null;
   mockMode?: boolean;
 }
 
@@ -22,16 +28,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     new Set()
   );
 
-  // Load charts from API if analyticsId is provided and no initial charts
-  useEffect(() => {
-    if (analyticsId && !initialCharts && !mockMode && apiService) {
-      loadChartsFromAPI();
-    } else if (initialCharts) {
-      setCharts(initialCharts);
-    }
-  }, [analyticsId, initialCharts, mockMode, apiService]);
-
-  const loadChartsFromAPI = async () => {
+  const loadChartsFromAPI = useCallback(async () => {
     if (!analyticsId || !apiService) {
       setError("Analytics ID or API service not available");
       return;
@@ -45,11 +42,11 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
       const response = await apiService.getCharts(analyticsId);
 
-      let chartData;
+      let chartData: GeneratedChart[];
       if (typeof response === "string") {
         try {
-          chartData = JSON.parse(response);
-        } catch (parseError) {
+          chartData = JSON.parse(response) as GeneratedChart[];
+        } catch {
           console.error("Failed to parse charts JSON response:", response);
           throw new Error("Invalid JSON response from charts API");
         }
@@ -74,7 +71,16 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [analyticsId, apiService]);
+
+  // Load charts from API if analyticsId is provided and no initial charts
+  useEffect(() => {
+    if (analyticsId && !initialCharts && !mockMode && apiService) {
+      loadChartsFromAPI();
+    } else if (initialCharts) {
+      setCharts(initialCharts);
+    }
+  }, [analyticsId, initialCharts, mockMode, apiService, loadChartsFromAPI]);
 
   const refreshChart = async (chartId: string) => {
     if (!analyticsId || !apiService || mockMode) return;
@@ -86,11 +92,11 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
       const response = await apiService.refreshChart(analyticsId, chartId);
 
-      let refreshedChart;
+      let refreshedChart: GeneratedChart;
       if (typeof response === "string") {
         try {
-          refreshedChart = JSON.parse(response);
-        } catch (parseError) {
+          refreshedChart = JSON.parse(response) as GeneratedChart;
+        } catch {
           console.error(
             "Failed to parse refresh chart JSON response:",
             response
@@ -137,11 +143,11 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     return (
       chart.plot_type === "pie" &&
       chart.series &&
-      Array.isArray(chart.series.value) &&
+      Array.isArray(chart.series.valueOf) &&
       Array.isArray(chart.series.category) &&
-      chart.series.value.length > 0 &&
+      chart.series.valueOf.length > 0 &&
       chart.series.category.length > 0 &&
-      chart.series.value.length === chart.series.category.length
+      chart.series.valueOf.length === chart.series.category.length
     );
   };
 
@@ -322,7 +328,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
               ) : isValidPieChartData(chart) ? (
                 <PieChart
                   data={{
-                    value: chart.series!.value as number[],
+                    value: chart.series!.valueOf as number[],
                     category: chart.series!.category as string[],
                   }}
                   title=""  // Title is handled above

@@ -1,31 +1,17 @@
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
 
-// Define interfaces for better type safety
-export interface ErrorResponse {
-    message?: string;
-    error?: {
-        message?: string;
-    };
-    detail?: string;
-    // Add other common error response properties as needed
-}
-
-const ErrorHandler = (error: AxiosError<ErrorResponse>): void => {
+const ErrorHandler = (error: AxiosError) => {
     if (error.response) {
         if (error.response.data) {
-            const data = error.response.data;
-            if (typeof data === 'object' && data !== null) {
-                const errorMessages = (data.error?.message || data.message || data.detail);
-                if (errorMessages) {
-                    toast.error(errorMessages, { containerId: 'TR' });
-                } else {
-                    toast.error('An error occurred', { containerId: 'TR' });
-                }
+            const data: any = error.response.data;
+            if (typeof data === 'object') {
+                const errorMessages = (data?.error?.message || data.message);
+                toast.error(errorMessages, { containerId: 'TR' });
             } else {
-                toast.error(String(data), { containerId: 'TR' });
+                toast.error(data, { containerId: 'TR' });
             }
-        } else {
+        }else {
             toast.error('An unexpected server error occurred.', { containerId: 'TR' });
         }
     } else if (error.request) {
@@ -35,4 +21,4 @@ const ErrorHandler = (error: AxiosError<ErrorResponse>): void => {
     }
 }
 
-export default ErrorHandler;
+export default ErrorHandler

@@ -1,5 +1,3 @@
-// Fixed interfaces with proper typing
-
 export interface ProcessedVideo {
   id: number;
   analytics_id: string;
@@ -19,32 +17,7 @@ export interface ProcessedVideo {
   video_duration?: string;
 }
 
-// Define specific types for metadata, charts, and insights
-export interface ProcessedMetadata {
-  [key: string]: unknown;
-}
-
-export interface GeneratedChart {
-  plot_type: string;
-  series: boolean;
-  title: any;
-  status: string;
-  value: undefined;
-  styling: any;
-  x_axis: any;
-  insights: boolean;
-  id: string;
-  type: string;
-  data: unknown;
-  config?: unknown;
-}
-
-export interface Insight {
-  type: string;
-  value: unknown;
-  confidence: number;
-  timestamp?: string;
-}
+// types.ts
 
 export interface AnalyticsData {
   id: number;
@@ -54,9 +27,9 @@ export interface AnalyticsData {
   sub_profile_id: number;
   template_id: number;
   original_video_url: string;
-  processed_metadata: ProcessedMetadata[];
-  generated_charts: GeneratedChart[];
-  insights: Insight[];
+  processed_metadata: any[];
+  generated_charts: any[];
+  insights: any[];
   confidence_scores: number[];
   timestamp: string;
   status: string;
@@ -68,68 +41,23 @@ export interface AnalyticsData {
   updated_at: string;
 }
 
-// Define a proper type for the data field
-export interface InsightDataContent {
-  [key: string]: unknown;
-}
-
 export interface InsightData {
   insight_type: string;
   title: string;
   description: string;
   confidence: string;
   severity: string;
-  data: InsightDataContent;
+  data: any;
   action_items: string[];
   timestamp: string;
-}
-
-// Define a proper interface for the API service
-export interface ApiService {
-  getAnalytics: (id: string) => Promise<AnalyticsData>;
-  // Add other methods as needed
-  [key: string]: unknown;
 }
 
 export interface VideoMetricsModalProps {
   isOpen: boolean;
   onClose: () => void;
   analyticsId: string | null;
-  apiService?: ApiService;
+  apiService?: any;
   mockMode?: boolean;
 }
 
 
-// Define proper interfaces for the PDF library
-export interface JsPDFInstance {
-  setFontSize: (size: number) => void;
-  setTextColor: (r: number, g: number, b: number) => void;
-  text: (text: string, x: number, y: number, options?: { align?: string }) => void;
-  addImage: (
-    imageData: string,
-    format: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    alias?: string,
-    compression?: string,
-    rotation?: number,
-    offsetY?: number
-  ) => void;
-  addPage: () => void;
-  getNumberOfPages: () => number;
-  setPage: (page: number) => void;
-  save: (filename: string) => void;
-}
-
-// Define proper options for html2canvas
-export interface Html2CanvasOptions {
-  scale?: number;
-  useCORS?: boolean;
-  allowTaint?: boolean;
-  backgroundColor?: string;
-  width?: number;
-  scrollX?: number;
-  scrollY?: number;
-}

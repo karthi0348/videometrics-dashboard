@@ -11,16 +11,10 @@ interface GeneratedSummary {
   metrics_highlighted: string[];
 }
 
-// Define the API service interface
-interface ApiService {
-  getSummary: (analyticsId: string) => Promise<GeneratedSummary | string>;
-  [key: string]: unknown; // Allow for additional methods
-}
-
 interface SummaryViewProps {
   summary?: GeneratedSummary;
   analyticsId?: string | null;
-  apiService?: ApiService;
+  apiService?: any;
   mockMode?: boolean;
 }
 
@@ -55,10 +49,10 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       
       const response = await apiService.getSummary(analyticsId);
       
-      let data: GeneratedSummary;
+      let data;
       if (typeof response === "string") {
         try {
-          data = JSON.parse(response) as GeneratedSummary;
+          data = JSON.parse(response);
         } catch (parseError) {
           console.error("Failed to parse JSON response:", response);
           throw new Error("Invalid JSON response from server");

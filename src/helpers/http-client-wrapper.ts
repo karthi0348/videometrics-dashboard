@@ -1,196 +1,187 @@
-import { AxiosInstance, AxiosResponse, AxiosRequestConfig } from "axios";
+import { AxiosInstance } from "axios";
 import ApiConfig from "./api-config";
 
-// Define interfaces for better type safety
-export interface HeaderConfig {
-    headers: Record<string, string>;
-}
-
-export interface ApiResponseData<T = unknown> {
-    data: T;
-    message?: string;
-    success?: boolean;
-}
-
 class HttpClientWrapper {
+
     private axiosClient: AxiosInstance;
 
     constructor() {
         this.axiosClient = new ApiConfig().getAxiosInstance();
     }
 
-    public post = async <T = unknown>(path: string, payload: unknown): Promise<T> => {
+    public post = async (path: string, payload: any) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.post(path, payload, this.getJsonHeaderConfig());
-            return response.data;
-        } catch (err: unknown) {
+            let response: any = await this.axiosClient.post(path, payload, this.getJsonHeaderConfig());
+            return response;
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public postWithoutAuth = async <T = unknown>(path: string, payload: unknown): Promise<T> => {
+    public postWithoutAuth = async (path: string, payload: any) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.post(path, payload, this.getJsonHeaderConfigWithoutAuth());
-            return response.data;
-        } catch (err: unknown) {
+            let response: any = await this.axiosClient.post(path, payload, this.getJsonHeaderConfigWithoutAuth());
+            return response;
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public get = async <T = unknown>(path: string, payload?: unknown): Promise<T> => {
+    public get = async (path: string, payload?: any) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.get(path, this.getJsonHeaderConfig());
+            let response: any = await this.axiosClient.get(path, this.getJsonHeaderConfig());
             return response.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public getWithoutAuth = async <T = unknown>(path: string, payload?: unknown): Promise<T> => {
+    public getWithoutAuth = async (path: string, payload?: any) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.get(path, this.getJsonHeaderConfigWithoutAuth());
+            let response: any = await this.axiosClient.get(path, this.getJsonHeaderConfigWithoutAuth());
             return response.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public download = async <T = unknown>(path: string, isBlob: boolean = false): Promise<T> => {
+    public download = async (path: string, isBlob: boolean = false) => {
         try {
-            const config: AxiosRequestConfig = this.getJsonHeaderConfig();
+            const config: any = this.getJsonHeaderConfig();
             if (isBlob) {
                 config.responseType = 'blob';
             }
-            const response: AxiosResponse<T> = await this.axiosClient.get(path, config);
+            const response = await this.axiosClient.get(path, config);
             return response.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     };
 
-    public postBy = async <T = unknown>(path: string): Promise<T> => {
+    public postBy = async (path: string) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.post(path, '', this.getJsonHeaderConfig());
-            return response.data;
-        } catch (err: unknown) {
+            let response: any = await this.axiosClient.post(path, '', this.getJsonHeaderConfig());
+            return response;
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public put = async <T = unknown>(path: string, payload?: unknown): Promise<T> => {
+    public put = async (path: string, payload?: any) => {
         try {
-            const response: AxiosResponse<ApiResponseData<T>> = await this.axiosClient.put(path, payload, this.getJsonHeaderConfig());
+            let response: any = await this.axiosClient.put(path, payload, this.getJsonHeaderConfig());
             return response.data.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public putWithoutAuth = async <T = unknown>(path: string, payload?: unknown): Promise<T> => {
+    public putWithoutAuth = async (path: string, payload?: any) => {
         try {
-            const response: AxiosResponse<ApiResponseData<T>> = await this.axiosClient.put(path, payload, this.getJsonHeaderConfigWithoutAuth());
+            let response: any = await this.axiosClient.put(path, payload, this.getJsonHeaderConfigWithoutAuth());
             return response.data.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public patch = async <T = unknown>(path: string, payload?: unknown): Promise<T> => {
+
+    public patch = async (path: string, payload?: any) => {
         try {
-            const response: AxiosResponse<ApiResponseData<T>> = await this.axiosClient.patch(path, payload, this.getJsonHeaderConfig());
+            let response: any = await this.axiosClient.patch(path, payload, this.getJsonHeaderConfig());
             return response.data.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public patchFormData = async <T = unknown>(path: string, formData: FormData): Promise<T> => {
+    public patchFormData = async (path: string, formData: FormData) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.patch(path, formData, this.getFormDataHeaderConfig());
+            let response: any = await this.axiosClient.patch(path, formData, this.getFormDataHeaderConfig());
             return response.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public delete = async <T = unknown>(path: string): Promise<T> => {
+    public delete = async (path: string) => {
         try {
-            const response: AxiosResponse<ApiResponseData<T>> = await this.axiosClient.delete(path, this.getJsonHeaderConfig());
+            let response: any = await this.axiosClient.delete(path, this.getJsonHeaderConfig());
             return response.data.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public postFormData = async <T = unknown>(path: string, formData: FormData): Promise<T> => {
+    public postFormData = async (path: string, formData: FormData) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.post(path, formData, this.getFormDataHeaderConfig());
+            let response: any = await this.axiosClient.post(path, formData, this.getFormDataHeaderConfig());
             return response.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public postFormDataWithoutAuth = async <T = unknown>(path: string, formData: FormData): Promise<T> => {
+    public postFormDataWithoutAuth = async (path: string, formData: FormData) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.post(path, formData, this.getFormDataHeaderConfigWithoutAuth());
+            let response: any = await this.axiosClient.post(path, formData, this.getFormDataHeaderConfigWithoutAuth());
             return response.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public putFormData = async <T = unknown>(path: string, formData: FormData): Promise<T> => {
+    public putFormData = async (path: string, formData: FormData) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.put(path, formData, this.getFormDataHeaderConfig());
+            let response: any = await this.axiosClient.put(path, formData, this.getFormDataHeaderConfig());
             return response.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public putFormDataWithoutAuth = async <T = unknown>(path: string, formData: FormData): Promise<T> => {
+    public putFormDataWithoutAuth = async (path: string, formData: FormData) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.put(path, formData, this.getFormDataHeaderConfigWithoutAuth());
+            let response: any = await this.axiosClient.put(path, formData, this.getFormDataHeaderConfigWithoutAuth());
             return response.data;
-        } catch (err: unknown) {
+        } catch (err: any) {
             throw err;
         }
     }
 
-    public doLogout = async <T = unknown>(path: string): Promise<T> => {
+    public doLogout = async (path: string) => {
         try {
-            const response: AxiosResponse<T> = await this.axiosClient.post(path, '', this.getJsonHeaderConfigWithAuth());
-            return response.data;
-        } catch (err: unknown) {
+            let response: any = await this.axiosClient.post(path, '', this.getJsonHeaderConfigWithAuth());
+            return response;
+        } catch (err: any) {
             throw err;
         }
     }
 
-    getFormDataHeaderConfig = (): HeaderConfig => {
+    getFormDataHeaderConfig = () => {
         return this.getHeaderConfigWithAuth('multipart/form-data');
     }
 
-    getHeaderConfig = (contentType: string): HeaderConfig => {
-        const headers: Record<string, string> = {};
+    getHeaderConfig = (contentType: string) => {
+        let headers: any = {};
         headers['Content-Type'] = contentType;
         return { headers: headers }
     }
 
-    getJsonHeaderConfig = (): HeaderConfig => {
+    getJsonHeaderConfig = () => {
         return this.getHeaderConfigWithAuth('application/json');
     }
 
-    getJsonHeaderConfigWithoutAuth = (): HeaderConfig => {
+    getJsonHeaderConfigWithoutAuth = () => {
         return this.getHeaderConfig('application/json');
     }
 
-    getFormDataHeaderConfigWithoutAuth = (): HeaderConfig => {
+    getFormDataHeaderConfigWithoutAuth = () => {
         return this.getHeaderConfig('multipart/form-data');
     }
 
-    getHeaderConfigWithAuth = (contentType: string): HeaderConfig => {
-        const headers: Record<string, string> = {};
+    getHeaderConfigWithAuth = (contentType: string) => {
+        let headers: any = {};
         headers['Content-Type'] = contentType;
         const accessToken = localStorage.getItem('accessToken');
         if (accessToken) {
@@ -202,9 +193,8 @@ class HttpClientWrapper {
         return { headers: headers }
     }
 
-    getJsonHeaderConfigWithAuth = (): HeaderConfig => {
+    getJsonHeaderConfigWithAuth = () => {
         return this.getHeaderConfigWithAuth('application/json');
     }
 }
-
 export default HttpClientWrapper;
