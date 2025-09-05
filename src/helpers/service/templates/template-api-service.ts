@@ -1,7 +1,7 @@
 import HttpClientWrapper from "@/helpers/http-client-wrapper";
 
 // Define interfaces for better type safety
-interface Template {
+export interface Template {
   id: number;
   template_name: string;
   description: string;
@@ -23,7 +23,7 @@ interface Template {
   updated_at?: string;
 }
 
-interface CreateTemplatePayload {
+export interface CreateTemplatePayload {
   template_name: string;
   description: string;
   tags: string[];
@@ -42,12 +42,14 @@ interface CreateTemplatePayload {
   is_public: boolean;
 }
 
-interface AssignSubProfilePayload {
-  subProfileIds: number[];
-  // Add other properties as needed
+// Updated interface to match the actual API requirements
+export interface AssignSubProfilePayload {
+  template_id: string | number;
+  sub_profile_ids: (string | number)[];
+  priority: '1' | '2' | '3';
 }
 
-interface ApiResponse<T = unknown> {
+export interface ApiResponse<T = unknown> {
   data: T;
   message?: string;
   success?: boolean;

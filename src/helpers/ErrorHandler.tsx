@@ -2,7 +2,7 @@ import { AxiosError } from "axios";
 import { toast } from "react-toastify";
 
 // Define interfaces for better type safety
-interface ErrorResponse {
+export interface ErrorResponse {
     message?: string;
     error?: {
         message?: string;

@@ -1,7 +1,7 @@
 import HttpClientWrapper from "@/helpers/http-client-wrapper";
 
 // Define interfaces for better type safety
-interface SubProfile {
+export interface SubProfile {
   id: number;
   name: string;
   profile_id: number;
@@ -12,7 +12,7 @@ interface SubProfile {
   // Add other sub-profile properties as needed
 }
 
-interface ApiResponse<T = unknown> {
+export interface ApiResponse<T = unknown> {
   data: T;
   message?: string;
   success?: boolean;

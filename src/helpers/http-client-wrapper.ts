@@ -2,11 +2,11 @@ import { AxiosInstance, AxiosResponse, AxiosRequestConfig } from "axios";
 import ApiConfig from "./api-config";
 
 // Define interfaces for better type safety
-interface HeaderConfig {
+export interface HeaderConfig {
     headers: Record<string, string>;
 }
 
-interface ApiResponseData<T = unknown> {
+export interface ApiResponseData<T = unknown> {
     data: T;
     message?: string;
     success?: boolean;

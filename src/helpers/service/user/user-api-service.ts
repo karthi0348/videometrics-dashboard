@@ -3,7 +3,7 @@
 import HttpClientWrapper from "@/helpers/http-client-wrapper";
 
 // Define interfaces for better type safety
-interface User {
+export interface User {
   id: number;
   email: string;
   full_name: string;
@@ -13,18 +13,18 @@ interface User {
   is_active?: boolean;
 }
 
-interface UpdateUserPayload {
+export interface UpdateUserPayload {
   email: string;
   full_name: string;
   current_password?: string;
   new_password?: string;
 }
 
-interface SendCodeResponse {
+export interface SendCodeResponse {
   message: string;
 }
 
-interface VerifyResetPasswordResponse {
+export interface VerifyResetPasswordResponse {
   message: string;
 }
 

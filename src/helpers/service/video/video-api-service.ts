@@ -1,7 +1,7 @@
 import HttpClientWrapper from "@/helpers/http-client-wrapper";
 
 // Define interfaces for better type safety
-interface Video {
+export interface Video {
   id: number;
   url: string;
   title?: string;
@@ -14,7 +14,7 @@ interface Video {
   // Add other video properties as needed
 }
 
-interface ApiResponse<T = unknown> {
+export interface ApiResponse<T = unknown> {
   data: T;
   message?: string;
   success?: boolean;

@@ -1,6 +1,6 @@
 import ErrorHandler from "@/helpers/ErrorHandler";
 import ProfileApiService from "@/helpers/service/profile/profile-api-service";
-import TemplateApiService from "@/helpers/service/templates/template-api-service";
+import TemplateApiService, { AssignSubProfilePayload } from "@/helpers/service/templates/template-api-service";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 
@@ -13,13 +13,6 @@ interface Template {
 interface Profile {
   id: string | number;
   profile_name: string;
-}
-
-// Updated interface to match the expected API payload structure
-interface AssignmentPayload {
-  template_id: string | number;
-  sub_profile_ids: (string | number)[]; // Changed from sub_profile_ids to subProfileIds
-  priority: '1' | '2' | '3';
 }
 
 const AssignmentModal = ({
@@ -41,11 +34,10 @@ const AssignmentModal = ({
 
     const handleAssign = async () => {
         try {
-            const payload: AssignmentPayload = {
+            // Use the service interface directly
+            const payload: AssignSubProfilePayload = {
                 template_id: template.id,
-                sub_profile_ids: [ // Back to snake_case to match API
-                    selectedProfile
-                ],
+                sub_profile_ids: [selectedProfile],
                 priority: selectedPriority
             };
             await templateApiService.assignSubProfile(template.id, payload);

@@ -1,5 +1,5 @@
 // Define interfaces for better type safety
-interface UserData {
+export interface UserData {
     userName?: string;
     role?: string;
     [key: string]: unknown; // Allow additional properties
