@@ -18,7 +18,7 @@ interface Profile {
 // Updated interface to match the expected API payload structure
 interface AssignmentPayload {
   template_id: string | number;
-  subProfileIds: (string | number)[]; // Changed from sub_profile_ids to subProfileIds
+  sub_profile_ids: (string | number)[]; // Changed from sub_profile_ids to subProfileIds
   priority: '1' | '2' | '3';
 }
 
@@ -68,7 +68,7 @@ const AssignmentModal = ({
     const getAllProfile = useCallback(async () => {
         try {
             const result = await profileApiService.getAllProfile('');
-            setProfile(result as Profile[]);
+            setProfile(result as unknown as Profile[]);
         } catch (error) {
             setProfile([]);
             const errorObj = error as Error;
