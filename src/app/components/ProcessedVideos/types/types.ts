@@ -20,17 +20,26 @@ export interface ProcessedVideo {
 }
 
 // Define specific types for metadata, charts, and insights
-interface ProcessedMetadata {
+export interface ProcessedMetadata {
   [key: string]: unknown;
 }
 
-interface GeneratedChart {
+export interface GeneratedChart {
+  plot_type: string;
+  series: boolean;
+  title: any;
+  status: string;
+  value: undefined;
+  styling: any;
+  x_axis: any;
+  insights: boolean;
+  id: string;
   type: string;
   data: unknown;
   config?: unknown;
 }
 
-interface Insight {
+export interface Insight {
   type: string;
   value: unknown;
   confidence: number;
@@ -60,7 +69,7 @@ export interface AnalyticsData {
 }
 
 // Define a proper type for the data field
-interface InsightDataContent {
+export interface InsightDataContent {
   [key: string]: unknown;
 }
 
@@ -76,7 +85,7 @@ export interface InsightData {
 }
 
 // Define a proper interface for the API service
-interface ApiService {
+export interface ApiService {
   getAnalytics: (id: string) => Promise<AnalyticsData>;
   // Add other methods as needed
   [key: string]: unknown;
@@ -90,25 +99,9 @@ export interface VideoMetricsModalProps {
   mockMode?: boolean;
 }
 
-// Improved TypeScript declarations for global libraries
-declare global {
-  interface Window {
-    jsPDF: {
-      jsPDF: new (options?: {
-        orientation?: 'portrait' | 'landscape';
-        unit?: 'mm' | 'pt' | 'px' | 'in' | 'ex' | 'em' | 'pc';
-        format?: string | [number, number];
-      }) => JsPDFInstance;
-    };
-    html2canvas: (
-      element: HTMLElement,
-      options?: Html2CanvasOptions
-    ) => Promise<HTMLCanvasElement>;
-  }
-}
 
 // Define proper interfaces for the PDF library
-interface JsPDFInstance {
+export interface JsPDFInstance {
   setFontSize: (size: number) => void;
   setTextColor: (r: number, g: number, b: number) => void;
   text: (text: string, x: number, y: number, options?: { align?: string }) => void;
@@ -131,7 +124,7 @@ interface JsPDFInstance {
 }
 
 // Define proper options for html2canvas
-interface Html2CanvasOptions {
+export interface Html2CanvasOptions {
   scale?: number;
   useCORS?: boolean;
   allowTaint?: boolean;

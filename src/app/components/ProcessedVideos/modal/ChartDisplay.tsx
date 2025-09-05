@@ -1,17 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { GeneratedChart } from "../types/types";
 import { PieChart, CircularGauge } from "./ChartComponents";
-
-// Define API service interface
-interface ApiService {
-  getCharts: (analyticsId: string) => Promise<GeneratedChart[] | string>;
-  refreshChart: (analyticsId: string, chartId: string) => Promise<GeneratedChart | string>;
-}
 
 interface ChartDisplayProps {
   charts?: GeneratedChart[];
   analyticsId?: string;
-  apiService?: ApiService | null;
+  apiService?: any;
   mockMode?: boolean;
 }
 
@@ -28,7 +22,16 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     new Set()
   );
 
-  const loadChartsFromAPI = useCallback(async () => {
+  // Load charts from API if analyticsId is provided and no initial charts
+  useEffect(() => {
+    if (analyticsId && !initialCharts && !mockMode && apiService) {
+      loadChartsFromAPI();
+    } else if (initialCharts) {
+      setCharts(initialCharts);
+    }
+  }, [analyticsId, initialCharts, mockMode, apiService]);
+
+  const loadChartsFromAPI = async () => {
     if (!analyticsId || !apiService) {
       setError("Analytics ID or API service not available");
       return;
@@ -42,11 +45,11 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
       const response = await apiService.getCharts(analyticsId);
 
-      let chartData: GeneratedChart[];
+      let chartData;
       if (typeof response === "string") {
         try {
-          chartData = JSON.parse(response) as GeneratedChart[];
-        } catch {
+          chartData = JSON.parse(response);
+        } catch (parseError) {
           console.error("Failed to parse charts JSON response:", response);
           throw new Error("Invalid JSON response from charts API");
         }
@@ -71,16 +74,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [analyticsId, apiService]);
-
-  // Load charts from API if analyticsId is provided and no initial charts
-  useEffect(() => {
-    if (analyticsId && !initialCharts && !mockMode && apiService) {
-      loadChartsFromAPI();
-    } else if (initialCharts) {
-      setCharts(initialCharts);
-    }
-  }, [analyticsId, initialCharts, mockMode, apiService, loadChartsFromAPI]);
+  };
 
   const refreshChart = async (chartId: string) => {
     if (!analyticsId || !apiService || mockMode) return;
@@ -92,11 +86,11 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
       const response = await apiService.refreshChart(analyticsId, chartId);
 
-      let refreshedChart: GeneratedChart;
+      let refreshedChart;
       if (typeof response === "string") {
         try {
-          refreshedChart = JSON.parse(response) as GeneratedChart;
-        } catch {
+          refreshedChart = JSON.parse(response);
+        } catch (parseError) {
           console.error(
             "Failed to parse refresh chart JSON response:",
             response
