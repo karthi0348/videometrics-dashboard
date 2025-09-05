@@ -4,10 +4,9 @@ import HttpClientWrapper from "@/helpers/http-client-wrapper";
 
 // Define interfaces for better type safety
 export interface User {
-  name: string;
-  profile_picture: any;
-  avatar: any;
-  username: any;
+  profile_picture: unknown;
+  avatar: unknown;
+  username: string;
   id: number;
   email: string;
   full_name: string;
