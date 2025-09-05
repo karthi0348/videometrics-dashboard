@@ -1,15 +1,33 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { X, Save, Loader2, Calendar, Camera, Bell, AlertCircle, Menu } from 'lucide-react';
-import { SubProfile, UpdateSubProfileAPIRequest, CameraLocation, MonitoringSchedule, AlertSettings } from '@/app/types/subprofiles';
-import CameraLocations from '../../Profiles/Subprofile/CameraLocations';
-import MonitoringScheduleComponent from '../../Profiles/Subprofile/MonitoringScheduleComponent';
-import AlertSettingsComponent from '../../Profiles/Subprofile/AlertSettingsComponent';
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  Save,
+  Loader2,
+  Calendar,
+  Camera,
+  Bell,
+  AlertCircle,
+  Menu,
+} from "lucide-react";
+import {
+  SubProfile,
+  UpdateSubProfileAPIRequest,
+  CameraLocation,
+  MonitoringSchedule,
+  AlertSettings,
+} from "@/app/types/subprofiles";
+import CameraLocations from "../../Profiles/Subprofile/CameraLocations";
+import MonitoringScheduleComponent from "../../Profiles/Subprofile/MonitoringScheduleComponent";
+import AlertSettingsComponent from "../../Profiles/Subprofile/AlertSettingsComponent";
 
 interface EditSubProfileModalProps {
   subProfile: SubProfile;
-  onSave: (subProfileId: number, data: UpdateSubProfileAPIRequest) => Promise<void>;
+  onSave: (
+    subProfileId: number,
+    data: UpdateSubProfileAPIRequest
+  ) => Promise<void>;
   onCancel: () => void;
   loading?: boolean;
 }
@@ -22,16 +40,24 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     name: subProfile.name,
-    description: subProfile.description || '',
+    description: subProfile.description || "",
     areaType: subProfile.areaType,
-    tags: subProfile.tags?.join(', ') || '',
+    tags: subProfile.tags?.join(", ") || "",
   });
 
-  const [cameraLocations, setCameraLocations] = useState<Omit<CameraLocation, 'id'>[]>([]);
-  const [monitoringSchedules, setMonitoringSchedules] = useState<Omit<MonitoringSchedule, 'id'>[]>([]);
-  const [alertSettings, setAlertSettings] = useState<Omit<AlertSettings, 'id'>[]>([]);
+  const [cameraLocations, setCameraLocations] = useState<
+    Omit<CameraLocation, "id">[]
+  >([]);
+  const [monitoringSchedules, setMonitoringSchedules] = useState<
+    Omit<MonitoringSchedule, "id">[]
+  >([]);
+  const [alertSettings, setAlertSettings] = useState<
+    Omit<AlertSettings, "id">[]
+  >([]);
 
-  const [activeTab, setActiveTab] = useState<'basic' | 'cameras' | 'monitoring' | 'alerts'>('basic');
+  const [activeTab, setActiveTab] = useState<
+    "basic" | "cameras" | "monitoring" | "alerts"
+  >("basic");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -43,24 +69,35 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
   useEffect(() => {
     // Initialize camera locations if they exist
     if (subProfile.cameraLocations) {
-      const locations = Array.isArray(subProfile.cameraLocations) 
-        ? subProfile.cameraLocations 
-        : Object.values(subProfile.cameraLocations || {}); 
-      setCameraLocations(locations.map(({ id, ...rest }: CameraLocation) => rest));
-    }
+      const locations: CameraLocation[] = Array.isArray(
+        subProfile.cameraLocations
+      )
+        ? subProfile.cameraLocations
+        : (Object.values(subProfile.cameraLocations || {}) as CameraLocation[]);
 
+      setCameraLocations(
+        locations.map(({ id, ...rest }) => rest) 
+      );
+    }
     // Initialize monitoring schedules if they exist
     if (subProfile.monitoringSchedules) {
-      const schedules = Array.isArray(subProfile.monitoringSchedules) 
-        ? subProfile.monitoringSchedules 
-        : Object.values(subProfile.monitoringSchedules || {}) as MonitoringSchedule[];
-      setMonitoringSchedules(schedules.map(({ id, ...rest }) => rest) as Omit<MonitoringSchedule, 'id'>[]);
+      const schedules = Array.isArray(subProfile.monitoringSchedules)
+        ? subProfile.monitoringSchedules
+        : (Object.values(
+            subProfile.monitoringSchedules || {}
+          ) as MonitoringSchedule[]);
+      setMonitoringSchedules(
+        schedules.map(({ id, ...rest }) => rest) as Omit<
+          MonitoringSchedule,
+          "id"
+        >[]
+      );
     }
 
     // Initialize alert settings if they exist
     if (subProfile.alertSettings) {
-      const alerts: AlertSettings[] = Array.isArray(subProfile.alertSettings) 
-        ? subProfile.alertSettings 
+      const alerts: AlertSettings[] = Array.isArray(subProfile.alertSettings)
+        ? subProfile.alertSettings
         : Object.values(subProfile.alertSettings || {});
       setAlertSettings(alerts.map(({ id, ...rest }: AlertSettings) => rest));
     }
@@ -70,17 +107,17 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Sub-profile name is required';
+      newErrors.name = "Sub-profile name is required";
     } else if (formData.name.length < 2) {
-      newErrors.name = 'Sub-profile name must be at least 2 characters';
+      newErrors.name = "Sub-profile name must be at least 2 characters";
     }
 
     if (!formData.areaType.trim()) {
-      newErrors.areaType = 'Area type is required';
+      newErrors.areaType = "Area type is required";
     }
 
     if (formData.description && formData.description.length > 500) {
-      newErrors.description = 'Description must be less than 500 characters';
+      newErrors.description = "Description must be less than 500 characters";
     }
 
     setErrors(newErrors);
@@ -88,7 +125,10 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
   };
 
   // Helper function to convert array to object
-  const convertArrayToObject = <T extends Record<string, unknown>>(arr: T[], prefix: string): Record<string, T> => {
+  const convertArrayToObject = <T extends Record<string, unknown>>(
+    arr: T[],
+    prefix: string
+  ): Record<string, T> => {
     return arr.reduce((acc, item, index) => {
       acc[`${prefix}_${index}`] = item;
       return acc;
@@ -99,7 +139,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
     if (!validateForm()) {
       // If basic info is invalid, switch to basic tab
       if (errors.name || errors.description || errors.areaType) {
-        setActiveTab('basic');
+        setActiveTab("basic");
         setShowMobileNav(false);
       }
       return;
@@ -114,27 +154,32 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
         description: formData.description.trim(),
         area_type: formData.areaType.trim(),
         tags: formData.tags
-          .split(',')
-          .map(tag => tag.trim())
-          .filter(tag => tag.length > 0),
-        camera_locations: convertArrayToObject(cameraLocations, 'camera'),
-        monitoring_schedule: convertArrayToObject(monitoringSchedules, 'schedule'),
-        alert_settings: convertArrayToObject(alertSettings, 'alert')
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter((tag) => tag.length > 0),
+        camera_locations: convertArrayToObject(cameraLocations, "camera"),
+        monitoring_schedule: convertArrayToObject(
+          monitoringSchedules,
+          "schedule"
+        ),
+        alert_settings: convertArrayToObject(alertSettings, "alert"),
       };
 
       await onSave(subProfile.id, updateData);
     } catch (error) {
-      console.error('Error updating sub-profile:', error);
-      setApiError(error instanceof Error ? error.message : 'An unexpected error occurred');
+      console.error("Error updating sub-profile:", error);
+      setApiError(
+        error instanceof Error ? error.message : "An unexpected error occurred"
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
     // Clear API error when user makes changes
     if (apiError) {
@@ -142,16 +187,18 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
     }
   };
 
-  const handleTabChange = (tabId: 'basic' | 'cameras' | 'monitoring' | 'alerts') => {
+  const handleTabChange = (
+    tabId: "basic" | "cameras" | "monitoring" | "alerts"
+  ) => {
     setActiveTab(tabId);
     setShowMobileNav(false);
   };
 
   const tabs = [
-    { id: 'basic' as const, label: 'Basic Info', icon: null },
-    { id: 'cameras' as const, label: 'Camera Locations', icon: Camera },
-    { id: 'monitoring' as const, label: 'Monitoring Schedule', icon: Calendar },
-    { id: 'alerts' as const, label: 'Alert Settings', icon: Bell }
+    { id: "basic" as const, label: "Basic Info", icon: null },
+    { id: "cameras" as const, label: "Camera Locations", icon: Camera },
+    { id: "monitoring" as const, label: "Monitoring Schedule", icon: Calendar },
+    { id: "alerts" as const, label: "Alert Settings", icon: Bell },
   ];
 
   return (
@@ -161,8 +208,12 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Edit Sub-Profile</h2>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">Update settings for {subProfile.name}</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+              Edit Sub-Profile
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate">
+              Update settings for {subProfile.name}
+            </p>
           </div>
           <button
             onClick={onCancel}
@@ -178,7 +229,9 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
           <div className="mx-4 sm:mx-6 mt-2 sm:mt-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 flex-shrink-0" />
-              <p className="text-xs sm:text-sm text-red-700 break-words">{apiError}</p>
+              <p className="text-xs sm:text-sm text-red-700 break-words">
+                {apiError}
+              </p>
             </div>
           </div>
         )}
@@ -192,12 +245,26 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
             <div className="flex items-center gap-2">
               <Menu className="w-4 h-4" />
               <span className="font-medium text-sm">
-                {tabs.find(tab => tab.id === activeTab)?.label}
+                {tabs.find((tab) => tab.id === activeTab)?.label}
               </span>
             </div>
-            <div className={`transform transition-transform ${showMobileNav ? 'rotate-180' : ''}`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <div
+              className={`transform transition-transform ${
+                showMobileNav ? "rotate-180" : ""
+              }`}
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </button>
@@ -206,19 +273,21 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
         {/* Mobile Navigation Dropdown */}
         {showMobileNav && (
           <div className="sm:hidden border-b border-gray-200 bg-gray-50">
-            {tabs.map(tab => {
+            {tabs.map((tab) => {
               const Icon = tab.icon;
-              const hasErrors = tab.id === 'basic' && (errors.name || errors.description || errors.areaType);
+              const hasErrors =
+                tab.id === "basic" &&
+                (errors.name || errors.description || errors.areaType);
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={`w-full flex items-center gap-3 p-4 text-left transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-500'
+                      ? "bg-blue-50 text-blue-600 border-r-2 border-blue-500"
                       : hasErrors
-                      ? 'text-red-500 hover:bg-red-50'
-                      : 'text-gray-700 hover:bg-white'
+                      ? "text-red-500 hover:bg-red-50"
+                      : "text-gray-700 hover:bg-white"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -235,19 +304,21 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
         {/* Desktop Tabs */}
         <div className="hidden sm:block border-b border-gray-200">
           <nav className="flex px-4 sm:px-6 overflow-x-auto scrollbar-hide">
-            {tabs.map(tab => {
+            {tabs.map((tab) => {
               const Icon = tab.icon;
-              const hasErrors = tab.id === 'basic' && (errors.name || errors.description || errors.areaType);
+              const hasErrors =
+                tab.id === "basic" &&
+                (errors.name || errors.description || errors.areaType);
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={`py-3 px-4 lg:px-6 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
+                      ? "border-blue-500 text-blue-600"
                       : hasErrors
-                      ? 'border-transparent text-red-500 hover:text-red-700'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      ? "border-transparent text-red-500 hover:text-red-700"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -255,9 +326,13 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
                     {hasErrors && <AlertCircle className="w-4 h-4" />}
                     <span className="hidden md:inline">{tab.label}</span>
                     <span className="md:hidden">
-                      {tab.id === 'basic' ? 'Basic' : 
-                       tab.id === 'cameras' ? 'Cameras' : 
-                       tab.id === 'monitoring' ? 'Schedule' : 'Alerts'}
+                      {tab.id === "basic"
+                        ? "Basic"
+                        : tab.id === "cameras"
+                        ? "Cameras"
+                        : tab.id === "monitoring"
+                        ? "Schedule"
+                        : "Alerts"}
                     </span>
                   </div>
                 </button>
@@ -269,20 +344,23 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
         {/* Content - Scrollable area */}
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="p-4 sm:p-6">
-            {activeTab === 'basic' && (
+            {activeTab === "basic" && (
               <div className="space-y-4 sm:space-y-6 max-w-2xl">
                 {/* Name */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Sub-Profile Name *
                   </label>
                   <input
                     type="text"
                     id="name"
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${
-                      errors.name ? 'border-red-300' : 'border-gray-300'
+                      errors.name ? "border-red-300" : "border-gray-300"
                     }`}
                     placeholder="Enter sub-profile name"
                     disabled={loading}
@@ -298,16 +376,21 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
 
                 {/* Description */}
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Description
                   </label>
                   <textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("description", e.target.value)
+                    }
                     rows={3}
                     className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-sm sm:text-base ${
-                      errors.description ? 'border-red-300' : 'border-gray-300'
+                      errors.description ? "border-red-300" : "border-gray-300"
                     }`}
                     placeholder="Enter description (optional)"
                     disabled={loading}
@@ -316,7 +399,9 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
                     {errors.description && (
                       <p className="text-sm text-red-600 flex items-center gap-1">
                         <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                        <span className="break-words">{errors.description}</span>
+                        <span className="break-words">
+                          {errors.description}
+                        </span>
                       </p>
                     )}
                     <p className="text-xs text-gray-500 sm:ml-auto">
@@ -327,15 +412,20 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
 
                 {/* Area Type */}
                 <div>
-                  <label htmlFor="areaType" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="areaType"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Area Type *
                   </label>
                   <select
                     id="areaType"
                     value={formData.areaType}
-                    onChange={(e) => handleInputChange('areaType', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("areaType", e.target.value)
+                    }
                     className={`w-full px-3 sm:px-4 py-2 sm:py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${
-                      errors.areaType ? 'border-red-300' : 'border-gray-300'
+                      errors.areaType ? "border-red-300" : "border-gray-300"
                     }`}
                     disabled={loading}
                     required
@@ -361,14 +451,17 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
 
                 {/* Tags */}
                 <div>
-                  <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="tags"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Tags
                   </label>
                   <input
                     type="text"
                     id="tags"
                     value={formData.tags}
-                    onChange={(e) => handleInputChange('tags', e.target.value)}
+                    onChange={(e) => handleInputChange("tags", e.target.value)}
                     className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                     placeholder="Enter tags separated by commas"
                     disabled={loading}
@@ -380,14 +473,18 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
 
                 {/* Status Information */}
                 <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-gray-900 mb-2">Current Status</h3>
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">
+                    Current Status
+                  </h3>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium inline-block w-fit ${
-                      subProfile.isActive 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {subProfile.isActive ? 'Active' : 'Inactive'}
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium inline-block w-fit ${
+                        subProfile.isActive
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {subProfile.isActive ? "Active" : "Inactive"}
                     </span>
                     <span className="text-xs sm:text-sm text-gray-500">
                       Use the toggle in the main list to change status
@@ -397,26 +494,33 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               </div>
             )}
 
-            {activeTab === 'cameras' && (
+            {activeTab === "cameras" && (
               <div className="w-full">
                 {CameraLocations ? (
-                  <CameraLocations 
+                  <CameraLocations
                     cameraLocations={cameraLocations}
                     setCameraLocations={setCameraLocations}
                   />
                 ) : (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Camera Locations</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Camera Locations
+                    </h3>
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="w-5 h-5 text-yellow-500" />
                         <p className="text-sm text-yellow-700">
-                          Camera Locations component is not available. Please ensure the component exists at the correct import path.
+                          Camera Locations component is not available. Please
+                          ensure the component exists at the correct import
+                          path.
                         </p>
                       </div>
                     </div>
                     <div className="text-sm text-gray-600">
-                      <p><strong>Current camera locations:</strong> {cameraLocations.length} configured</p>
+                      <p>
+                        <strong>Current camera locations:</strong>{" "}
+                        {cameraLocations.length} configured
+                      </p>
                       <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto">
                         {JSON.stringify(cameraLocations, null, 2)}
                       </pre>
@@ -426,7 +530,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               </div>
             )}
 
-            {activeTab === 'monitoring' && (
+            {activeTab === "monitoring" && (
               <div className="w-full">
                 {MonitoringScheduleComponent ? (
                   <MonitoringScheduleComponent
@@ -435,17 +539,24 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
                   />
                 ) : (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Monitoring Schedule</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Monitoring Schedule
+                    </h3>
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="w-5 h-5 text-yellow-500" />
                         <p className="text-sm text-yellow-700">
-                          Monitoring Schedule component is not available. Please ensure the component exists at the correct import path.
+                          Monitoring Schedule component is not available. Please
+                          ensure the component exists at the correct import
+                          path.
                         </p>
                       </div>
                     </div>
                     <div className="text-sm text-gray-600">
-                      <p><strong>Current monitoring schedules:</strong> {monitoringSchedules.length} configured</p>
+                      <p>
+                        <strong>Current monitoring schedules:</strong>{" "}
+                        {monitoringSchedules.length} configured
+                      </p>
                       <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto">
                         {JSON.stringify(monitoringSchedules, null, 2)}
                       </pre>
@@ -455,7 +566,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               </div>
             )}
 
-            {activeTab === 'alerts' && (
+            {activeTab === "alerts" && (
               <div className="w-full">
                 {AlertSettingsComponent ? (
                   <AlertSettingsComponent
@@ -464,17 +575,24 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
                   />
                 ) : (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Alert Settings</h3>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Alert Settings
+                    </h3>
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="w-5 h-5 text-yellow-500" />
                         <p className="text-sm text-yellow-700">
-                          Alert Settings component is not available. Please ensure the component exists at the correct import path.
+                          Alert Settings component is not available. Please
+                          ensure the component exists at the correct import
+                          path.
                         </p>
                       </div>
                     </div>
                     <div className="text-sm text-gray-600">
-                      <p><strong>Current alert settings:</strong> {alertSettings.length} configured</p>
+                      <p>
+                        <strong>Current alert settings:</strong>{" "}
+                        {alertSettings.length} configured
+                      </p>
                       <pre className="mt-2 p-3 bg-gray-100 rounded text-xs overflow-auto">
                         {JSON.stringify(alertSettings, null, 2)}
                       </pre>
@@ -493,7 +611,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
             <div className="hidden sm:block text-xs sm:text-sm text-gray-500 mb-3">
               All required fields marked with * must be filled
             </div>
-            
+
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
               <button
