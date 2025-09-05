@@ -76,21 +76,22 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
         : (Object.values(subProfile.cameraLocations || {}) as CameraLocation[]);
 
       setCameraLocations(
-        locations.map(({ id, ...rest }) => rest) 
+        locations.map(({ id, ...rest }): Omit<CameraLocation, "id"> => rest)
       );
     }
+
     // Initialize monitoring schedules if they exist
     if (subProfile.monitoringSchedules) {
-      const schedules = Array.isArray(subProfile.monitoringSchedules)
+      const schedules: MonitoringSchedule[] = Array.isArray(
+        subProfile.monitoringSchedules
+      )
         ? subProfile.monitoringSchedules
         : (Object.values(
             subProfile.monitoringSchedules || {}
           ) as MonitoringSchedule[]);
+
       setMonitoringSchedules(
-        schedules.map(({ id, ...rest }) => rest) as Omit<
-          MonitoringSchedule,
-          "id"
-        >[]
+        schedules.map(({ id, ...rest }): Omit<MonitoringSchedule, "id"> => rest)
       );
     }
 
@@ -98,8 +99,11 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
     if (subProfile.alertSettings) {
       const alerts: AlertSettings[] = Array.isArray(subProfile.alertSettings)
         ? subProfile.alertSettings
-        : Object.values(subProfile.alertSettings || {});
-      setAlertSettings(alerts.map(({ id, ...rest }: AlertSettings) => rest));
+        : (Object.values(subProfile.alertSettings || {}) as AlertSettings[]);
+
+      setAlertSettings(
+        alerts.map(({ id, ...rest }): Omit<AlertSettings, "id"> => rest)
+      );
     }
   }, [subProfile]);
 
