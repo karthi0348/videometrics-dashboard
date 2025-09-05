@@ -2,6 +2,11 @@ import HttpClientWrapper from "@/helpers/http-client-wrapper";
 
 // Define interfaces for better type safety
 interface DashboardStats {
+  total_analytics: number;
+  processing_analytics: number;
+  completed_analytics: number;
+  failed_analytics: number;
+  total_sub_profiles: number;
   total_videos: number;
   processed_videos: number;
   pending_videos: number;
