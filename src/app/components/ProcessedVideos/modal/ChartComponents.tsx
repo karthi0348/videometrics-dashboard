@@ -15,29 +15,8 @@ import {
   AreaChart,
   Area,
   Pie,
-  TooltipProps,
+  TooltipProps ,
 } from "recharts";
-
-// Type definitions
-interface ChartDataPoint {
-  name: string;
-  [key: string]: string | number;
-}
-
-interface PieChartDataPoint {
-  name: string;
-  value: number;
-  percentage: string;
-}
-
-interface TooltipPayload {
-  payload: PieChartDataPoint;
-}
-
-interface CustomTooltipProps {
-  active?: boolean;
-  payload?: TooltipPayload[];
-}
 
 // Enhanced Pie Chart Component
 export const PieChart: React.FC<{
@@ -72,7 +51,7 @@ export const PieChart: React.FC<{
     }
   };
 
-  const CustomTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -253,14 +232,14 @@ export const CircularGauge: React.FC<{
 
 // Enhanced Bar Chart Component
 export const BarChartComponent: React.FC<{
-  data: Record<string, number[]>;
+  data: any;
   xAxis: string[];
   title: string;
   status: string;
 }> = ({ data, xAxis, title, status }) => {
   // Transform data for Recharts
-  const chartData: ChartDataPoint[] = xAxis.map((label, index) => {
-    const dataPoint: ChartDataPoint = { name: label };
+  const chartData = xAxis.map((label, index) => {
+    const dataPoint: any = { name: label };
     Object.keys(data).forEach(seriesName => {
       dataPoint[seriesName] = data[seriesName][index] || 0;
     });
@@ -286,22 +265,6 @@ export const BarChartComponent: React.FC<{
       case "attention_needed": return "#fffbeb";
       default: return "#f9fafb";
     }
-  };
-
-  const CustomBarTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-          <p className="font-medium text-gray-900">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="text-sm text-gray-600">
-              {entry.name}: <span className="font-medium">{entry.value?.toLocaleString()}</span>
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
   };
 
   return (
@@ -331,7 +294,14 @@ export const BarChartComponent: React.FC<{
               height={60}
             />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip content={<CustomBarTooltip />} />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            />
             <Legend />
             {seriesKeys.map((key, index) => (
               <Bar 
@@ -350,14 +320,14 @@ export const BarChartComponent: React.FC<{
 
 // Enhanced Line Chart Component
 export const LineChartComponent: React.FC<{
-  data: Record<string, number[]>;
+  data: any;
   xAxis: string[];
   title: string;
   status: string;
 }> = ({ data, xAxis, title, status }) => {
   // Transform data for Recharts
-  const chartData: ChartDataPoint[] = xAxis.map((label, index) => {
-    const dataPoint: ChartDataPoint = { name: label };
+  const chartData = xAxis.map((label, index) => {
+    const dataPoint: any = { name: label };
     Object.keys(data).forEach(seriesName => {
       dataPoint[seriesName] = data[seriesName][index] || 0;
     });
@@ -383,22 +353,6 @@ export const LineChartComponent: React.FC<{
       case "attention_needed": return "#fffbeb";
       default: return "#f9fafb";
     }
-  };
-
-  const CustomLineTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-          <p className="font-medium text-gray-900">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="text-sm text-gray-600">
-              {entry.name}: <span className="font-medium">{entry.value?.toLocaleString()}</span>
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
   };
 
   return (
@@ -428,7 +382,14 @@ export const LineChartComponent: React.FC<{
               height={60}
             />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip content={<CustomLineTooltip />} />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            />
             <Legend />
             {seriesKeys.map((key, index) => (
               <Line 
@@ -450,14 +411,14 @@ export const LineChartComponent: React.FC<{
 
 // Enhanced Area Chart Component
 export const AreaChartComponent: React.FC<{
-  data: Record<string, number[]>;
+  data: any;
   xAxis: string[];
   title: string;
   status: string;
 }> = ({ data, xAxis, title, status }) => {
   // Transform data for Recharts
-  const chartData: ChartDataPoint[] = xAxis.map((label, index) => {
-    const dataPoint: ChartDataPoint = { name: label };
+  const chartData = xAxis.map((label, index) => {
+    const dataPoint: any = { name: label };
     Object.keys(data).forEach(seriesName => {
       dataPoint[seriesName] = data[seriesName][index] || 0;
     });
@@ -483,22 +444,6 @@ export const AreaChartComponent: React.FC<{
       case "attention_needed": return "#fffbeb";
       default: return "#f9fafb";
     }
-  };
-
-  const CustomAreaTooltip: React.FC<TooltipProps<number, string>> = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-          <p className="font-medium text-gray-900">{label}</p>
-          {payload.map((entry, index) => (
-            <p key={index} className="text-sm text-gray-600">
-              {entry.name}: <span className="font-medium">{entry.value?.toLocaleString()}</span>
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
   };
 
   return (
@@ -528,7 +473,14 @@ export const AreaChartComponent: React.FC<{
               height={60}
             />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip content={<CustomAreaTooltip />} />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            />
             <Legend />
             {seriesKeys.map((key, index) => (
               <Area 

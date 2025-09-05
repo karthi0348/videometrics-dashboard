@@ -12,8 +12,6 @@ import {
   ProcessingVideo,
   Priority,
   ProcessVideoPageProps,
-  AnalyticsVideo,
-  AnalyticsResponse,
   ProcessVideoRequest,
   ProcessVideoResponse,
   ProcessedVideoNotification
@@ -54,6 +52,33 @@ interface SubProfileApiResponse {
   is_active?: boolean;
 }
 
+// Define the actual API response structure for analytics
+interface AnalyticsListItem {
+  id: number;
+  analytics_id: string;
+  uuid?: string; // Make uuid optional since it might not exist
+  processing_status?: string;
+  status?: string;
+  error_message?: unknown;
+  profile_name: string;
+  sub_profile_name: string;
+  template_name: string;
+  processing_duration?: unknown;
+  file_size?: unknown;
+  video_duration?: unknown;
+  video_url?: unknown;
+  thumbnail_url?: unknown;
+  created_at: string;
+  updated_at: string;
+}
+
+interface AnalyticsListResponse {
+  data: AnalyticsListItem[];
+  total?: number;
+  page?: number;
+  page_size?: number;
+}
+
 // Define error response interfaces
 interface ValidationError {
   loc?: string[];
@@ -67,6 +92,7 @@ interface ErrorResponse {
       detail?: ValidationError[] | string;
       message?: string;
     };
+    status?: number;
   };
   message?: string;
 }
@@ -221,7 +247,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
     try {
       console.log("Checking processing queue...");
       
-      const response: AnalyticsResponse = await apiService.getAnalyticsList({
+      const response: AnalyticsListResponse = await apiService.getAnalyticsList({
         page: 1,
         page_size: 50,
         sort_by: "created_at",
@@ -285,33 +311,32 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
           console.log(`Checking status for video UUID: ${video.uuid}`);
 
-          const response: AnalyticsResponse = await apiService.getAnalyticsList(
-            {
-              page: 1,
-              page_size: 50,
-              sort_by: "updated_at",
-              sort_order: "desc",
-              status: "processing",
-            }
-          );
+          const response: AnalyticsListResponse = await apiService.getAnalyticsList({
+            page: 1,
+            page_size: 50,
+            sort_by: "updated_at",
+            sort_order: "desc",
+            status: "processing",
+          });
 
           console.log("Analytics response for UUID check:", response);
 
           if (response?.data?.length > 0) {
-            // Use the correct property name
             console.log(`Looking for UUID: ${video.uuid}`);
-            console.log(`Available UUIDs:`, response.data.map(v => v.uuid));
+            console.log(`Available UUIDs:`, response.data.map(v => v.uuid || v.analytics_id));
+            
             const matchingVideo = response.data.find(
-            (analyticsVideo: AnalyticsVideo) =>
-              analyticsVideo.uuid === video.uuid ||
-              analyticsVideo.id === video.video_id
-          );
+              (analyticsVideo: AnalyticsListItem) =>
+                analyticsVideo.uuid === video.uuid ||
+                analyticsVideo.analytics_id === video.uuid ||
+                analyticsVideo.id === video.video_id
+            );
 
             if (matchingVideo) {
               console.log(`Found matching video:`, matchingVideo);
 
-              // Use processing_status from the interface
-              const status = matchingVideo.processing_status;
+              // Check both processing_status and status fields
+              const status = matchingVideo.processing_status || matchingVideo.status;
 
               if (
                 status === "completed" ||
@@ -322,8 +347,8 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                   uuid: video.uuid,
                   video_name: video.video_name,
                   status: status as "completed" | "failed",
-                  error_message: matchingVideo.error_message || "",
-                  videoData: matchingVideo,
+                  error_message: matchingVideo.error_message ? String(matchingVideo.error_message) : "",
+                  videoData: matchingVideo as any, // Cast to maintain compatibility
                 };
               } else {
                 console.log(
@@ -403,11 +428,11 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
         completedVideos.forEach((video) => {
           if (video.status === "completed") {
             setSuccess(
-              `Video &quot;${video.video_name}&quot; completed processing successfully!`
+              `Video "${video.video_name}" completed processing successfully!`
             );
           } else {
             setError(
-              `Video &quot;${video.video_name}&quot; failed processing: ${
+              `Video "${video.video_name}" failed processing: ${
                 video.error_message || "Unknown error"
               }`
             );
@@ -544,7 +569,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       setProcessingQueue((prev) => [...prev, processingVideo]);
 
       setSuccess(
-        `Video &quot;${videoName}&quot; has been submitted for processing successfully! UUID: ${responseData.uuid}`
+        `Video "${videoName}" has been submitted for processing successfully! UUID: ${responseData.uuid}`
       );
     } catch (processError) {
       console.error("Error processing video:", processError);
