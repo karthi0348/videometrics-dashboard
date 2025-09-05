@@ -12,7 +12,6 @@ interface DashboardPageProps {
 
 interface DashboardStats {
   total_profiles: number;
-  total_sub_profiles: number;
   total_templates: number;
   total_analytics: number;
   processing_analytics: number;
@@ -57,7 +56,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         // Transform the API response to match our interface
         const transformedData: DashboardStats = {
           total_profiles: data.total_profiles || 0,
-          total_sub_profiles: data.total_sub_profiles || 0,
           total_templates: data.total_templates || 0,
           total_analytics: data.total_analytics || 0,
           processing_analytics: data.processing_analytics || 0,
