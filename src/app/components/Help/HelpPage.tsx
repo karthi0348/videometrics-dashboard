@@ -7,7 +7,7 @@ interface HelpPageProps {
 }
 
 const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
-  const [expandedFaq, setExpandedFaq] = useState(null);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const faqs = [
     {
@@ -37,7 +37,7 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
     }
   ];
 
-  const toggleFaq = (faqId) => {
+  const toggleFaq = (faqId: number) => {
     setExpandedFaq(expandedFaq === faqId ? null : faqId);
   };
 
