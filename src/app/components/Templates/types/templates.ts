@@ -7,6 +7,10 @@ export interface FormData {
 }
 
 export interface Template {
+  template_name: string;
+  created_at: any;
+  usage_count: number;
+  is_public: any;
   id: string;
   name: string;
   description: string;

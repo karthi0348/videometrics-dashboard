@@ -4,14 +4,19 @@ import ChartConfiguration from "./ChartConfiguration/ChartConfiguration";
 import SummaryConfiguration from "./SummaryConfiguration/SummaryConfiguration";
 import TemplateApiService from "@/helpers/service/templates/template-api-service";
 import ErrorHandler from "@/helpers/ErrorHandler";
-import { FormData, ChartConfig, SummaryConfig, } from "@/app/components/Templates/types/templates";
+import { AxiosError } from "axios";
+import {
+  FormData,
+  ChartConfig,
+  SummaryConfig,
+} from "@/app/components/Templates/types/templates";
 
 // Define proper types for the component props
 interface EditTemplateModalProps {
   isEditOpen: boolean;
   onClose: () => void;
-  refresh: () => void; 
-  id: string | number; 
+  refresh: () => void;
+  id: string | number;
 }
 
 // Define the template data structure from API
@@ -24,6 +29,15 @@ interface TemplateData {
   metric_structure?: Record<string, unknown> | null;
   chart_config?: ChartConfig[];
   summary_config?: SummaryConfig | null;
+}
+
+// Define error response interface if not already imported
+interface ErrorResponse {
+  message?: string;
+  error?: {
+    message?: string;
+  };
+  detail?: string;
 }
 
 const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
@@ -137,8 +151,14 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
         chartConfiguration: false,
         summaryConfiguration: false,
       });
-    } catch (error: unknown) { 
-      return ErrorHandler(error);
+    } catch (error: unknown) {
+      // Type guard to check if error is an AxiosError
+      if (error instanceof AxiosError) {
+        return ErrorHandler(error as AxiosError<ErrorResponse>);
+      }
+      // Handle non-Axios errors
+      console.error("Unexpected error:", error);
+      // You could also show a generic error message here
     } finally {
       setIsSubmitting(false);
     }
@@ -181,14 +201,18 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
 
   const getAllTemplate = async () => {
     try {
-      const result = await templateApiService.getAllTemplateById(id); 
-      setTemplates(result);
-    } catch (error) {
-      return ErrorHandler(error);
+      const result = await templateApiService.getAllTemplateById(id);
+      setTemplates(result as TemplateData);
+    } catch (error: unknown) {
+      // Type guard for the error handler
+      if (error instanceof AxiosError) {
+        return ErrorHandler(error as AxiosError<ErrorResponse>);
+      }
+      console.error("Unexpected error:", error);
     }
   };
 
-  const setTemplates = (data: TemplateData) => { 
+  const setTemplates = (data: TemplateData) => {
     setFormData({
       templateName: data.template_name || "",
       description: data.description || "",
@@ -274,7 +298,9 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <span className="text-sm sm:text-base lg:text-lg">Template Information</span>
+                <span className="text-sm sm:text-base lg:text-lg">
+                  Template Information
+                </span>
               </h2>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
@@ -342,7 +368,9 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                           key={index}
                           className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-teal-100 text-teal-700 text-xs sm:text-sm rounded-full"
                         >
-                          <span className="truncate max-w-[100px] sm:max-w-none">{tag}</span>
+                          <span className="truncate max-w-[100px] sm:max-w-none">
+                            {tag}
+                          </span>
                           <button
                             type="button"
                             onClick={() => handleRemoveTag(tag)}
@@ -460,7 +488,9 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
                       d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                     />
                   </svg>
-                  <span className="text-sm sm:text-base lg:text-lg">Metric Structure</span>
+                  <span className="text-sm sm:text-base lg:text-lg">
+                    Metric Structure
+                  </span>
                   <span className="text-xs sm:text-sm text-gray-500 font-normal">
                     (Optional)
                   </span>

@@ -3,13 +3,23 @@ import MetricStructureEditor from "./MetricStructureEditor";
 import ChartConfiguration from "./ChartConfiguration/ChartConfiguration";
 import SummaryConfiguration from "./SummaryConfiguration/SummaryConfiguration";
 import TemplateApiService from "@/helpers/service/templates/template-api-service";
-import {ErrorHandler} from "@/helpers/ErrorHandler";
+import ErrorHandler from "@/helpers/ErrorHandler";
+import { AxiosError } from "axios";
 import { FormData, ChartConfig, SummaryConfig } from "@/app/components/Templates/types/templates";
 
 interface NewTemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
   refresh: () => void; 
+}
+
+// Define error response interface
+interface ErrorResponse {
+  message?: string;
+  error?: {
+    message?: string;
+  };
+  detail?: string;
 }
 
 const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
@@ -72,13 +82,19 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
     setIsSubmitting(true);
 
     try {
+      // Parse metric structure only if it's valid JSON, otherwise use null
+      let metricStructure = null;
+      if (jsonContent.trim() && isValidJson()) {
+        metricStructure = JSON.parse(jsonContent);
+      }
+
       const payload = {
         template_name: formData.templateName,
         description: formData.description,
         tags: formData.tags,
         version: "1.0.0",
         analysis_prompt: formData.analysisPrompt,
-        metric_structure: JSON.parse(jsonContent), // JSON structure
+        metric_structure: metricStructure, // Can be null now
         chart_config: chartConfigs.length > 0 ? chartConfigs : [],
         summary_config: summaryConfig || null,
         gui_config: {
@@ -116,8 +132,14 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
         chartConfiguration: false,
         summaryConfiguration: false,
       });
-    } catch (error) {
-      return ErrorHandler(error);
+    } catch (error: unknown) { 
+      // Type guard to check if error is an AxiosError
+      if (error instanceof AxiosError) {
+        return ErrorHandler(error as AxiosError<ErrorResponse>);
+      }
+      // Handle non-Axios errors
+      console.error('Unexpected error:', error);
+      // You could also show a generic error message here
     } finally {
       setIsSubmitting(false);
     }
@@ -139,6 +161,7 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
   };
 
   const isValidJson = () => {
+    if (!jsonContent.trim()) return true; // Empty content is valid (optional)
     try {
       JSON.parse(jsonContent);
       return true;
@@ -152,8 +175,7 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
       formData.templateName.trim().length >= 3 &&
       formData.description.trim().length >= 10 &&
       formData.analysisPrompt.trim().length >= 20 &&
-      isValidJson() &&
-      getObjectProperties() > 0
+      isValidJson() // Only check if JSON is valid, not if it exists
     );
   };
 
@@ -409,6 +431,9 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
                     />
                   </svg>
                   <span className="text-sm sm:text-base">Metric Structure</span>
+                  <span className="text-xs sm:text-sm text-gray-500 font-normal">
+                    (Optional)
+                  </span>
                 </h3>
                 <svg
                   className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-500 transform transition-transform flex-shrink-0 ${
@@ -442,7 +467,7 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
                 chartConfiguration: !expandedSections.chartConfiguration,
               })}
               onConfigChange={handleChartConfigChange} 
-              config={undefined}            
+              config={chartConfigs}            
             />
 
             {/* Summary Configuration */}
@@ -453,7 +478,7 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
                 summaryConfiguration: !expandedSections.summaryConfiguration,
               })}
               onConfigChange={handleSummaryConfigChange} 
-              config={undefined}            
+              config={summaryConfig}            
             />
           </div>
 
