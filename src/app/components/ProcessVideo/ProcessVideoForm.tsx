@@ -8,6 +8,7 @@ import {
   ProcessVideoRequest,
 } from "./types/types";
 
+// Define video interface to replace 'any'
 interface VideoItem {
   id: number;
   video_name: string;
@@ -86,7 +87,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
 
       console.log("Loading templates for sub-profile:", subProfileId);
 
-      const assignedTemplates: TemplateAssignment[] =
+      const assignedTemplates =
         await templateApiService.getAssignedTemplatesBySubProfile(subProfileId);
 
       console.log("Assigned templates response:", assignedTemplates);

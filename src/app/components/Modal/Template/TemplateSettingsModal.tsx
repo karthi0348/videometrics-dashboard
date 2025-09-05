@@ -9,7 +9,7 @@ import { Template } from '@/app/components/Templates/types/templates';
 interface TemplateSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  template: Template | null; 
+  template: Template | null; // Fixed: Replace 'any' with proper type
 }
 
 // Template Settings Modal Component
@@ -100,6 +100,7 @@ const TemplateSettingsModal: React.FC<TemplateSettingsModalProps> = ({
                 <div className="text-xs sm:text-sm text-gray-500">
                   {template.tags && template.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-1 sm:gap-2">
+                      {/* Fixed: Replace 'any' with proper types */}
                       {template.tags.map((tag: string, index: number) => (
                         <span 
                           key={index} 
@@ -213,14 +214,17 @@ const TemplateSettingsModal: React.FC<TemplateSettingsModalProps> = ({
         </div>
       </div>
 
-      <AssignmentModal
-        isOpen={showAssignmentModal}
-        onClose={() => {
-          setShowAssignmentModal(false);
-          setSelectedTemplate(null);
-        }}
-        template={selectedTemplate}
-      />
+      {/* Fixed: Only render AssignmentModal when selectedTemplate is not null */}
+      {showAssignmentModal && selectedTemplate && (
+        <AssignmentModal
+          isOpen={showAssignmentModal}
+          onClose={() => {
+            setShowAssignmentModal(false);
+            setSelectedTemplate(null);
+          }}
+          template={selectedTemplate}
+        />
+      )}
     </div>
   );
 };

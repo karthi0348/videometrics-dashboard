@@ -133,13 +133,13 @@ export interface ChartData {
 export type AnalyticsChartsResponse = ChartData[];
 
 // Generic delete response interface
-interface DeleteResponse {
+export interface DeleteResponse {
     message: string;
     success: boolean;
 }
 
 // Generic refresh response interface
-interface RefreshResponse {
+export interface RefreshResponse {
     message: string;
     success: boolean;
     updated_at: string;
