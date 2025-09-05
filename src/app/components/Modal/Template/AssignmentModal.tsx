@@ -15,9 +15,10 @@ interface Profile {
   profile_name: string;
 }
 
+// Updated interface to match the expected API payload structure
 interface AssignmentPayload {
   template_id: string | number;
-  sub_profile_ids: (string | number)[];
+  subProfileIds: (string | number)[]; // Changed from sub_profile_ids to subProfileIds
   priority: '1' | '2' | '3';
 }
 
@@ -42,7 +43,7 @@ const AssignmentModal = ({
         try {
             const payload: AssignmentPayload = {
                 template_id: template.id,
-                sub_profile_ids: [
+                sub_profile_ids: [ // Back to snake_case to match API
                     selectedProfile
                 ],
                 priority: selectedPriority
