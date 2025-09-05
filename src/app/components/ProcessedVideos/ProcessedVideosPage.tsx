@@ -13,6 +13,48 @@ interface ProcessedVideosPageProps {
   onNewVideoReceived?: () => void;
 }
 
+// Define interfaces for API responses
+interface ApiVideoResponse {
+  id: number;
+  analytics_id: string;
+  status: string;
+  confidence_score?: number;
+  created_at: string;
+  processing_completed_at: string;
+  error_message?: string;
+  profile_name?: string;
+  sub_profile_name?: string;
+  template_name?: string;
+  processing_duration?: string;
+  file_size?: string;
+  video_duration?: string;
+  video_url?: string;
+  thumbnail_url?: string;
+  total?: number;
+  total_pages?: number;
+  page?: number;
+}
+
+interface BulkDeleteRequest {
+  entity_type: string;
+  entity_ids: number[];
+  confirm: boolean;
+}
+
+interface BulkDeleteResponse {
+  successful: number;
+  failed: number;
+  errors?: Array<{ msg: string }>;
+}
+
+interface AnalyticsListParams {
+  status?: string;
+  page: number;
+  page_size: number;
+  sort_by: string;
+  sort_order: string;
+}
+
 const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
   newProcessedVideo,
   onNewVideoReceived
@@ -98,20 +140,20 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
       if (showLoading) setLoading(true);
       setError("");
       
-      const response: any = await apiService.getAnalyticsList({
+      const response: ApiVideoResponse[] = await apiService.getAnalyticsList({
         status: undefined,
         page: page,
         page_size: pageSize,
         sort_by: 'processing_completed_at',
         sort_order: 'desc'
-      });
+      } as AnalyticsListParams);
 
       if (response) {
-        const filteredVideos = response.filter((video: any) => 
+        const filteredVideos = response.filter((video: ApiVideoResponse) => 
           video.status === 'completed' || video.status === 'failed'
         );
 
-        const transformedVideos: ProcessedVideo[] = filteredVideos.map((video: any) => ({
+        const transformedVideos: ProcessedVideo[] = filteredVideos.map((video: ApiVideoResponse) => ({
           id: video.id,
           analytics_id: video.analytics_id,
           video_title: video.template_name || 'Untitled Video',
@@ -142,9 +184,12 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
         }
 
         setProcessedVideos(transformedVideos);
-        setTotalCount(response.total || filteredVideos.length);
-        setTotalPages(response.total_pages || Math.ceil(filteredVideos.length / pageSize));
-        setCurrentPage(response.page || page);
+        
+        // Handle pagination metadata - check if it's in the response or calculate
+        const firstVideo = response[0];
+        setTotalCount(firstVideo?.total || filteredVideos.length);
+        setTotalPages(firstVideo?.total_pages || Math.ceil(filteredVideos.length / pageSize));
+        setCurrentPage(firstVideo?.page || page);
         setLastRefresh(new Date());
       } else {
         setProcessedVideos([]);
@@ -203,7 +248,7 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
 
   useEffect(() => {
     loadProcessedVideos(1);
-  }, [mockMode]);
+  }, [mockMode, loadProcessedVideos]);
 
   useEffect(() => {
     return () => {
@@ -286,11 +331,11 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
         return;
       }
 
-      const response = await apiService.bulkDelete({
+      const response: BulkDeleteResponse = await apiService.bulkDelete({
         entity_type: "analytics",
         entity_ids: Array.from(selectedVideos),
         confirm: true
-      });
+      } as BulkDeleteRequest);
 
       if (response.successful > 0) {
         setBulkDeleteResult(

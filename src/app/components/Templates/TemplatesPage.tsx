@@ -1,6 +1,6 @@
 "use client";
 
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX, useEffect, useState, useCallback } from "react";
 import NewTemplateModal from "../Modal/Template/NewTemplateModal";
 import TemplateApiService from "@/helpers/service/templates/template-api-service";
 import ErrorHandler from "@/helpers/ErrorHandler";
@@ -8,27 +8,54 @@ import AssignmentModal from "../Modal/Template/AssignmentModal";
 import DeleteModal from "../Common/DeleteModal";
 import { toast } from "react-toastify";
 import EditTemplateModal from "../Modal/Template/EditTemplateModal";
-import TemplateSettingsModal from "../Modal/Template/TemplateSettingsModal"; // Import the separated modal
+import TemplateSettingsModal from "../Modal/Template/TemplateSettingsModal";
 import { Template } from "@/app/components/Templates/types/templates";
+
+// Type definitions
+interface ApiResponse<T> {
+  data?: T;
+  templates?: T;
+  total?: number;
+  totalCount?: number;
+  count?: number;
+}
+
+interface AssignmentInfo {
+  sub_profile_id: string;
+  priority: number;
+}
+
+interface TemplateWithUsage extends Template {
+  template_name: string;
+  is_public: boolean;
+  usage_count?: number;
+  assignedProfiles?: number;
+}
+
+type FilterStatus = "active" | "beta" | "";
+type FilterVisibility = "public" | "private" | "";
 
 const TemplatesPage: React.FC = () => {
   const templateApiService: TemplateApiService = new TemplateApiService();
 
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedEditTemplateId, setSelectedEditTemplateId] = useState(false);
+  const [selectedEditTemplateId, setSelectedEditTemplateId] = useState<
+    string | false
+  >(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
     null
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<any>("");
-  const [filterVisibility, setFilterVisibility] = useState<any>("");
-  const [tempId, setTempId] = useState<any>(null);
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("");
+  const [filterVisibility, setFilterVisibility] =
+    useState<FilterVisibility>("");
+  const [tempId, setTempId] = useState<string | null>(null);
   const [showAssignments, setShowAssignments] = useState<boolean>(false);
-  const [templates, setTemplates] = useState<any>([]);
-  const [assesmentInfo, setAssesmentInfo] = useState([]);
+  const [templates, setTemplates] = useState<TemplateWithUsage[]>([]);
+  const [assesmentInfo, setAssesmentInfo] = useState<AssignmentInfo[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(6);
   const [totalCount, setTotalCount] = useState(0);
@@ -52,7 +79,9 @@ const TemplatesPage: React.FC = () => {
   const toggleAssignments = async (templateId: string) => {
     try {
       if (!showAssignments) {
-        let res = await templateApiService.getSubProfileAssignments(templateId);
+        const res = await templateApiService.getSubProfileAssignments(
+          templateId
+        );
         setAssesmentInfo(res);
         setTempId(templateId);
         setShowAssignments(true);
@@ -61,13 +90,13 @@ const TemplatesPage: React.FC = () => {
         setTempId(null);
         setShowAssignments(false);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setAssesmentInfo([]);
       return ErrorHandler(err);
     }
   };
 
-  const handleOpenEdit = (id: any) => {
+  const handleOpenEdit = (id: string) => {
     setShowEditModal(true);
     setSelectedEditTemplateId(id);
   };
@@ -84,7 +113,7 @@ const TemplatesPage: React.FC = () => {
         await getAllTemplate();
         setDeleteModal(false);
         return;
-      } catch (error: any) {
+      } catch (error: unknown) {
         return ErrorHandler(error);
       } finally {
         setDeleteLoading(false);
@@ -92,7 +121,7 @@ const TemplatesPage: React.FC = () => {
     }
   };
 
-  const deleteTemplate = (id: any) => {
+  const deleteTemplate = (id: string) => {
     setSelectedId(id);
     setDeleteModal(true);
   };
@@ -189,7 +218,7 @@ const TemplatesPage: React.FC = () => {
     return colorMap[color] || colorMap.purple;
   };
 
-  const getAllTemplate = async () => {
+  const getAllTemplate = useCallback(async () => {
     try {
       setIsRefreshing(true);
       const params = new URLSearchParams();
@@ -209,7 +238,7 @@ const TemplatesPage: React.FC = () => {
       params.append("sort_order", "desc");
 
       const url = `?${params.toString()}`;
-      let result = await templateApiService.getAllTemplate(url);
+      const result: unknown = await templateApiService.getAllTemplate(url);
 
       // Handle different API response structures
       if (result && typeof result === "object") {
@@ -244,7 +273,7 @@ const TemplatesPage: React.FC = () => {
         setTemplates([]);
         setTotalCount(0);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       setTemplates([]);
       setTotalCount(0);
       toast.error("Failed to refresh templates", {
@@ -254,7 +283,7 @@ const TemplatesPage: React.FC = () => {
     } finally {
       setIsRefreshing(false);
     }
-  };
+  }, [searchQuery, filterStatus, filterVisibility, page, pageSize]);
 
   // Handle refresh button click
   const handleRefresh = async () => {
@@ -264,7 +293,7 @@ const TemplatesPage: React.FC = () => {
 
   useEffect(() => {
     getAllTemplate();
-  }, [searchQuery, filterStatus, filterVisibility, page, pageSize]);
+  }, [getAllTemplate]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -351,7 +380,7 @@ const TemplatesPage: React.FC = () => {
             </div>
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="">All Status</option>
@@ -360,7 +389,9 @@ const TemplatesPage: React.FC = () => {
             </select>
             <select
               value={filterVisibility}
-              onChange={(e) => setFilterVisibility(e.target.value)}
+              onChange={(e) =>
+                setFilterVisibility(e.target.value as FilterVisibility)
+              }
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="">All Visibility</option>
@@ -375,10 +406,18 @@ const TemplatesPage: React.FC = () => {
             <span>Showing: {templates.length}</span>
             <span>
               Active:{" "}
-              {templates.filter((t: any) => t.status === "active").length}
+              {
+                templates.filter(
+                  (t: TemplateWithUsage) => t.status === "active"
+                ).length
+              }
             </span>
             <span>
-              Beta: {templates.filter((t: any) => t.status === "beta").length}
+              Beta:{" "}
+              {
+                templates.filter((t: TemplateWithUsage) => t.status === "beta")
+                  .length
+              }
             </span>
           </div>
         </div>
@@ -422,7 +461,7 @@ const TemplatesPage: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.map((template: any) => {
+            {templates.map((template: TemplateWithUsage) => {
               const colorClasses = getColorClasses(template.color);
               return (
                 <div
@@ -547,7 +586,7 @@ const TemplatesPage: React.FC = () => {
                       <div className="flex flex-wrap gap-1">
                         {template.tags
                           .slice(0, 3)
-                          .map((tag: any, index: any) => (
+                          .map((tag: string, index: number) => (
                             <span
                               key={index}
                               className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md"
@@ -589,19 +628,21 @@ const TemplatesPage: React.FC = () => {
                       {assesmentInfo.length > 0 ? (
                         <div className="text-sm text-gray-600">
                           <div className="mt-2 space-y-1">
-                            {assesmentInfo.map((item: any, idx: any) => (
-                              <div
-                                key={idx}
-                                className="flex items-center justify-between py-1"
-                              >
-                                <span className="text-gray-700">
-                                  Sub-Profile Id : {item.sub_profile_id}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  Priority : {item.priority}
-                                </span>
-                              </div>
-                            ))}
+                            {assesmentInfo.map(
+                              (item: AssignmentInfo, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between py-1"
+                                >
+                                  <span className="text-gray-700">
+                                    Sub-Profile Id : {item.sub_profile_id}
+                                  </span>
+                                  <span className="text-xs text-gray-500">
+                                    Priority : {item.priority}
+                                  </span>
+                                </div>
+                              )
+                            )}
                           </div>
                         </div>
                       ) : (

@@ -5,22 +5,58 @@ import VideoTable from './VideoTable';
 import { API_ENDPOINTS } from '../../config/api';
 import '../../styles/Videos.css';
 
+// --- Type Definitions ---
+interface Video {
+  id: string;
+  name: string;
+  created_at: string;
+  file_size: number;
+  // Add other video properties as needed
+}
+
+interface VideoUploadResponse {
+  success: boolean;
+  message: string;
+  video?: Video;
+  // Add other response properties as needed
+}
+
+interface VideoUploadError {
+  message: string;
+  code?: string;
+  details?: string;
+  // Add other error properties as needed
+}
+
+interface FilterOptions {
+  search: string;
+  sortBy: 'name' | 'date' | 'size';
+  sortOrder: 'asc' | 'desc';
+  dateFrom: string;
+  dateTo: string;
+}
+
+interface BulkDeleteResponse {
+  success: boolean;
+  message: string;
+  deleted_count: number;
+}
+
 // --- Header Component ---
 interface HeaderProps {
   videoCount: number;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  onAddVideo?: (video: any) => void;
+  onAddVideo?: (video: Video) => void;
   selectedVideos?: string[];
-  onFilterChange?: (filters: any) => void;
+  onFilterChange?: (filters: FilterOptions) => void;
   onTitleClick?: () => void;
   isNavigationTarget?: boolean;
-  onVideoUploadSuccess?: (response: any) => void;
-  onVideoUploadError?: (error: any) => void;
+  onVideoUploadSuccess?: (response: VideoUploadResponse) => void;
+  onVideoUploadError?: (error: VideoUploadError) => void;
   isSelectMode?: boolean;
   onSelectModeToggle?: () => void;
   onSelectAll?: () => void;
-  onDeselectAll?: () => void;
   onBulkDelete?: (videoIds: string[]) => void;
   isBulkDeleting?: boolean;
 }
@@ -39,7 +75,6 @@ const Header: React.FC<HeaderProps> = ({
   isSelectMode = false,
   onSelectModeToggle,
   onSelectAll,
-  onDeselectAll,
   onBulkDelete,
   isBulkDeleting = false
 }) => {
@@ -79,7 +114,7 @@ const Header: React.FC<HeaderProps> = ({
   }, [showMobileActions]);
 
   useEffect(() => {
-    const filters = {
+    const filters: FilterOptions = {
       search: searchQuery,
       sortBy,
       sortOrder,
@@ -107,15 +142,22 @@ const Header: React.FC<HeaderProps> = ({
     console.log('Opening video upload modal...');
     setShowUploadModal(true);
     setShowMobileActions(false);
-    onAddVideo?.({});
+    // Create a placeholder video object since onAddVideo expects a Video parameter
+    const placeholderVideo: Video = {
+      id: '',
+      name: '',
+      created_at: '',
+      file_size: 0
+    };
+    onAddVideo?.(placeholderVideo);
   };
 
-  const handleUploadSuccess = (response: any) => {
+  const handleUploadSuccess = (response: VideoUploadResponse) => {
     console.log('Video uploaded successfully:', response);
     onVideoUploadSuccess?.(response);
   };
 
-  const handleUploadError = (error: any) => {
+  const handleUploadError = (error: VideoUploadError) => {
     console.error('Video upload failed:', error);
     onVideoUploadError?.(error);
     alert('Failed to upload video. Please try again.');
@@ -302,8 +344,6 @@ const Header: React.FC<HeaderProps> = ({
               ))}
             </div>
 
-
-
             <div className={`header-actions ${isMobile && showMobileActions ? 'mobile-open' : ''}`}>
               <button 
                 className="action-btn secondary"
@@ -393,7 +433,7 @@ const Header: React.FC<HeaderProps> = ({
                 <select 
                   className="filter-select"
                   value={sortBy}
-                  onChange={(e) => handleSortChange(e.target.value as any)}
+                  onChange={(e) => handleSortChange(e.target.value as 'name' | 'date' | 'size')}
                 >
                   <option value="date">Upload Date</option>
                   <option value="name">Name</option>
@@ -538,17 +578,13 @@ const VideosPage: React.FC = () => {
     console.log('Select all functionality - you need to implement this based on your current video list');
   }, []);
 
-  const handleDeselectAll = useCallback(() => {
-    setSelectedVideos([]);
-  }, []);
-
-  const handleVideoUploadSuccess = useCallback((response: any) => {
+  const handleVideoUploadSuccess = useCallback((response: VideoUploadResponse) => {
     console.log('Video uploaded successfully:', response);
     setRefreshTrigger(prev => prev + 1);
     alert('Video uploaded successfully!');
   }, []);
 
-  const handleVideoUploadError = useCallback((error: any) => {
+  const handleVideoUploadError = useCallback((error: VideoUploadError) => {
     console.error('Video upload failed:', error);
     alert('Failed to upload video. Please try again.');
   }, []);
@@ -579,7 +615,7 @@ const VideosPage: React.FC = () => {
       });
 
       if (response.ok) {
-        const result = await response.json();
+        const result = await response.json() as BulkDeleteResponse;
         console.log('Bulk delete successful:', result);
         
         // Clear selected videos and exit select mode
@@ -592,7 +628,7 @@ const VideosPage: React.FC = () => {
         // Show success message
         alert(`Successfully deleted ${videoIds.length} video(s).`);
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json() as { message: string };
         throw new Error(errorData.message || 'Failed to delete videos');
       }
     } catch (error) {
@@ -602,20 +638,6 @@ const VideosPage: React.FC = () => {
       setIsBulkDeleting(false);
     }
   }, []);
-
-  const handleBulkAction = useCallback((action: 'delete' | 'process' | 'download') => {
-    if (selectedVideos.length === 0) {
-      alert('Please select videos first.');
-      return;
-    }
-
-    if (action === 'delete') {
-      handleBulkDelete(selectedVideos);
-    } else {
-      console.log(`Bulk ${action} for videos:`, selectedVideos);
-      alert(`${action} action would be performed on ${selectedVideos.length} video(s)`);
-    }
-  }, [selectedVideos, handleBulkDelete]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -631,7 +653,6 @@ const VideosPage: React.FC = () => {
           isSelectMode={isSelectMode}
           onSelectModeToggle={handleSelectModeToggle}
           onSelectAll={handleSelectAll}
-          onDeselectAll={handleDeselectAll}
           onBulkDelete={handleBulkDelete}
           isBulkDeleting={isBulkDeleting}
         />

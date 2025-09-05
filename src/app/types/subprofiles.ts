@@ -30,7 +30,7 @@ export interface AlertSettings {
   threshold?: number;
   enabled: boolean;
   notificationMethods: string[];
-  conditions?: Record<string, any>;
+  conditions?: Record<string, unknown>; // Changed from 'any' to 'unknown'
 }
 
 // API Request interface that matches backend expectations
@@ -39,9 +39,9 @@ export interface CreateSubProfileAPIRequest {
   description: string;
   tags: string[];
   area_type: string;
-  camera_locations: Record<string, any>;
-  monitoring_schedule: Record<string, any>;
-  alert_settings: Record<string, any>;
+  camera_locations: Record<string, unknown>; // Changed from 'any' to 'unknown'
+  monitoring_schedule: Record<string, unknown>; // Changed from 'any' to 'unknown'
+  alert_settings: Record<string, unknown>; // Changed from 'any' to 'unknown'
 }
 
 // API Update interface for PATCH requests
@@ -50,9 +50,9 @@ export interface UpdateSubProfileAPIRequest {
   description?: string;
   tags?: string[];
   area_type?: string;
-  camera_locations?: Record<string, any>;
-  monitoring_schedule?: Record<string, any>;
-  alert_settings?: Record<string, any>;
+  camera_locations?: Record<string, unknown>; // Changed from 'any' to 'unknown'
+  monitoring_schedule?: Record<string, unknown>; // Changed from 'any' to 'unknown'
+  alert_settings?: Record<string, unknown>; // Changed from 'any' to 'unknown'
   is_active?: boolean;
 }
 
@@ -65,9 +65,9 @@ export interface SubProfileResponse {
   description: string;
   tags: string[];
   area_type: string;
-  camera_locations: Record<string, any>;
-  monitoring_schedule: Record<string, any>;
-  alert_settings: Record<string, any>;
+  camera_locations: Record<string, unknown>; // Changed from 'any' to 'unknown'
+  monitoring_schedule: Record<string, unknown>; // Changed from 'any' to 'unknown'
+  alert_settings: Record<string, unknown>; // Changed from 'any' to 'unknown'
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -132,15 +132,15 @@ export const convertSubProfileToApiRequest = (
     camera_locations: cameraLocations.reduce((acc, camera, index) => {
       acc[`camera_${index}`] = camera;
       return acc;
-    }, {} as Record<string, any>),
+    }, {} as Record<string, unknown>), // Changed from 'any' to 'unknown'
     monitoring_schedule: monitoringSchedules.reduce((acc, schedule, index) => {
       acc[`schedule_${index}`] = schedule;
       return acc;
-    }, {} as Record<string, any>),
+    }, {} as Record<string, unknown>), // Changed from 'any' to 'unknown'
     alert_settings: alertSettings.reduce((acc, alert, index) => {
       acc[`alert_${index}`] = alert;
       return acc;
-    }, {} as Record<string, any>)
+    }, {} as Record<string, unknown>) // Changed from 'any' to 'unknown'
   };
 };
 

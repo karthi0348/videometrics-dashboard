@@ -1,6 +1,10 @@
 import React from 'react';
 
-interface SummaryConfig {
+// Define proper types for configuration values
+type ConfigValue = string | number | boolean | string[] | undefined;
+
+interface ConfigObject {
+  [key: string]: ConfigValue;
   summary_type?: string;
   sections?: string[];
   metrics_to_highlight?: string[];
@@ -9,31 +13,31 @@ interface SummaryConfig {
 }
 
 interface FormEditorProps {
-  config: any;
+  config: ConfigObject;
   onConfigChange: (jsonString: string) => void;
 }
 
 const FormEditor: React.FC<FormEditorProps> = ({ config, onConfigChange }) => {
-  const handleFieldChange = (field: string, value: any) => {
+  const handleFieldChange = (field: string, value: ConfigValue) => {
     const newConfig = { ...config, [field]: value };
     onConfigChange(JSON.stringify(newConfig, null, 2));
   };
 
   const handleArrayItemChange = (field: string, index: number, value: string) => {
-    const currentArray = config[field] || [];
+    const currentArray = (config[field] as string[]) || [];
     const newArray = [...currentArray];
     newArray[index] = value;
     handleFieldChange(field, newArray);
   };
 
   const handleArrayItemDelete = (field: string, index: number) => {
-    const currentArray = config[field] || [];
-    const newArray = currentArray.filter((_: any, i: number) => i !== index);
+    const currentArray = (config[field] as string[]) || [];
+    const newArray = currentArray.filter((_, i: number) => i !== index);
     handleFieldChange(field, newArray);
   };
 
   const handleArrayItemAdd = (field: string) => {
-    const currentArray = config[field] || [];
+    const currentArray = (config[field] as string[]) || [];
     const newArray = [...currentArray, ''];
     handleFieldChange(field, newArray);
   };
@@ -118,7 +122,7 @@ const FormEditor: React.FC<FormEditorProps> = ({ config, onConfigChange }) => {
             </div>
 
             <div className="ml-2 sm:ml-6 space-y-2 sm:space-y-3">
-              {(config.sections || []).map((section: string, index: number) => (
+              {((config.sections as string[]) || []).map((section: string, index: number) => (
                 <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <div className="flex items-center gap-2 sm:min-w-0">
                     <span className="text-xs sm:text-sm text-green-600 font-mono whitespace-nowrap">Item {index}</span>
@@ -183,7 +187,7 @@ const FormEditor: React.FC<FormEditorProps> = ({ config, onConfigChange }) => {
             </div>
 
             <div className="ml-2 sm:ml-6 space-y-2 sm:space-y-3">
-              {(config.metrics_to_highlight || []).map((metric: string, index: number) => (
+              {((config.metrics_to_highlight as string[]) || []).map((metric: string, index: number) => (
                 <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <div className="flex items-center gap-2 sm:min-w-0">
                     <span className="text-xs sm:text-sm text-green-600 font-mono whitespace-nowrap">Item {index}</span>
@@ -204,7 +208,7 @@ const FormEditor: React.FC<FormEditorProps> = ({ config, onConfigChange }) => {
                     >
                       <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                  </svg>
                     </button>
                   </div>
                 </div>

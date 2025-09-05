@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { VideoAnalytics, GeneratedChart } from "../types/types";
 import ChartDisplay from "./ChartDisplay";
 import SummaryView from "./SummaryView";
@@ -8,8 +8,11 @@ interface VideoMetricsModalProps {
   isOpen: boolean;
   onClose: () => void;
   analyticsId: string | null;
-  apiService: any;
+  apiService: ApiService | null;
   mockMode: boolean;
+}
+interface ApiService {
+  getAnalytics: (id: string) => Promise<VideoAnalytics | string>;
 }
 
 // Add these type declarations at the top of your component file or in a types file
@@ -185,7 +188,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
     }
   }, [isOpen, analyticsId]);
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = useCallback(async () => {
     if (mockMode) {
       setLoading(false);
       setAnalytics(mockAnalytics);
@@ -211,11 +214,11 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
 
       const response = await apiService.getAnalytics(analyticsId);
 
-      let data;
+      let data: VideoAnalytics;
       if (typeof response === "string") {
         try {
-          data = JSON.parse(response);
-        } catch (parseError) {
+          data = JSON.parse(response) as VideoAnalytics;
+        } catch {
           console.error("Failed to parse JSON response:", response);
           throw new Error("Invalid JSON response from server");
         }
@@ -240,17 +243,8 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [analyticsId, apiService, mockMode]);
 
-  const handleRefresh = () => {
-    loadAnalytics();
-  };
-
-  // Simplified PDF export function
-  // Updated loadPdfLibraries function with better error handling
-
-  // Updated PDF export function with better error handling and debugging
-  // Enhanced library loading function
   const loadPdfLibraries = (): Promise<void> => {
     return new Promise((resolve, reject) => {
       let html2canvasLoaded = false;
@@ -436,14 +430,14 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
               element.scrollIntoView({ behavior: "instant", block: "center" });
               await new Promise((resolve) => setTimeout(resolve, 500));
 
-              const canvas = await html2canvas(element, {
+              const canvas = await (window as any).html2canvas(element, {
                 scale: 2,
                 useCORS: true,
                 allowTaint: true,
                 backgroundColor: "#ffffff",
                 width: element.offsetWidth,
                 height: element.offsetHeight,
-                logging: true, // Enable logging for debugging
+                logging: true,
                 foreignObjectRendering: true,
                 removeContainer: true,
               });
@@ -471,7 +465,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
                 console.log(`Capturing Recharts element ${i}...`);
 
                 // Find the parent container that includes the title
-                let captureElement = element;
+                const captureElement = element; // Use const instead of let
                 let parent = element.parentElement;
                 while (
                   parent &&
@@ -482,13 +476,14 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
                       'h3, h4, .chart-title, [class*="title"]'
                     )
                   ) {
-                    captureElement = parent;
+                    // captureElement = parent; // Remove this reassignment
                     break;
                   }
                   parent = parent.parentElement;
                 }
 
-                captureElement.scrollIntoView({
+                const finalCaptureElement = parent || captureElement;
+                finalCaptureElement.scrollIntoView({
                   behavior: "instant",
                   block: "center",
                 });
@@ -1247,6 +1242,10 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  function handleRefresh(event: MouseEvent<HTMLButtonElement, MouseEvent>): void {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

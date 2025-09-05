@@ -5,18 +5,23 @@ interface RawDataViewProps {
   data: VideoAnalytics;
 }
 
+// Define types for the data filtering
+type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
+type JsonObject = { [key: string]: JsonValue };
+type JsonArray = JsonValue[];
+
 const RawDataView: React.FC<RawDataViewProps> = ({ data }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandAll, setExpandAll] = useState(false);
 
   // Filter data based on search term
-  const filterData = (obj: any, searchTerm: string): any => {
+  const filterData = (obj: JsonObject, searchTerm: string): JsonObject => {
     if (!searchTerm) return obj;
 
     const search = searchTerm.toLowerCase();
-    const filtered: any = {};
+    const filtered: JsonObject = {};
 
-    const searchInValue = (value: any): boolean => {
+    const searchInValue = (value: JsonValue): boolean => {
       if (typeof value === "string") {
         return value.toLowerCase().includes(search);
       }
@@ -43,7 +48,7 @@ const RawDataView: React.FC<RawDataViewProps> = ({ data }) => {
     return filtered;
   };
 
-  const filteredData = filterData(data, searchTerm);
+  const filteredData = filterData(data as JsonObject, searchTerm);
 
   return (
     <div className="p-6">
@@ -190,8 +195,13 @@ const RawDataView: React.FC<RawDataViewProps> = ({ data }) => {
   );
 };
 
-// Enhanced JSON Tree Component
-const JsonTreeView: React.FC<{ data: any; level?: number }> = ({ data, level = 0 }) => {
+// Enhanced JSON Tree Component with proper types
+interface JsonTreeViewProps {
+  data: JsonObject;
+  level?: number;
+}
+
+const JsonTreeView: React.FC<JsonTreeViewProps> = ({ data, level = 0 }) => {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(
     new Set(['video_metadata', 'parsed_metrics', 'generated_summary', 'generated_charts'])
   );
@@ -206,7 +216,7 @@ const JsonTreeView: React.FC<{ data: any; level?: number }> = ({ data, level = 0
     setExpandedKeys(newExpanded);
   };
 
-  const getTypeColor = (value: any): string => {
+  const getTypeColor = (value: JsonValue): string => {
     if (value === null) return "bg-gray-100 text-gray-600";
     if (typeof value === "string") return "bg-green-100 text-green-700";
     if (typeof value === "number") return "bg-blue-100 text-blue-700";
@@ -216,22 +226,22 @@ const JsonTreeView: React.FC<{ data: any; level?: number }> = ({ data, level = 0
     return "bg-gray-100 text-gray-600";
   };
 
-  const getValueDisplay = (value: any): string => {
+  const getValueDisplay = (value: JsonValue): string => {
     if (value === null) return "null";
     if (typeof value === "string") return `"${value.length > 50 ? value.substring(0, 50) + '...' : value}"`;
     if (typeof value === "number" || typeof value === "boolean") return String(value);
     if (Array.isArray(value)) return `Array(${value.length})`;
-    if (typeof value === "object") return `Object(${Object.keys(value).length})`;
+    if (typeof value === "object" && value !== null) return `Object(${Object.keys(value).length})`;
     return String(value);
   };
 
-  const getTypeName = (value: any): string => {
+  const getTypeName = (value: JsonValue): string => {
     if (value === null) return "null";
     if (Array.isArray(value)) return "array";
     return typeof value;
   };
 
-  const renderValue = (key: string, value: any, path: string) => {
+  const renderValue = (key: string, value: JsonValue, path: string) => {
     const isExpanded = expandedKeys.has(path);
     const indent = level * 20;
     const isComplexType = (typeof value === "object" && value !== null) || Array.isArray(value);
@@ -280,7 +290,7 @@ const JsonTreeView: React.FC<{ data: any; level?: number }> = ({ data, level = 0
                   level={level + 1}
                 />
               ))
-            ) : (
+            ) : typeof value === "object" && value !== null ? (
               Object.entries(value).map(([subKey, subValue]) => (
                 <JsonTreeView
                   key={`${path}-${subKey}`}
@@ -288,7 +298,7 @@ const JsonTreeView: React.FC<{ data: any; level?: number }> = ({ data, level = 0
                   level={level + 1}
                 />
               ))
-            )}
+            ) : null}
           </div>
         )}
       </div>

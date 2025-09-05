@@ -13,8 +13,19 @@ import {
 } from '@/app/types/subprofiles';
 import { API_ENDPOINTS } from '../config/api';
 
+// Define interfaces for better type safety
+interface ErrorResponse {
+  detail?: string;
+  message?: string;
+}
+
+interface ApiListResponse {
+  sub_profiles?: SubProfileResponse[];
+  data?: SubProfileResponse[];
+}
+
 export class SubProfileService {
-  private getAuthHeaders() {
+  private getAuthHeaders(): Record<string, string> {
     const accessToken = localStorage.getItem('accessToken');
     if (!accessToken) {
       throw new Error('Authentication token not found. Please log in.');
@@ -44,7 +55,7 @@ export class SubProfileService {
       if (response.status === 403) {
         throw new Error('Access denied. You do not have permission to create sub-profiles.');
       }
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json().catch(() => ({})) as ErrorResponse;
       throw new Error(errorData.detail || errorData.message || `Failed to create sub-profile: ${response.status} - ${response.statusText}`);
     }
 
@@ -70,7 +81,7 @@ export class SubProfileService {
       throw new Error(`Failed to fetch sub-profiles: ${response.status} - ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data = await response.json() as SubProfileResponse[] | ApiListResponse;
     
     // Handle different response formats
     let subProfilesArray: SubProfileResponse[] = [];
@@ -83,7 +94,7 @@ export class SubProfileService {
       subProfilesArray = data.data;
     } else {
       // Single item response
-      subProfilesArray = [data];
+      subProfilesArray = [data as SubProfileResponse];
     }
 
     return subProfilesArray.map(convertApiResponseToSubProfile);
@@ -137,7 +148,7 @@ export class SubProfileService {
       if (response.status === 404) {
         throw new Error('Sub-profile not found.');
       }
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json().catch(() => ({})) as ErrorResponse;
       throw new Error(errorData.detail || errorData.message || `Failed to update sub-profile: ${response.status}`);
     }
 
@@ -167,7 +178,7 @@ export class SubProfileService {
       if (response.status === 404) {
         throw new Error('Sub-profile not found.');
       }
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json().catch(() => ({})) as ErrorResponse;
       throw new Error(errorData.detail || errorData.message || `Failed to patch sub-profile: ${response.status}`);
     }
 
@@ -193,7 +204,7 @@ export class SubProfileService {
       if (response.status === 404) {
         throw new Error('Sub-profile not found.');
       }
-      const errorData = await response.json().catch(() => ({}));
+      const errorData = await response.json().catch(() => ({})) as ErrorResponse;
       throw new Error(errorData.detail || errorData.message || `Failed to delete sub-profile: ${response.status}`);
     }
   }
@@ -217,17 +228,17 @@ export class SubProfileService {
     alertSettings: AlertSettings[] = []
   ): Promise<SubProfile> {
     // Convert arrays to objects as expected by the API
-    const camera_locations: Record<string, any> = {};
+    const camera_locations: Record<string, unknown> = {};
     cameraLocations.forEach((camera, index) => {
       camera_locations[`camera_${index}`] = camera;
     });
 
-    const monitoring_schedule: Record<string, any> = {};
+    const monitoring_schedule: Record<string, unknown> = {};
     monitoringSchedules.forEach((schedule, index) => {
       monitoring_schedule[`schedule_${index}`] = schedule;
     });
 
-    const alert_settings: Record<string, any> = {};
+    const alert_settings: Record<string, unknown> = {};
     alertSettings.forEach((alert, index) => {
       alert_settings[`alert_${index}`] = alert;
     });
@@ -277,7 +288,7 @@ export class SubProfileService {
 
     // Convert camera locations if provided
     if (cameraLocations !== undefined) {
-      const camera_locations: Record<string, any> = {};
+      const camera_locations: Record<string, unknown> = {};
       cameraLocations.forEach((camera, index) => {
         camera_locations[`camera_${index}`] = camera;
       });
@@ -286,7 +297,7 @@ export class SubProfileService {
 
     // Convert monitoring schedules if provided
     if (monitoringSchedules !== undefined) {
-      const monitoring_schedule: Record<string, any> = {};
+      const monitoring_schedule: Record<string, unknown> = {};
       monitoringSchedules.forEach((schedule, index) => {
         monitoring_schedule[`schedule_${index}`] = schedule;
       });
@@ -295,7 +306,7 @@ export class SubProfileService {
 
     // Convert alert settings if provided
     if (alertSettings !== undefined) {
-      const alert_settings: Record<string, any> = {};
+      const alert_settings: Record<string, unknown> = {};
       alertSettings.forEach((alert, index) => {
         alert_settings[`alert_${index}`] = alert;
       });

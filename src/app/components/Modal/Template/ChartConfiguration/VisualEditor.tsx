@@ -4,7 +4,7 @@ import { ChartConfig } from "@/app/components/Templates/types/templates";
 interface VisualEditorProps {
   charts: ChartConfig[];
   chartTypes: string[];
-  updateChart: (index: number, field: string, value: any) => void;
+  updateChart: (index: number, field: string, value: string | number | boolean) => void;
   addChart: () => void;
   removeChart: (index: number) => void;
 }

@@ -1,16 +1,41 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import EditProfileModal from '../Modal/Settings/EditProfile';
 import ResetPasswordModal from '../Modal/Settings/ResetPassword';
 import ChangePasswordModal from '../Modal/Settings/ChangePassword';
 import UserApiService from '@/helpers/service/user/user-api-service';
 
+// Type definitions
+interface UserData {
+  full_name?: string;
+  username?: string;
+  email?: string;
+  profile_image?: string;
+}
+
+interface ProfileFormData {
+  fullName: string;
+}
+
+interface PasswordChangeData {
+  email: string;
+  current_password: string;
+  new_password: string;
+}
+
+interface FileChangeEvent {
+  target: {
+    files: FileList | null;
+    result?: string | ArrayBuffer | null;
+  };
+}
+
 const SettingsPage = () => {
   const [fullName, setFullName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [profileImage, setProfileImage] = useState(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   // Modal states
@@ -18,18 +43,14 @@ const SettingsPage = () => {
   const [showResetModal, setShowResetModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const userApiService = new UserApiService();
 
   // Load user data on component mount
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const userData = await userApiService.getCurrentUser();
+      const userData: UserData = await userApiService.getCurrentUser();
       
       // Map API response to component state
       setFullName(userData.full_name || '');
@@ -42,20 +63,27 @@ const SettingsPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userApiService]);
+
+  useEffect(() => {
+    loadUserData();
+  }, [loadUserData]);
 
   const handleProfileImageClick = () => {
     fileInputRef.current?.click();
   };
 
-  const handleImageChange = (e: { target: { files: any[]; }; }) => {
-    const file = e.target.files[0];
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setProfileImage(e.target.result);
-        // Here you could also upload the image to your server
-        // handleUpdateProfileImage(file);
+      reader.onload = (event) => {
+        const result = event.target?.result;
+        if (typeof result === 'string') {
+          setProfileImage(result);
+          // Here you could also upload the image to your server
+          // handleUpdateProfileImage(file);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -65,36 +93,35 @@ const SettingsPage = () => {
     setShowEditModal(true);
   };
 
-  
-
-const handleSaveProfile = async (formData: { fullName: any; }) => {
-  try {
-    const payload = {
-      email: email, // Required field
-      full_name: formData.fullName
-    };
-    
-    const updatedUser = await userApiService.updateCurrentUser(payload);
-    
-    if (updatedUser) {
-      setFullName(updatedUser.full_name || formData.fullName);
-      setUsername(updatedUser.username || username);
-      setEmail(updatedUser.email || email);
-    } else {
-      setFullName(formData.fullName);
+  const handleSaveProfile = async (formData: ProfileFormData) => {
+    try {
+      const payload = {
+        email: email, // Required field
+        full_name: formData.fullName
+      };
+      
+      const updatedUser: UserData = await userApiService.updateCurrentUser(payload);
+      
+      if (updatedUser) {
+        setFullName(updatedUser.full_name || formData.fullName);
+        setUsername(updatedUser.username || username);
+        setEmail(updatedUser.email || email);
+      } else {
+        setFullName(formData.fullName);
+      }
+      
+      alert('Profile updated successfully!');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw new Error('Error updating profile. Please try again.');
     }
-    
-    alert('Profile updated successfully!');
-  } catch (error) {
-    console.error('Error updating profile:', error);
-    throw new Error('Error updating profile. Please try again.');
-  }
-};
+  };
+
   const handleChangePassword = () => {
     setShowChangePasswordModal(true);
   };
 
-  const handleChangePasswordSubmit = async (passwordData: { email: any; current_password: any; new_password: any; }) => {
+  const handleChangePasswordSubmit = async (passwordData: PasswordChangeData) => {
     try {
       const payload = {
         email: passwordData.email,
@@ -114,6 +141,7 @@ const handleSaveProfile = async (formData: { fullName: any; }) => {
   const handleResetPassword = () => {
     setShowResetModal(true);
   };
+
   const handleSendCode = async (email: string) => {
     try {
       await userApiService.sendCode(email);
@@ -135,7 +163,7 @@ const handleSaveProfile = async (formData: { fullName: any; }) => {
   };
 
   const getInitials = (name: string) => {
-    return name.split(' ').map((word: any[]) => word[0]).join('').toUpperCase().slice(0, 2);
+    return name.split(' ').map((word: string) => word[0]).join('').toUpperCase().slice(0, 2);
   };
 
   if (isLoading) {

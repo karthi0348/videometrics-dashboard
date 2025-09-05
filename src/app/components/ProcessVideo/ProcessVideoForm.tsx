@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import TemplateApiService from "../../../helpers/service/templates/template-api-service";
 import {
-  Video,
   Profile,
   SubProfile,
   Template,
@@ -9,8 +8,44 @@ import {
   ProcessVideoRequest,
 } from "./types/types";
 
+interface VideoItem {
+  id: number;
+  video_name: string;
+  url?: string;
+  video_url?: string;
+  file_url?: string;
+}
+
+// Define template assignment interface
+interface TemplateAssignment {
+  template_id: number;
+}
+
+// Define template detail interface
+interface TemplateDetail {
+  id: number | string;
+  template_name?: string;
+  name?: string;
+}
+
+// Define validation error interface
+interface ValidationError {
+  loc: string[];
+  msg: string;
+}
+
+// Define error response interface
+interface ErrorResponse {
+  response?: {
+    data?: {
+      detail?: ValidationError[];
+    };
+  };
+  message?: string;
+}
+
 interface ProcessVideoFormProps {
-  videos: any;
+  videos: VideoItem[];
   profiles: Profile[];
   subProfiles: SubProfile[];
   onProcessVideo: (payload: ProcessVideoRequest) => Promise<void>;
@@ -40,7 +75,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
   const [error, setError] = useState<string>("");
 
   // Load templates when sub-profile changes
-  const loadTemplates = async (subProfileId?: number) => {
+  const loadTemplates = useCallback(async (subProfileId?: number) => {
     try {
       setError("");
 
@@ -51,7 +86,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
 
       console.log("Loading templates for sub-profile:", subProfileId);
 
-      const assignedTemplates =
+      const assignedTemplates: TemplateAssignment[] =
         await templateApiService.getAssignedTemplatesBySubProfile(subProfileId);
 
       console.log("Assigned templates response:", assignedTemplates);
@@ -63,10 +98,10 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
       }
 
       const templateDetailsPromises = assignedTemplates.map(
-        async (item: any) => {
+        async (item: TemplateAssignment) => {
           try {
             console.log("Fetching template details for ID:", item.template_id);
-            const templateDetail = await templateApiService.getTemplateById(
+            const templateDetail: TemplateDetail = await templateApiService.getTemplateById(
               item.template_id
             );
             return templateDetail;
@@ -82,11 +117,11 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
 
       const templateDetails = await Promise.all(templateDetailsPromises);
       const validTemplates = templateDetails.filter(
-        (template) => template !== null
+        (template): template is TemplateDetail => template !== null
       );
 
       const transformedTemplates: Template[] = validTemplates.map(
-        (template: any, index: number) => ({
+        (template: TemplateDetail, index: number) => ({
           id: Number(template.id) || Date.now() + index,
           name:
             template.template_name ||
@@ -102,7 +137,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
       setError("Failed to load templates for selected sub-profile");
       setTemplates([]);
     }
-  };
+  }, [templateApiService]);
 
   // Effect to load templates when sub-profile changes
   useEffect(() => {
@@ -113,7 +148,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
       setTemplates([]);
     }
     setSelectedTemplateId("");
-  }, [selectedSubProfileId]);
+  }, [selectedSubProfileId, loadTemplates]);
 
   // Filter sub-profiles based on selected profile
   const availableSubProfiles = subProfiles.filter(
@@ -145,7 +180,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
       return;
     }
 
-    const video = videos.find((v: any) => v.id === selectedVideoId);
+    const video = videos.find((v: VideoItem) => v.id === selectedVideoId);
     if (!video) {
       setError("Selected video not found");
       return;
@@ -165,7 +200,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
       if (customParameters.trim()) {
         try {
           parsedCustomParameters = JSON.parse(customParameters);
-        } catch (e) {
+        } catch {
           throw new Error("Invalid JSON format in custom parameters");
         }
       }
@@ -205,15 +240,17 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
       setSelectedTemplateId("");
       setSelectedSubProfileId("");
       setCustomParameters("{}");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error processing video:", error);
-      if (error.response?.data?.detail) {
-        const validationErrors = error.response.data.detail
-          .map((err: any) => `${err.loc.join(".")}: ${err.msg}`)
+      const typedError = error as ErrorResponse;
+      
+      if (typedError.response?.data?.detail) {
+        const validationErrors = typedError.response.data.detail
+          .map((err: ValidationError) => `${err.loc.join(".")}: ${err.msg}`)
           .join(", ");
         setError(`Validation error: ${validationErrors}`);
       } else {
-        setError(error.message || "Failed to process video. Please try again.");
+        setError(typedError.message || "Failed to process video. Please try again.");
       }
     }
   };
@@ -282,7 +319,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
                 ? "No videos available"
                 : "Select a video"}
             </option>
-            {videos.map((video: any) => (
+            {videos.map((video: VideoItem) => (
               <option key={video.id} value={video.id}>
                 {video.video_name}
               </option>

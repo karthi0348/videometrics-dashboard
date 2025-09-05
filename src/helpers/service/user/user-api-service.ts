@@ -2,6 +2,32 @@
 
 import HttpClientWrapper from "@/helpers/http-client-wrapper";
 
+// Define interfaces for better type safety
+interface User {
+  id: number;
+  email: string;
+  full_name: string;
+  created_at?: string;
+  updated_at?: string;
+  role?: string;
+  is_active?: boolean;
+}
+
+interface UpdateUserPayload {
+  email: string;
+  full_name: string;
+  current_password?: string;
+  new_password?: string;
+}
+
+interface SendCodeResponse {
+  message: string;
+}
+
+interface VerifyResetPasswordResponse {
+  message: string;
+}
+
 class UserApiService {
   private httpClientWrapper: HttpClientWrapper;
 
@@ -10,9 +36,9 @@ class UserApiService {
   }
 
   // Get Current User Info
-  getCurrentUser = async () => {
+  getCurrentUser = async (): Promise<User> => {
     try {
-      const data: any = await this.httpClientWrapper.get("auth/me");
+      const data = await this.httpClientWrapper.get<User>("auth/me");
       return data;
     } catch (error) {
       throw error;
@@ -20,25 +46,20 @@ class UserApiService {
   };
 
   // Update Current User Info
-updateCurrentUser = async (payload: {
-  email: string;
-  full_name: string;
-  current_password?: string;
-  new_password?: string;
-}) => {
-  try {
-    const data: any = await this.httpClientWrapper.put("auth/me", payload);
-    return data; // ✅ backend already returns full updated user object
-  } catch (error) {
-    throw error;
-  }
-};
+  updateCurrentUser = async (payload: UpdateUserPayload): Promise<User> => {
+    try {
+      const data = await this.httpClientWrapper.put<User>("auth/me", payload);
+      return data; // ✅ backend already returns full updated user object
+    } catch (error) {
+      throw error;
+    }
+  };
 
   // Send Code (POST /auth/send-code)
-  sendCode = async (email: string) => {
+  sendCode = async (email: string): Promise<SendCodeResponse> => {
     try {
       const payload = { email };
-      const data: any = await this.httpClientWrapper.post("auth/send-code", payload);
+      const data = await this.httpClientWrapper.post<SendCodeResponse>("auth/send-code", payload);
       return data; // { message: "string" }
     } catch (error) {
       throw error;
@@ -50,14 +71,14 @@ updateCurrentUser = async (payload: {
     email: string,
     verificationCode: string,
     newPassword: string
-  ) => {
+  ): Promise<VerifyResetPasswordResponse> => {
     try {
       const payload = {
         email,
         verification_code: verificationCode,
         new_password: newPassword,
       };
-      const data: any = await this.httpClientWrapper.post(
+      const data = await this.httpClientWrapper.post<VerifyResetPasswordResponse>(
         "auth/verify-and-reset-password",
         payload
       );

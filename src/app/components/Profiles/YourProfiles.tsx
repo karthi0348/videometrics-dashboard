@@ -99,7 +99,7 @@ const YourProfiles: React.FC<YourProfilesProps> = ({
           {["all", "active", "inactive"].map((filter) => (
             <button
               key={filter}
-              onClick={() => setFilterStatus(filter as any)}
+              onClick={() => setFilterStatus(filter)}
               className={`px-4 py-2 rounded-lg font-medium capitalize transition-colors ${
                 filterStatus === filter
                   ? "text-white"

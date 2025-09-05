@@ -6,11 +6,24 @@ import TemplateApiService from "@/helpers/service/templates/template-api-service
 import ErrorHandler from "@/helpers/ErrorHandler";
 import { FormData, ChartConfig, SummaryConfig, } from "@/app/components/Templates/types/templates";
 
+// Define proper types for the component props
 interface EditTemplateModalProps {
   isEditOpen: boolean;
   onClose: () => void;
-  refresh: any;
-  id: any;
+  refresh: () => void; 
+  id: string | number; 
+}
+
+// Define the template data structure from API
+interface TemplateData {
+  template_name?: string;
+  description?: string;
+  tags?: string[];
+  analysis_prompt?: string;
+  is_public?: boolean;
+  metric_structure?: Record<string, unknown> | null;
+  chart_config?: ChartConfig[];
+  summary_config?: SummaryConfig | null;
 }
 
 const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
@@ -124,7 +137,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
         chartConfiguration: false,
         summaryConfiguration: false,
       });
-    } catch (error: any) {
+    } catch (error: unknown) { 
       return ErrorHandler(error);
     } finally {
       setIsSubmitting(false);
@@ -137,14 +150,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
     }
   };
 
-  const getObjectProperties = () => {
-    try {
-      const parsed = JSON.parse(jsonContent);
-      return Object.keys(parsed).length;
-    } catch {
-      return 0;
-    }
-  };
+  // Removed unused function 'getObjectProperties'
 
   const isValidJson = () => {
     if (!jsonContent.trim()) return true; // Empty content is valid (optional)
@@ -175,14 +181,14 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
 
   const getAllTemplate = async () => {
     try {
-      let result = await templateApiService.getAllTemplateById(id);
+      const result = await templateApiService.getAllTemplateById(id); 
       setTemplates(result);
-    } catch (error: any) {
+    } catch (error: unknown) { 
       return ErrorHandler(error);
     }
   };
 
-  const setTemplates = (data: any) => {
+  const setTemplates = (data: TemplateData) => { 
     setFormData({
       templateName: data.template_name || "",
       description: data.description || "",

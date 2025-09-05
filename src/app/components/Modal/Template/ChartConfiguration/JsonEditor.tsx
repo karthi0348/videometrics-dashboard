@@ -108,7 +108,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
     try {
       JSON.parse(jsonContent);
       return null;
-    } catch (error: any) {
+    } catch (error) {
       return error.message;
     }
   };

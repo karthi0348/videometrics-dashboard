@@ -51,7 +51,7 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
     "Bubble Chart",
   ];
 
-  const updateChart = (index: number, field: string, value: any) => {
+  const updateChart = (index: number, field: string, value: string | number | boolean) => {
     const updatedCharts = [...charts];
     if (field.includes(".")) {
       const [parent, child] = field.split(".");

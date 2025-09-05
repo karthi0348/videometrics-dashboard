@@ -13,8 +13,11 @@ export const getJsonError = (jsonString: string): string | null => {
   try {
     JSON.parse(jsonString);
     return null;
-  } catch (error: any) {
-    return error.message;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return 'Unknown JSON parsing error';
   }
 };
 
@@ -40,20 +43,28 @@ export const updateChartField = (
   charts: ChartConfig[],
   index: number,
   field: string,
-  value: any
+  value: unknown
 ): ChartConfig[] => {
   const updatedCharts = [...charts];
   if (field.includes(".")) {
     const [parent, child] = field.split(".");
-    updatedCharts[index] = {
-      ...updatedCharts[index],
-      [parent]: {
-        ...(updatedCharts[index][parent as keyof ChartConfig] as object),
-        [child]: value,
-      },
-    };
+    const currentParentValue = updatedCharts[index][parent as keyof ChartConfig];
+    
+    // Type guard to ensure we're working with an object
+    if (typeof currentParentValue === 'object' && currentParentValue !== null) {
+      updatedCharts[index] = {
+        ...updatedCharts[index],
+        [parent]: {
+          ...(currentParentValue as Record<string, unknown>),
+          [child]: value,
+        },
+      };
+    }
   } else {
-    updatedCharts[index] = { ...updatedCharts[index], [field]: value };
+    updatedCharts[index] = { 
+      ...updatedCharts[index], 
+      [field]: value 
+    } as ChartConfig;
   }
   return updatedCharts;
 };

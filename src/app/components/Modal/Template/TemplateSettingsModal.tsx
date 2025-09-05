@@ -5,22 +5,27 @@ import AssignmentModal from './AssignmentModal';
 import moment from 'moment';
 import { Template } from '@/app/components/Templates/types/templates';
 
+// Define proper interface for template props
+interface TemplateSettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  template: Template | null; 
+}
+
 // Template Settings Modal Component
-const TemplateSettingsModal = ({
+const TemplateSettingsModal: React.FC<TemplateSettingsModalProps> = ({
   isOpen,
   onClose,
   template
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  template: any;
 }) => {
-  if (!isOpen || !template) return null;
-
+  // Fixed: Move hooks before early return to follow Rules of Hooks
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
-  const handleOpenAssignment = (template: Template) => {
+  // Early return after hooks
+  if (!isOpen || !template) return null;
+
+  const handleOpenAssignment = (template: Template): void => {
     setSelectedTemplate(template);
     setShowAssignmentModal(true);
   };
@@ -95,7 +100,7 @@ const TemplateSettingsModal = ({
                 <div className="text-xs sm:text-sm text-gray-500">
                   {template.tags && template.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-1 sm:gap-2">
-                      {template.tags.map((tag: any, index: any) => (
+                      {template.tags.map((tag: string, index: number) => (
                         <span 
                           key={index} 
                           className="px-2 py-1 bg-gray-100 text-gray-600 rounded-md text-xs sm:text-sm break-all"

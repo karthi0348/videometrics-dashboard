@@ -110,7 +110,7 @@ const MetricStructureEditor: React.FC<MetricStructureEditorProps> = ({
     try {
       JSON.parse(jsonContent);
       return null;
-    } catch (error: any) {
+    } catch (error) {
       return error.message;
     }
   };
@@ -129,7 +129,7 @@ const MetricStructureEditor: React.FC<MetricStructureEditorProps> = ({
   const updateProperty = (oldKey: string, newKey: string, newValue: string) => {
     try {
       const parsed = JSON.parse(jsonContent);
-      const newParsed: any = {};
+      const newParsed: Record<string, unknown> = {};
       
       Object.keys(parsed).forEach(key => {
         if (key === oldKey) {

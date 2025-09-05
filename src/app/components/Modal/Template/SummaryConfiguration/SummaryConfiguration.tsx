@@ -15,7 +15,7 @@ interface SummaryConfig {
 interface SummaryConfigurationProps {
   isExpanded: boolean;
   onToggle: () => void;
-  config: any;
+  config: SummaryConfig | null; 
   onConfigChange: (config: SummaryConfig | null) => void;
 }
 
@@ -55,7 +55,8 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
       const parsed = JSON.parse(jsonString);
       setSummaryConfig(parsed);
       onConfigChange(parsed);
-    } catch (error) {
+    } catch {
+      // Fixed: Removed unused 'error' parameter
       // Invalid JSON - don't update visual editor
       onConfigChange(null);
     }
@@ -65,7 +66,8 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
     try {
       await navigator.clipboard.writeText(jsonContent);
       // Could add toast notification here
-    } catch (error) {
+    } catch {
+      // Fixed: Removed unused 'error' parameter
       console.error('Failed to copy JSON');
     }
   };
@@ -95,7 +97,8 @@ const SummaryConfiguration: React.FC<SummaryConfigurationProps> = ({
             const content = e.target?.result as string;
             JSON.parse(content); // Validate JSON
             updateVisualFromJson(content);
-          } catch (error) {
+          } catch {
+            // Fixed: Removed unused 'error' parameter
             console.error('Invalid JSON file');
           }
         };

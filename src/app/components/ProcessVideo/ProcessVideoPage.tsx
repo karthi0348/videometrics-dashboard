@@ -7,10 +7,8 @@ import ProcessVideoForm from "./ProcessVideoForm";
 
 // Import types
 import {
-  Video,
   Profile,
   SubProfile,
-  Template,
   ProcessingVideo,
   Priority,
   ProcessVideoPageProps,
@@ -21,20 +19,73 @@ import {
   ProcessedVideoNotification
 } from "./types/types";
 
+interface VideoItem {
+  id: number;
+  video_name: string;
+  name?: string;
+  title?: string;
+  url?: string;
+  video_url?: string;
+  file_url?: string;
+}
+
+// Define profile API response interface
+interface ProfileApiResponse {
+  id: number | string;
+  profile_name?: string;
+  name?: string;
+  email?: string;
+  tag?: string;
+  contact?: string;
+  contact_person?: string;
+  description?: string;
+}
+
+// Define sub-profile API response interface
+interface SubProfileApiResponse {
+  id: number | string;
+  sub_profile_name?: string;
+  name?: string;
+  profile_id?: number;
+  description?: string;
+  area_type?: string;
+  areaType?: string;
+  isActive?: boolean;
+  is_active?: boolean;
+}
+
+// Define error response interfaces
+interface ValidationError {
+  loc?: string[];
+  msg?: string;
+  message?: string;
+}
+
+interface ErrorResponse {
+  response?: {
+    data?: {
+      detail?: ValidationError[] | string;
+      message?: string;
+    };
+  };
+  message?: string;
+}
+
 interface ExtendedProcessingVideo extends ProcessingVideo {
   created_at?: string;
 }
 
 const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
-  videos: propVideos,
+  // Unused props - keeping for interface compatibility but not using
+  // videos: propVideos,
   profiles: propProfiles,
-  subProfiles: propSubProfiles,
-  templates: propTemplates,
+  // subProfiles: propSubProfiles,
+  // templates: propTemplates,
   onVideoProcessed,
   onRedirectToNextPage,
 }) => {
   // State for API data
-  const [videos, setVideos] = useState<any[]>([]);
+  const [videos, setVideos] = useState<VideoItem[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [subProfiles, setSubProfiles] = useState<SubProfile[]>([]);
 
@@ -64,7 +115,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
   const [success, setSuccess] = useState<string>("");
 
   // Load videos from API
-  const loadVideos = async () => {
+  const loadVideos = useCallback(async () => {
     try {
       console.log("Loading videos...");
       const data = await videoApiService.getAllVideos("");
@@ -72,17 +123,18 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
       const videosArray = Array.isArray(data)
         ? data
-        : data?.videos || data?.results || [];
+        : (data as { videos?: VideoItem[]; results?: VideoItem[] })?.videos || 
+          (data as { videos?: VideoItem[]; results?: VideoItem[] })?.results || [];
       setVideos(videosArray);
     } catch (err) {
       console.error("Error loading videos:", err);
       setError(err instanceof Error ? err.message : "Failed to load videos");
       setVideos([]);
     }
-  };
+  }, [videoApiService]);
 
   // Load profiles from API
-  const loadProfiles = async () => {
+  const loadProfiles = useCallback(async () => {
     if (propProfiles && propProfiles.length > 0) {
       setProfiles(propProfiles);
       for (const profile of propProfiles) {
@@ -98,9 +150,10 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
       const profilesArray = Array.isArray(data)
         ? data
-        : data?.profiles || data?.results || [];
+        : (data as { profiles?: ProfileApiResponse[]; results?: ProfileApiResponse[] })?.profiles || 
+          (data as { profiles?: ProfileApiResponse[]; results?: ProfileApiResponse[] })?.results || [];
 
-      const transformedProfiles: Profile[] = profilesArray.map((item: any) => ({
+      const transformedProfiles: Profile[] = profilesArray.map((item: ProfileApiResponse) => ({
         id: Number(item.id) || Date.now(),
         name: item.profile_name || item.name || "Untitled Profile",
         email: item.email || "",
@@ -119,9 +172,9 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       setError(err instanceof Error ? err.message : "Failed to load profiles");
       setProfiles([]);
     }
-  };
+  }, [propProfiles, profileApiService]);
 
-  const loadSubProfiles = async (profileId: number) => {
+  const loadSubProfiles = useCallback(async (profileId: number) => {
     try {
       console.log(`Loading sub-profiles for profile ${profileId}...`);
       const data = await subProfileApiService.getAllSubProfile(profileId, "");
@@ -129,10 +182,11 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
       const subProfilesArray = Array.isArray(data)
         ? data
-        : data?.subProfiles || data?.results || [];
+        : (data as { subProfiles?: SubProfileApiResponse[]; results?: SubProfileApiResponse[] })?.subProfiles || 
+          (data as { subProfiles?: SubProfileApiResponse[]; results?: SubProfileApiResponse[] })?.results || [];
 
       const transformed: SubProfile[] = subProfilesArray.map(
-        (item: any, index: number) => ({
+        (item: SubProfileApiResponse, index: number) => ({
           id: Number(item.id) || Date.now() + index,
           name: item.sub_profile_name || item.name || "Untitled Sub-Profile",
           profile_id: Number(item.profile_id || profileId),
@@ -160,7 +214,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
         err
       );
     }
-  };
+  }, [subProfileApiService]);
 
   // New function to check processing queue and redirect if empty
   const checkProcessingQueue = useCallback(async (): Promise<boolean> => {
@@ -183,7 +237,6 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       if (!hasProcessingVideos) {
         console.log("No videos in processing queue - triggering redirect");
         
-        // Clear any existing processing queue
         setProcessingQueue([]);
         
         // Trigger redirect to next page
@@ -303,10 +356,11 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
             console.log("No processing videos found in response");
           }
           return null;
-        } catch (error: any) {
-          console.error(`Error checking status for ${video.uuid}:`, error);
+        } catch (statusError) {
+          console.error(`Error checking status for ${video.uuid}:`, statusError);
 
-          if (error?.response?.status === 404) {
+          const typedError = statusError as ErrorResponse;
+          if (typedError?.response?.status === 404) {
             return {
               uuid: video.uuid,
               video_name: video.video_name,
@@ -349,11 +403,11 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
         completedVideos.forEach((video) => {
           if (video.status === "completed") {
             setSuccess(
-              `Video "${video.video_name}" completed processing successfully!`
+              `Video &quot;${video.video_name}&quot; completed processing successfully!`
             );
           } else {
             setError(
-              `Video "${video.video_name}" failed processing: ${
+              `Video &quot;${video.video_name}&quot; failed processing: ${
                 video.error_message || "Unknown error"
               }`
             );
@@ -427,7 +481,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
     };
 
     loadAllData();
-  }, []);
+  }, [loadVideos, loadProfiles]);
 
   // Updated handleProcessVideo function
   const handleProcessVideo = async (
@@ -454,7 +508,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       console.log("Process video response:", response);
 
       // Extract the actual response data (API returns response wrapped in axios response)
-      const responseData: ProcessVideoResponse = (response as any)?.data || response;
+      const responseData: ProcessVideoResponse = (response as { data?: ProcessVideoResponse })?.data || response as ProcessVideoResponse;
 
       // Validate that we received a proper UUID
       if (!responseData.uuid) {
@@ -466,7 +520,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       }
 
       const selectedVideo = videos.find(
-        (v: any) =>
+        (v: VideoItem) =>
           v.url === payload.video_url ||
           v.id?.toString() === payload.video_url ||
           v.video_url === payload.video_url
@@ -490,32 +544,33 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       setProcessingQueue((prev) => [...prev, processingVideo]);
 
       setSuccess(
-        `Video "${videoName}" has been submitted for processing successfully! UUID: ${responseData.uuid}`
+        `Video &quot;${videoName}&quot; has been submitted for processing successfully! UUID: ${responseData.uuid}`
       );
-    } catch (error: any) {
-      console.error("Error processing video:", error);
+    } catch (processError) {
+      console.error("Error processing video:", processError);
 
       let errorMessage = "Failed to process video. Please try again.";
 
-      if (error?.response?.data?.detail) {
-        if (Array.isArray(error.response.data.detail)) {
-          errorMessage = error.response.data.detail
+      const typedError = processError as ErrorResponse;
+      if (typedError?.response?.data?.detail) {
+        if (Array.isArray(typedError.response.data.detail)) {
+          errorMessage = typedError.response.data.detail
             .map(
-              (e: any) =>
+              (e: ValidationError) =>
                 `${e.loc?.join(".") || "field"}: ${e.msg || e.message}`
             )
             .join(", ");
-        } else if (typeof error.response.data.detail === "string") {
-          errorMessage = error.response.data.detail;
+        } else if (typeof typedError.response.data.detail === "string") {
+          errorMessage = typedError.response.data.detail;
         }
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error?.message) {
-        errorMessage = error.message;
+      } else if (typedError?.response?.data?.message) {
+        errorMessage = typedError.response.data.message;
+      } else if (typedError?.message) {
+        errorMessage = typedError.message;
       }
 
       setError(errorMessage);
-      throw error;
+      throw processError;
     } finally {
       setIsProcessing(false);
     }
@@ -756,7 +811,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                     d="M5 13l4 4L19 7"
                   />
                 </svg>
-                <div className="text-green-800 text-sm">{success}</div>
+                <div className="text-green-800 text-sm" dangerouslySetInnerHTML={{ __html: success }} />
               </div>
             </div>
           )}
@@ -832,7 +887,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                       }`}
                     >
                       <strong className="block truncate">
-                        Video "{video.video_name}"{" "}
+                        Video &ldquo;{video.video_name}&rdquo;{" "}
                         {video.status === "completed" ? "completed" : "failed"}{" "}
                         processing!
                       </strong>

@@ -1,5 +1,58 @@
 import HttpClientWrapper from "@/helpers/http-client-wrapper";
 
+// Define interfaces for better type safety
+interface Template {
+  id: number;
+  template_name: string;
+  description: string;
+  tags: string[];
+  version: string;
+  analysis_prompt: string;
+  metric_structure: Record<string, unknown> | null;
+  chart_config: unknown[];
+  summary_config: unknown | null;
+  gui_config: {
+    layout_type: string;
+    theme: string;
+    components: unknown[];
+    responsive_breakpoints: Record<string, unknown>;
+    custom_css: string;
+  };
+  is_public: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface CreateTemplatePayload {
+  template_name: string;
+  description: string;
+  tags: string[];
+  version: string;
+  analysis_prompt: string;
+  metric_structure: Record<string, unknown> | null;
+  chart_config: unknown[];
+  summary_config: unknown | null;
+  gui_config: {
+    layout_type: string;
+    theme: string;
+    components: unknown[];
+    responsive_breakpoints: Record<string, unknown>;
+    custom_css: string;
+  };
+  is_public: boolean;
+}
+
+interface AssignSubProfilePayload {
+  subProfileIds: number[];
+  // Add other properties as needed
+}
+
+interface ApiResponse<T = unknown> {
+  data: T;
+  message?: string;
+  success?: boolean;
+}
+
 class TemplateApiService {
   private httpClientWrapper: HttpClientWrapper;
 
@@ -7,96 +60,96 @@ class TemplateApiService {
     this.httpClientWrapper = new HttpClientWrapper();
   }
 
-  getAllTemplate = async (url: any) => {
+  getAllTemplate = async (url: string): Promise<ApiResponse<Template[]>> => {
     try {
-      let data: any = await this.httpClientWrapper.get("templates" + url);
-      return data;
+      const data = await this.httpClientWrapper.get("templates" + url);
+      return data as ApiResponse<Template[]>;
     } catch (error) {
       throw error;
     }
   };
 
-  getAllTemplateById = async (url: any) => {
+  getAllTemplateById = async (url: string | number): Promise<Template> => {
     try {
-      let data: any = await this.httpClientWrapper.get("templates/" + url);
-      return data;
+      const data = await this.httpClientWrapper.get("templates/" + url);
+      return data as Template;
     } catch (error) {
       throw error;
     }
   };
 
   // TemplateApiService.ts
-  getAllTemplateBySubProfile = async (subProfileId: string | number) => {
+  getAllTemplateBySubProfile = async (subProfileId: string | number): Promise<ApiResponse<Template[]>> => {
     try {
-      const data: any = await this.httpClientWrapper.get(
+      const data = await this.httpClientWrapper.get(
         `/sub-profiles/${subProfileId}/assigned-templates`
       );
-      return data;
+      return data as ApiResponse<Template[]>;
     } catch (error) {
       throw error;
     }
   };
 
+  getAssignedTemplatesBySubProfile = async (subProfileId: number): Promise<ApiResponse<Template[]>> => {
+    return await this.httpClientWrapper.get(`/sub-profiles/${subProfileId}/assigned-templates`) as ApiResponse<Template[]>;
+  };
 
-  getAssignedTemplatesBySubProfile = async (subProfileId: number) => {
-  return await this.httpClientWrapper.get(`/sub-profiles/${subProfileId}/assigned-templates`);
-};
+  getTemplateById = async (templateId: number): Promise<Template> => {
+    return await this.httpClientWrapper.get(`/templates/${templateId}`) as Template;
+  };
 
-getTemplateById = async (templateId: number) => {
-  return await this.httpClientWrapper.get(`/templates/${templateId}`);
-};
-
-  createTemplate = async (payload: any) => {
+  createTemplate = async (payload: CreateTemplatePayload): Promise<ApiResponse<Template>> => {
     try {
-      let data: any = await this.httpClientWrapper.post("templates", payload);
-      return data;
+      const data = await this.httpClientWrapper.post("templates", payload);
+      return data as ApiResponse<Template>;
     } catch (error) {
       throw error;
     }
   };
 
-  editTemplate = async (id: any, payload: any) => {
+  editTemplate = async (id: string | number, payload: CreateTemplatePayload): Promise<ApiResponse<Template>> => {
     try {
-      let data: any = await this.httpClientWrapper.put(
+      const data = await this.httpClientWrapper.put(
         "templates/" + id,
         payload
       );
-      return data;
+      return data as ApiResponse<Template>;
     } catch (error) {
       throw error;
     }
   };
 
-  deleteTemplate = async (id: any) => {
+  deleteTemplate = async (id: string | number): Promise<ApiResponse<{ deleted: boolean }>> => {
     try {
-      let data: any = await this.httpClientWrapper.delete("templates/" + id);
-      return data;
+      const data = await this.httpClientWrapper.delete("templates/" + id);
+      return data as ApiResponse<{ deleted: boolean }>;
     } catch (error) {
       throw error;
     }
   };
 
-  assignSUbProfile = async (tempId: any, payload: any) => {
+  assignSubProfile = async (tempId: string | number, payload: AssignSubProfilePayload): Promise<ApiResponse<unknown>> => {
     try {
-      let data: any = await this.httpClientWrapper.post(
+      const data = await this.httpClientWrapper.post(
         "templates/" + tempId + "/assign-subprofiles",
         payload
       );
-      return data;
+      return data as ApiResponse<unknown>;
     } catch (error) {
       throw error;
     }
   };
 
-  getSubProfileAssignments = async (tempId: any) => {
+  getSubProfileAssignments = async (tempId: string | number): Promise<ApiResponse<unknown[]>> => {
     try {
-      let data: any = await this.httpClientWrapper.get(
+      const data = await this.httpClientWrapper.get(
         "templates/" + tempId + "/assigned-subprofiles"
       );
-      return data;
+      return data as ApiResponse<unknown[]>;
     } catch (error) {
       throw error;
     }
   };
 }
+
 export default TemplateApiService;

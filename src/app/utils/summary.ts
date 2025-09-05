@@ -13,8 +13,11 @@ export const getJsonError = (jsonString: string): string | null => {
   try {
     JSON.parse(jsonString);
     return null;
-  } catch (error: any) {
-    return error.message;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    return 'Unknown JSON parsing error';
   }
 };
 
@@ -87,7 +90,7 @@ export const uploadJsonFile = (): Promise<string | null> => {
 export const updateSummaryConfig = (
   config: SummaryConfig,
   field: keyof SummaryConfig,
-  value: any
+  value: unknown
 ): SummaryConfig => {
   return {
     ...config,

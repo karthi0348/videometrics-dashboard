@@ -10,6 +10,18 @@ import ViewSubProfileModal from '../../Modal/SubProfiles/ViewSubProfileModal';
 import EditSubProfileModal from '../../Modal/SubProfiles/EditSubProfileModal';
 import DeleteSubProfileModal from '../../Modal/SubProfiles/DeleteSubProfileModal';
 
+// Type definitions
+interface CreateSubProfileData {
+  name: string;
+  description?: string;
+  areaType: string;
+  isActive: boolean;
+  tags?: string[];
+  cameraLocations?: unknown[];
+  monitoringSchedules?: unknown[];
+  alertSettings?: unknown[];
+}
+
 interface SubProfileListProps {
   profile: Profile;
   onBackToDetails: () => void; 
@@ -39,9 +51,10 @@ const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
       setError(null);
       const data = await subProfileService.getSubProfiles(profile.id);
       setSubProfiles(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch sub-profiles:', error);
-      setError(error.message || 'Failed to fetch sub-profiles');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch sub-profiles';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -52,23 +65,25 @@ const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
     try {
       const subProfile = await subProfileService.getSubProfile(subProfileId);
       setViewingSubProfile(subProfile);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to fetch sub-profile details:', error);
-      setError(error.message || 'Failed to fetch sub-profile details');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch sub-profile details';
+      setError(errorMessage);
     }
   };
 
   // Create sub-profile using existing service
-  const handleCreateSubProfile = async (subProfileData: any) => {
+  const handleCreateSubProfile = async (subProfileData: CreateSubProfileData) => {
     try {
       setCreating(true);
       setError(null);
       const newSubProfile = await subProfileService.createSubProfile(profile.id, subProfileData);
       setSubProfiles(prev => [...prev, newSubProfile]);
       setShowCreateModal(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to create sub-profile:', error);
-      setError(error.message || 'Failed to create sub-profile');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create sub-profile';
+      setError(errorMessage);
     } finally {
       setCreating(false);
     }
@@ -85,9 +100,10 @@ const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
       ));
       setEditingSubProfile(null);
       console.log('Sub-profile updated successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to update sub-profile:', error);
-      setError(error.message || 'Failed to update sub-profile');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update sub-profile';
+      setError(errorMessage);
     } finally {
       setUpdating(false);
     }
@@ -102,9 +118,10 @@ const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
       setSubProfiles(prev => prev.filter(sp => sp.id !== subProfileId));
       setDeletingSubProfile(null);
       console.log('Sub-profile deleted successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete sub-profile:', error);
-      setError(error.message || 'Failed to delete sub-profile');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete sub-profile';
+      setError(errorMessage);
     } finally {
       setDeleting(false);
     }
@@ -118,9 +135,10 @@ const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
       setSubProfiles(prev => prev.map(sp => 
         sp.id === subProfile.id ? updatedSubProfile : sp
       ));
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating sub-profile:', error);
-      setError(error.message || 'Error updating sub-profile status');
+      const errorMessage = error instanceof Error ? error.message : 'Error updating sub-profile status';
+      setError(errorMessage);
     }
   };
 

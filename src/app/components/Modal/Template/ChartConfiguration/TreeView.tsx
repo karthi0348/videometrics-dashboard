@@ -7,7 +7,7 @@ interface TreeViewProps {
 }
 
 export const TreeView: React.FC<TreeViewProps> = ({ charts, jsonContent }) => {
-  const renderTreeView = (data: any, level = 0): React.ReactNode => {
+  const renderTreeView = (data: string | number | boolean, level = 0): React.ReactNode => {
     if (Array.isArray(data)) {
       return (
         <div className="space-y-2">

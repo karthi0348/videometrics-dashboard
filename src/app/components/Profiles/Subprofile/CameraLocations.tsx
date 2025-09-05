@@ -8,11 +8,19 @@ interface DataTypeConfig {
   color: string;
   bgColor: string;
   label: string;
-  defaultValue: any;
+  defaultValue: string | number | boolean | unknown[] | Record<string, unknown>;
+}
+
+// Define the structure for data values
+type DataValue = string | number | boolean | DataValue[] | { [key: string]: DataValue };
+
+// Interface for the data structure
+interface DataStructure {
+  [key: string]: DataValue;
 }
 
 const FormEditor = () => {
-  const [data, setData] = useState<any>({});
+  const [data, setData] = useState<DataStructure>({});
   const [configurationMode, setConfigurationMode] = useState<'form' | 'json' | 'tree'>('form');
   const [jsonValue, setJsonValue] = useState('{}');
   const [jsonError, setJsonError] = useState('');
@@ -59,7 +67,7 @@ const FormEditor = () => {
 
   // Initialize with sample data
   useEffect(() => {
-    const sampleData = {
+    const sampleData: DataStructure = {
       name: "John Doe",
       age: 30,
       isActive: true,
@@ -74,35 +82,35 @@ const FormEditor = () => {
     updateJsonFromData(sampleData);
   }, []);
 
-  const updateJsonFromData = (newData: any) => {
+  const updateJsonFromData = (newData: DataStructure) => {
     setJsonValue(JSON.stringify(newData, null, 2));
   };
 
   const updateDataFromJson = () => {
     try {
-      const parsed = JSON.parse(jsonValue);
+      const parsed = JSON.parse(jsonValue) as DataStructure;
       setData(parsed);
       setJsonError('');
-    } catch (error) {
+    } catch {
       setJsonError('Invalid JSON format');
     }
   };
 
-  const getDataType = (value: any): DataType => {
+  const getDataType = (value: DataValue): DataType => {
     if (Array.isArray(value)) return 'array';
     if (value === null) return 'string';
     const type = typeof value;
     return (type as DataType) || 'string';
   };
 
-  const handleValueChange = (path: string, newValue: any, newType: DataType | null = null) => {
+  const handleValueChange = (path: string, newValue: DataValue, newType: DataType | null = null) => {
     const pathArray = path.split('.');
-    const newData = JSON.parse(JSON.stringify(data)); // Deep clone to avoid mutations
+    const newData = JSON.parse(JSON.stringify(data)) as DataStructure; // Deep clone to avoid mutations
     
-    let current = newData;
+    let current: Record<string, DataValue> = newData;
     for (let i = 0; i < pathArray.length - 1; i++) {
       if (!current[pathArray[i]]) current[pathArray[i]] = {};
-      current = current[pathArray[i]];
+      current = current[pathArray[i]] as Record<string, DataValue>;
     }
     
     const lastKey = pathArray[pathArray.length - 1];
@@ -111,7 +119,7 @@ const FormEditor = () => {
     if (newType) {
       switch (newType) {
         case 'number':
-          current[lastKey] = parseFloat(newValue) || 0;
+          current[lastKey] = parseFloat(String(newValue)) || 0;
           break;
         case 'boolean':
           current[lastKey] = newValue === 'true' || newValue === true;
@@ -120,7 +128,7 @@ const FormEditor = () => {
           current[lastKey] = Array.isArray(newValue) ? newValue : [];
           break;
         case 'object':
-          current[lastKey] = typeof newValue === 'object' && !Array.isArray(newValue) ? newValue : {};
+          current[lastKey] = typeof newValue === 'object' && !Array.isArray(newValue) ? newValue as Record<string, DataValue> : {};
           break;
         default:
           current[lastKey] = String(newValue);
@@ -141,7 +149,7 @@ const FormEditor = () => {
     
     if (oldKey === newKey) return; // No change needed
     
-    const newData = JSON.parse(JSON.stringify(data));
+    const newData = JSON.parse(JSON.stringify(data)) as DataStructure;
     
     if (pathArray.length === 1) {
       // Root level property
@@ -154,10 +162,10 @@ const FormEditor = () => {
     } else {
       // Nested property
       const parentPath = pathArray.slice(0, -1);
-      let parent = newData;
+      let parent: Record<string, DataValue> = newData;
       
       for (let i = 0; i < parentPath.length; i++) {
-        parent = parent[parentPath[i]];
+        parent = parent[parentPath[i]] as Record<string, DataValue>;
       }
       
       if (parent[newKey] !== undefined) {
@@ -181,16 +189,16 @@ const FormEditor = () => {
 
   const removeProperty = (path: string) => {
     const pathArray = path.split('.');
-    const newData = JSON.parse(JSON.stringify(data));
+    const newData = JSON.parse(JSON.stringify(data)) as DataStructure;
     
     if (pathArray.length === 1) {
       // Root level property
       delete newData[pathArray[0]];
     } else {
       // Nested property
-      let current = newData;
+      let current: Record<string, DataValue> = newData;
       for (let i = 0; i < pathArray.length - 1; i++) {
-        current = current[pathArray[i]];
+        current = current[pathArray[i]] as Record<string, DataValue>;
       }
       delete current[pathArray[pathArray.length - 1]];
     }
@@ -209,7 +217,7 @@ const FormEditor = () => {
     setExpandedObjects(newExpanded);
   };
 
-  const renderFormField = (key: string, value: any, path = '', depth = 0) => {
+  const renderFormField = (key: string, value: DataValue, path = '', depth = 0) => {
     const currentPath = path ? `${path}.${key}` : key;
     const dataType = getDataType(value);
     const typeConfig = dataTypes[dataType];
@@ -264,7 +272,7 @@ const FormEditor = () => {
             {/* Value Editor based on type */}
             {dataType === 'string' && (
               <textarea
-                value={value || ''}
+                value={String(value || '')}
                 onChange={(e) => handleValueChange(currentPath, e.target.value)}
                 placeholder="Enter text value..."
                 className="w-full p-3 border rounded text-sm resize-none h-20 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
@@ -274,7 +282,7 @@ const FormEditor = () => {
             {dataType === 'number' && (
               <input
                 type="number"
-                value={value || 0}
+                value={Number(value) || 0}
                 onChange={(e) => handleValueChange(currentPath, parseFloat(e.target.value) || 0)}
                 className="w-full p-3 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                 step="0.1"
@@ -283,7 +291,7 @@ const FormEditor = () => {
 
             {dataType === 'boolean' && (
               <select
-                value={value?.toString() || 'false'}
+                value={String(value) || 'false'}
                 onChange={(e) => handleValueChange(currentPath, e.target.value === 'true')}
                 className="w-full p-3 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               >
@@ -299,9 +307,9 @@ const FormEditor = () => {
                   <div key={index} className="flex items-center gap-2">
                     <input
                       type="text"
-                      value={item || ''}
+                      value={String(item) || ''}
                       onChange={(e) => {
-                        const newArray = [...(value || [])];
+                        const newArray = [...(value as DataValue[])];
                         newArray[index] = e.target.value;
                         handleValueChange(currentPath, newArray);
                       }}
@@ -309,7 +317,7 @@ const FormEditor = () => {
                     />
                     <button
                       onClick={() => {
-                        const newArray = (value || []).filter((_: any, i: number) => i !== index);
+                        const newArray = (value as DataValue[]).filter((_: DataValue, i: number) => i !== index);
                         handleValueChange(currentPath, newArray);
                       }}
                       className="p-1 text-red-500 hover:bg-red-50 rounded flex-shrink-0"
@@ -319,7 +327,7 @@ const FormEditor = () => {
                   </div>
                 ))}
                 <button
-                  onClick={() => handleValueChange(currentPath, [...(value || []), ''])}
+                  onClick={() => handleValueChange(currentPath, [...(value as DataValue[] || []), ''])}
                   className="text-sm text-purple-600 hover:bg-purple-50 px-2 py-1 rounded flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" />
@@ -340,7 +348,7 @@ const FormEditor = () => {
                     ) : (
                       <ChevronRight className="w-4 h-4" />
                     )}
-                    Object ({Object.keys(value || {}).length} properties)
+                    Object ({Object.keys((value as Record<string, DataValue>) || {}).length} properties)
                   </button>
                   <button
                     onClick={() => addProperty(currentPath)}
@@ -353,7 +361,7 @@ const FormEditor = () => {
 
                 {expandedObjects.has(currentPath) && (
                   <div className="space-y-3 pl-4 border-l-2 border-purple-200">
-                    {Object.entries(value || {}).map(([subKey, subValue]) => 
+                    {Object.entries((value as Record<string, DataValue>) || {}).map(([subKey, subValue]) => 
                       renderFormField(subKey, subValue, currentPath, depth + 1)
                     )}
                   </div>
@@ -371,7 +379,7 @@ const FormEditor = () => {
       const parsed = JSON.parse(jsonValue);
       setJsonValue(JSON.stringify(parsed, null, 2));
       setJsonError('');
-    } catch (error) {
+    } catch {
       setJsonError('Invalid JSON format');
     }
   };
@@ -381,7 +389,7 @@ const FormEditor = () => {
       const parsed = JSON.parse(jsonValue);
       setJsonValue(JSON.stringify(parsed));
       setJsonError('');
-    } catch (error) {
+    } catch {
       setJsonError('Invalid JSON format');
     }
   };
@@ -527,7 +535,7 @@ const FormEditor = () => {
                   try {
                     JSON.parse(e.target.value);
                     setJsonError('');
-                  } catch (error) {
+                  } catch {
                     setJsonError('Invalid JSON format');
                   }
                 }}

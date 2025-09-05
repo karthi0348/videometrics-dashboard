@@ -1,11 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { API_ENDPOINTS } from '../../../config/api'; // Adjust the import path based on your project structure
 
+// Define proper types for upload responses
+interface UploadSuccessResponse {
+  id: string;
+  video_name: string;
+  file_url: string;
+  user_id: string;
+  created_at: string;
+  // Add other expected response fields as needed
+}
+
+interface UploadErrorResponse {
+  error: string;
+  message?: string;
+  details?: string;
+  // Add other expected error fields as needed
+}
+
 interface VideoUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUploadSuccess?: (response: any) => void;
-  onUploadError?: (error: any) => void;
+  onUploadSuccess?: (response: UploadSuccessResponse) => void;
+  onUploadError?: (error: UploadErrorResponse | Error) => void;
 }
 
 interface User {
@@ -19,6 +36,13 @@ interface User {
   last_login: string;
   created_at: string;
   updated_at: string;
+}
+
+// Type for the message event data
+interface AuthMessageData {
+  type: 'AUTH_TOKEN';
+  accessToken: string;
+  user: User;
 }
 
 const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
@@ -43,7 +67,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     if (storedToken) {
       setAccessToken(storedToken);
       try {
-        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}') as User;
         setUser(storedUser);
       } catch (e) {
         console.error("Failed to parse user data from localStorage");
@@ -51,7 +75,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     }
 
     // Set up a listener for messages from the login page
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = (event: MessageEvent<AuthMessageData>) => {
       // Verify the origin and data type for security
       if (event.origin !== 'https://videometrics-ui.vercel.app/' || event.data.type !== 'AUTH_TOKEN') {
         return;
@@ -170,17 +194,17 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
-            const response = JSON.parse(xhr.responseText);
+            const response = JSON.parse(xhr.responseText) as UploadSuccessResponse;
             console.log('Upload successful:', response);
             onUploadSuccess?.(response);
             handleClose();
           } catch (error) {
             console.error('Error parsing response:', error);
-            onUploadError?.(error);
+            onUploadError?.(error instanceof Error ? error : new Error('Failed to parse response'));
           }
         } else {
           try {
-            const errorResponse = JSON.parse(xhr.responseText);
+            const errorResponse = JSON.parse(xhr.responseText) as UploadErrorResponse;
             console.error('Upload failed:', errorResponse);
             onUploadError?.(errorResponse);
           } catch (error) {
@@ -217,7 +241,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
 
     } catch (error) {
       console.error('Error uploading video:', error);
-      onUploadError?.(error);
+      onUploadError?.(error instanceof Error ? error : new Error('Unknown error occurred'));
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -428,7 +452,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
               </div>
               {uploadProgress < 100 && (
                 <p className="text-xs text-blue-600 text-center">
-                  Please don't close this window during upload
+                  Please do not close this window during upload
                 </p>
               )}
             </div>

@@ -9,7 +9,7 @@ import { FormData, ChartConfig, SummaryConfig } from "@/app/components/Templates
 interface NewTemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  refresh: any;
+  refresh: () => void; 
 }
 
 const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
@@ -116,7 +116,7 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
         chartConfiguration: false,
         summaryConfiguration: false,
       });
-    } catch (error: any) {
+    } catch (error) {
       return ErrorHandler(error);
     } finally {
       setIsSubmitting(false);

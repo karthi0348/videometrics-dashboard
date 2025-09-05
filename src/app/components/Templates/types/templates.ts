@@ -22,13 +22,10 @@ export interface Template {
   rating?: number;
 }
 
-
-
 export interface Profile {
   id: string;
   name: string;
 }
-
 
 export interface ChartConfig {
   chart_type: string;
@@ -44,8 +41,6 @@ export interface ChartConfig {
   };
 }
 
-
-
 export interface SummaryConfig {
   summary_type: string;
   sections: string[];
@@ -54,11 +49,11 @@ export interface SummaryConfig {
   include_recommendations: boolean;
 }
 
-
 export interface ChartConfigurationProps {
   isExpanded?: boolean;
   onToggle?: () => void;
-  config: any;
+  config: ChartConfig | ChartConfig[]; 
   onConfigChange?: (config: ChartConfig[]) => void;
 }
+
 export type TabType = "visual" | "json" | "form" | "tree";

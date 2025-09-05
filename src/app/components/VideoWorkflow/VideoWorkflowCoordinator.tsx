@@ -28,7 +28,7 @@ const VideoWorkflowCoordinator: React.FC = () => {
   const [newProcessedVideo, setNewProcessedVideo] = useState<ProcessedVideo | undefined>(undefined);
 
   // Callback for when a video completes processing in ProcessVideoPage
-  const handleVideoProcessed = useCallback((processedVideoData: any) => {
+  const handleVideoProcessed = useCallback((processedVideoData) => {
     console.log("Video processing completed:", processedVideoData);
     
     // Transform the data to match ProcessedVideo interface

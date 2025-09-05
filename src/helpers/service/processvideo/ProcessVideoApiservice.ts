@@ -7,7 +7,7 @@ export interface ProcessVideoRequest {
     sub_profile_id: number;
     template_id: number;
     priority: "normal" | "high" | "low";
-    custom_parameters: Record<string, any>;
+    custom_parameters: Record<string, unknown>; // Changed from 'any' to 'unknown'
 }
 
 // Interface for Process Video Success Response
@@ -41,10 +41,10 @@ export interface GetAnalyticsResponse {
     sub_profile_id: number;
     template_id: number;
     original_video_url: string;
-    processed_metadata: any[];
-    generated_charts: any[];
-    insights: any[];
-    confidence_scores: any[];
+    processed_metadata: unknown[]; // Changed from 'any[]' to 'unknown[]'
+    generated_charts: unknown[]; // Changed from 'any[]' to 'unknown[]'
+    insights: unknown[]; // Changed from 'any[]' to 'unknown[]'
+    confidence_scores: unknown[]; // Changed from 'any[]' to 'unknown[]'
     timestamp: string;
     status: string;
     error_message: string;
@@ -62,23 +62,23 @@ export interface AnalyticsInsightsResponse {
     description: string;
     confidence: string;
     severity: string;
-    data: any;
-    action_items: any[];
+    data: unknown; // Changed from 'any' to 'unknown'
+    action_items: unknown[]; // Changed from 'any[]' to 'unknown[]'
     timestamp: string;
 }
 
 // Interface for Analytics List Response
 export interface AnalyticsListResponse {
     data: Array<{
-        error_message: any;
+        error_message: unknown; // Changed from 'any' to 'unknown'
         profile_name: string;
         sub_profile_name: string;
         template_name: string;
-        processing_duration: any;
-        file_size: any;
-        video_duration: any;
-        video_url: any;
-        thumbnail_url: any;
+        processing_duration: unknown; // Changed from 'any' to 'unknown'
+        file_size: unknown; // Changed from 'any' to 'unknown'
+        video_duration: unknown; // Changed from 'any' to 'unknown'
+        video_url: unknown; // Changed from 'any' to 'unknown'
+        thumbnail_url: unknown; // Changed from 'any' to 'unknown'
         id: number;
         analytics_id: string;
         video_title: string;
@@ -125,17 +125,27 @@ export interface BulkDeleteResponse {
 }
 
 export interface ChartData {
-  title: string;
-  image_url: string;
-  summary: string;
+    title: string;
+    image_url: string;
+    summary: string;
 }
-
-
 
 export type AnalyticsChartsResponse = ChartData[];
 
-class ProcessVideoApiService {
+// Generic delete response interface
+interface DeleteResponse {
+    message: string;
+    success: boolean;
+}
 
+// Generic refresh response interface
+interface RefreshResponse {
+    message: string;
+    success: boolean;
+    updated_at: string;
+}
+
+class ProcessVideoApiService {
     private httpClientWrapper: HttpClientWrapper;
 
     constructor() {
@@ -145,7 +155,7 @@ class ProcessVideoApiService {
     // POST /process-video - Process Video
     processVideo = async (payload: ProcessVideoRequest): Promise<ProcessVideoResponse> => {
         try {
-            let data: ProcessVideoResponse = await this.httpClientWrapper.post('process-video', payload);
+            const data = await this.httpClientWrapper.post<ProcessVideoResponse>('process-video', payload);
             return data;
         } catch (error) {
             throw error;
@@ -153,65 +163,67 @@ class ProcessVideoApiService {
     }
 
     // GET /analytics/{analytics_id} - Get Analytics
- getAnalytics = async (analyticsId: string): Promise<string> => {
-    try {
-      let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}`);
-      return data;
-    } catch (error) {
-      throw error;
-    }
-  }
-// Chart API Service Methods - Add these to your existing API service class
-
-// GET /analytics/{analytics_id}/charts - Get Charts for Analytics
-getCharts = async (analyticsId: string): Promise<string> => {
-  try {
-    let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/charts`);
-    return data;
-  } catch (error) {
-    throw error;
-  }
-}
-getSummary = async (analyticsId: string): Promise<string> => {
-  try {
-    let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/summary`);
-    return data;
-  } catch (error) {
-    throw error;
-  }
-}
-// GET /analytics/{analytics_id}/charts/{chart_id} - Get Specific Chart
-getChart = async (analyticsId: string, chartId: string): Promise<string> => {
-  try {
-    let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/charts/${chartId}`);
-    return data;
-  } catch (error) {
-    throw error;
-  }
-}
-
-// POST /analytics/{analytics_id}/charts/{chart_id}/refresh - Refresh Specific Chart
-refreshChart = async (analyticsId: string, chartId: string): Promise<string> => {
-  try {
-    let data: string = await this.httpClientWrapper.post(`analytics/${analyticsId}/charts/${chartId}/refresh`, {});
-    return data;
-  } catch (error) {
-    throw error;
-  }
-}
-
-// POST /analytics/{analytics_id}/charts/refresh - Refresh All Charts
-refreshAllCharts = async (analyticsId: string): Promise<string> => {
-  try {
-    let data: string = await this.httpClientWrapper.post(`analytics/${analyticsId}/charts/refresh`, {});
-    return data;
-  } catch (error) {
-    throw error;
-  }
-} 
-    deleteAnalytics = async (analyticsId: string): Promise<string> => {
+    getAnalytics = async (analyticsId: string): Promise<GetAnalyticsResponse> => {
         try {
-            let data: string = await this.httpClientWrapper.delete(`analytics/${analyticsId}`);
+            const data = await this.httpClientWrapper.get<GetAnalyticsResponse>(`analytics/${analyticsId}`);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // GET /analytics/{analytics_id}/charts - Get Charts for Analytics
+    getCharts = async (analyticsId: string): Promise<AnalyticsChartsResponse> => {
+        try {
+            const data = await this.httpClientWrapper.get<AnalyticsChartsResponse>(`analytics/${analyticsId}/charts`);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    getSummary = async (analyticsId: string): Promise<string> => {
+        try {
+            const data = await this.httpClientWrapper.get<string>(`analytics/${analyticsId}/summary`);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // GET /analytics/{analytics_id}/charts/{chart_id} - Get Specific Chart
+    getChart = async (analyticsId: string, chartId: string): Promise<ChartData> => {
+        try {
+            const data = await this.httpClientWrapper.get<ChartData>(`analytics/${analyticsId}/charts/${chartId}`);
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // POST /analytics/{analytics_id}/charts/{chart_id}/refresh - Refresh Specific Chart
+    refreshChart = async (analyticsId: string, chartId: string): Promise<RefreshResponse> => {
+        try {
+            const data = await this.httpClientWrapper.post<RefreshResponse>(`analytics/${analyticsId}/charts/${chartId}/refresh`, {});
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // POST /analytics/{analytics_id}/charts/refresh - Refresh All Charts
+    refreshAllCharts = async (analyticsId: string): Promise<RefreshResponse> => {
+        try {
+            const data = await this.httpClientWrapper.post<RefreshResponse>(`analytics/${analyticsId}/charts/refresh`, {});
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    } 
+
+    deleteAnalytics = async (analyticsId: string): Promise<DeleteResponse> => {
+        try {
+            const data = await this.httpClientWrapper.delete<DeleteResponse>(`analytics/${analyticsId}`);
             return data;
         } catch (error) {
             throw error;
@@ -221,7 +233,7 @@ refreshAllCharts = async (analyticsId: string): Promise<string> => {
     // GET /analytics/{analytics_id}/insights - Get Analytics Insights
     getAnalyticsInsights = async (analyticsId: string): Promise<AnalyticsInsightsResponse> => {
         try {
-            let data: AnalyticsInsightsResponse = await this.httpClientWrapper.get(`analytics/${analyticsId}/insights`);
+            const data = await this.httpClientWrapper.get<AnalyticsInsightsResponse>(`analytics/${analyticsId}/insights`);
             return data;
         } catch (error) {
             throw error;
@@ -229,19 +241,19 @@ refreshAllCharts = async (analyticsId: string): Promise<string> => {
     }
 
     // GET /analytics/{analytics_id}/charts - Get Analytics Charts
-        getAnalyticsCharts = async (analyticsId: string): Promise<string> => {
-            try {
-                let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/charts`);
-                return data;
-            } catch (error) {
-                throw error;
-            }
+    getAnalyticsCharts = async (analyticsId: string): Promise<AnalyticsChartsResponse> => {
+        try {
+            const data = await this.httpClientWrapper.get<AnalyticsChartsResponse>(`analytics/${analyticsId}/charts`);
+            return data;
+        } catch (error) {
+            throw error;
         }
+    }
 
     // GET /analytics/{analytics_id}/summary - Get Analytics Summary
     getAnalyticsSummary = async (analyticsId: string): Promise<string> => {
         try {
-            let data: string = await this.httpClientWrapper.get(`analytics/${analyticsId}/summary`);
+            const data = await this.httpClientWrapper.get<string>(`analytics/${analyticsId}/summary`);
             return data;
         } catch (error) {
             throw error;
@@ -264,7 +276,7 @@ refreshAllCharts = async (analyticsId: string): Promise<string> => {
                     endpoint += `?${queryString}`;
                 }
             }
-            let data: AnalyticsListResponse = await this.httpClientWrapper.get(endpoint);
+            const data = await this.httpClientWrapper.get<AnalyticsListResponse>(endpoint);
             return data;
         } catch (error) {
             throw error;
@@ -274,7 +286,7 @@ refreshAllCharts = async (analyticsId: string): Promise<string> => {
     // POST /bulk/delete - Bulk Delete
     bulkDelete = async (payload: BulkDeleteRequest): Promise<BulkDeleteResponse> => {
         try {
-            let data: BulkDeleteResponse = await this.httpClientWrapper.post('bulk/delete', payload);
+            const data = await this.httpClientWrapper.post<BulkDeleteResponse>('bulk/delete', payload);
             return data;
         } catch (error) {
             throw error;

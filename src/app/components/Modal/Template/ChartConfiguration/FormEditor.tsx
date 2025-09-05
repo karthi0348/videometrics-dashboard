@@ -4,7 +4,7 @@ import { ChartConfig } from "@/app/components/Templates/types/templates";
 interface FormEditorProps {
   charts: ChartConfig[];
   chartTypes: string[];
-  updateChart: (index: number, field: string, value: any) => void;
+  updateChart: (index: number, field: string, value: string | number | boolean) => void;
   addChart: () => void;
   removeChart: (index: number) => void;
   onReset: () => void;
@@ -144,7 +144,7 @@ export const FormEditor: React.FC<FormEditorProps> = ({
                   {/* Property Value Editor */}
                   {typeof value === "object" && value !== null ? (
                     <div className="space-y-2 ml-0 sm:ml-4">
-                      {Object.entries(value as any).map(([subKey, subValue]) => (
+                      {Object.entries(value).map(([subKey, subValue]) => (
                         <div key={subKey} className="flex flex-col sm:flex-row sm:items-center gap-2">
                           <div className="flex items-center gap-2 sm:min-w-0 sm:flex-shrink-0">
                             <div className="w-1 h-1 bg-teal-500 rounded-full hidden sm:block"></div>

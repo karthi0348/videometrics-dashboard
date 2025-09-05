@@ -1,3 +1,5 @@
+// Fixed interfaces with proper typing
+
 export interface ProcessedVideo {
   id: number;
   analytics_id: string;
@@ -17,7 +19,23 @@ export interface ProcessedVideo {
   video_duration?: string;
 }
 
-// types.ts
+// Define specific types for metadata, charts, and insights
+interface ProcessedMetadata {
+  [key: string]: unknown;
+}
+
+interface GeneratedChart {
+  type: string;
+  data: unknown;
+  config?: unknown;
+}
+
+interface Insight {
+  type: string;
+  value: unknown;
+  confidence: number;
+  timestamp?: string;
+}
 
 export interface AnalyticsData {
   id: number;
@@ -27,9 +45,9 @@ export interface AnalyticsData {
   sub_profile_id: number;
   template_id: number;
   original_video_url: string;
-  processed_metadata: any[];
-  generated_charts: any[];
-  insights: any[];
+  processed_metadata: ProcessedMetadata[];
+  generated_charts: GeneratedChart[];
+  insights: Insight[];
   confidence_scores: number[];
   timestamp: string;
   status: string;
@@ -41,28 +59,38 @@ export interface AnalyticsData {
   updated_at: string;
 }
 
+// Define a proper type for the data field
+interface InsightDataContent {
+  [key: string]: unknown;
+}
+
 export interface InsightData {
   insight_type: string;
   title: string;
   description: string;
   confidence: string;
   severity: string;
-  data: any;
+  data: InsightDataContent;
   action_items: string[];
   timestamp: string;
+}
+
+// Define a proper interface for the API service
+interface ApiService {
+  getAnalytics: (id: string) => Promise<AnalyticsData>;
+  // Add other methods as needed
+  [key: string]: unknown;
 }
 
 export interface VideoMetricsModalProps {
   isOpen: boolean;
   onClose: () => void;
   analyticsId: string | null;
-  apiService?: any;
+  apiService?: ApiService;
   mockMode?: boolean;
 }
 
-// Add these TypeScript declarations at the top of your VideoMetricsModal file
-// or in a separate types file
-
+// Improved TypeScript declarations for global libraries
 declare global {
   interface Window {
     jsPDF: {
@@ -70,39 +98,45 @@ declare global {
         orientation?: 'portrait' | 'landscape';
         unit?: 'mm' | 'pt' | 'px' | 'in' | 'ex' | 'em' | 'pc';
         format?: string | [number, number];
-      }) => {
-        setFontSize: (size: number) => void;
-        setTextColor: (r: number, g: number, b: number) => void;
-        text: (text: string, x: number, y: number, options?: { align?: string }) => void;
-        addImage: (
-          imageData: string,
-          format: string,
-          x: number,
-          y: number,
-          width: number,
-          height: number,
-          alias?: string,
-          compression?: string,
-          rotation?: number,
-          offsetY?: number
-        ) => void;
-        addPage: () => void;
-        getNumberOfPages: () => number;
-        setPage: (page: number) => void;
-        save: (filename: string) => void;
-      };
+      }) => JsPDFInstance;
     };
     html2canvas: (
       element: HTMLElement,
-      options?: {
-        scale?: number;
-        useCORS?: boolean;
-        allowTaint?: boolean;
-        backgroundColor?: string;
-        width?: number;
-        scrollX?: number;
-        scrollY?: number;
-      }
+      options?: Html2CanvasOptions
     ) => Promise<HTMLCanvasElement>;
   }
+}
+
+// Define proper interfaces for the PDF library
+interface JsPDFInstance {
+  setFontSize: (size: number) => void;
+  setTextColor: (r: number, g: number, b: number) => void;
+  text: (text: string, x: number, y: number, options?: { align?: string }) => void;
+  addImage: (
+    imageData: string,
+    format: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    alias?: string,
+    compression?: string,
+    rotation?: number,
+    offsetY?: number
+  ) => void;
+  addPage: () => void;
+  getNumberOfPages: () => number;
+  setPage: (page: number) => void;
+  save: (filename: string) => void;
+}
+
+// Define proper options for html2canvas
+interface Html2CanvasOptions {
+  scale?: number;
+  useCORS?: boolean;
+  allowTaint?: boolean;
+  backgroundColor?: string;
+  width?: number;
+  scrollX?: number;
+  scrollY?: number;
 }

@@ -32,8 +32,11 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
     try {
       JSON.parse(jsonContent);
       return null;
-    } catch (error: any) {
-      return error.message;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return error.message;
+      }
+      return 'Unknown JSON parsing error';
     }
   };
 
@@ -41,7 +44,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
     try {
       const parsed = JSON.parse(jsonContent);
       onJsonChange(JSON.stringify(parsed, null, 2));
-    } catch (error) {
+    } catch {
       console.error('Invalid JSON');
     }
   };
@@ -50,7 +53,7 @@ const JsonEditor: React.FC<JsonEditorProps> = ({
     try {
       const parsed = JSON.parse(jsonContent);
       onJsonChange(JSON.stringify(parsed));
-    } catch (error) {
+    } catch {
       console.error('Invalid JSON');
     }
   };

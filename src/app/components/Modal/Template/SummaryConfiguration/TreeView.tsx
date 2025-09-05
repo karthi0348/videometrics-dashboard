@@ -8,6 +8,10 @@ interface TreeViewProps {
   onReset: () => void;
 }
 
+// Define proper types for JSON values
+type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+type JsonObject = { [key: string]: JsonValue };
+
 const TreeView: React.FC<TreeViewProps> = ({
   jsonContent,
   onCopy,
@@ -17,7 +21,7 @@ const TreeView: React.FC<TreeViewProps> = ({
 }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['sections', 'metrics_to_highlight']));
 
-  const isValidJson = () => {
+  const isValidJson = (): boolean => {
     try {
       JSON.parse(jsonContent);
       return true;
@@ -26,7 +30,7 @@ const TreeView: React.FC<TreeViewProps> = ({
     }
   };
 
-  const toggleSection = (sectionKey: string) => {
+  const toggleSection = (sectionKey: string): void => {
     const newExpanded = new Set(expandedSections);
     if (newExpanded.has(sectionKey)) {
       newExpanded.delete(sectionKey);
@@ -36,28 +40,28 @@ const TreeView: React.FC<TreeViewProps> = ({
     setExpandedSections(newExpanded);
   };
 
-  const config = isValidJson() ? JSON.parse(jsonContent) : {};
+  const config: JsonObject = isValidJson() ? JSON.parse(jsonContent) as JsonObject : {};
   const characterCount = jsonContent.length;
   const propertyCount = Object.keys(config).length;
 
-  const getValueDisplay = (value: any, type: string) => {
+  const getValueDisplay = (value: JsonValue, type: string): string => {
     switch (type) {
       case 'string':
-        return `"${value}"`;
+        return `"${value as string}"`;
       case 'boolean':
         return String(value);
       case 'number':
         return String(value);
       case 'array':
-        return `Array(${value.length})`;
+        return `Array(${(value as JsonValue[]).length})`;
       case 'object':
-        return `Object(${Object.keys(value).length})`;
+        return `Object(${Object.keys(value as JsonObject).length})`;
       default:
         return String(value);
     }
   };
 
-  const getTypeColor = (type: string) => {
+  const getTypeColor = (type: string): string => {
     switch (type) {
       case 'string':
         return 'text-green-600 bg-green-500';
@@ -74,8 +78,9 @@ const TreeView: React.FC<TreeViewProps> = ({
     }
   };
 
-  const getValueType = (value: any): string => {
+  const getValueType = (value: JsonValue): string => {
     if (Array.isArray(value)) return 'array';
+    if (value === null) return 'null';
     return typeof value;
   };
 
@@ -262,7 +267,7 @@ const TreeView: React.FC<TreeViewProps> = ({
                   {/* Expanded Array Items */}
                   {isExpandable && isExpanded && (
                     <div className="ml-4 md:ml-8 space-y-1 md:space-y-2 pb-2">
-                      {value.map((item: any, index: number) => (
+                      {(value as JsonValue[]).map((item: JsonValue, index: number) => (
                         <div key={index} className="flex items-center gap-2 md:gap-3 p-2 md:p-3 bg-gray-50 rounded-lg border border-gray-100">
                           <span className="w-3 h-3 md:w-4 md:h-4 flex items-center justify-center">
                             <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full"></div>
@@ -271,10 +276,10 @@ const TreeView: React.FC<TreeViewProps> = ({
                             [{index}]
                           </span>
                           <span className="text-xs md:text-sm text-green-700 font-medium break-all flex-1 min-w-0">
-                            "{item}"
+                            {String(item)}
                           </span>
                           <span className="px-2 py-0.5 text-xs bg-green-100 text-green-600 rounded-full shrink-0">
-                            string
+                            {getValueType(item)}
                           </span>
                         </div>
                       ))}

@@ -46,7 +46,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
       const locations = Array.isArray(subProfile.cameraLocations) 
         ? subProfile.cameraLocations 
         : Object.values(subProfile.cameraLocations || {}); 
-      setCameraLocations(locations.map(({ id, ...rest }:any) => rest));
+      setCameraLocations(locations.map(({ id, ...rest }: CameraLocation) => rest));
     }
 
     // Initialize monitoring schedules if they exist
@@ -59,10 +59,10 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
 
     // Initialize alert settings if they exist
     if (subProfile.alertSettings) {
-      const alerts:any = Array.isArray(subProfile.alertSettings) 
+      const alerts: AlertSettings[] = Array.isArray(subProfile.alertSettings) 
         ? subProfile.alertSettings 
         : Object.values(subProfile.alertSettings || {});
-      setAlertSettings(alerts.map(({ id, ...rest }:any) => rest));
+      setAlertSettings(alerts.map(({ id, ...rest }: AlertSettings) => rest));
     }
   }, [subProfile]);
 
@@ -88,11 +88,11 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
   };
 
   // Helper function to convert array to object
-  const convertArrayToObject = (arr: any[], prefix: string) => {
+  const convertArrayToObject = <T extends Record<string, unknown>>(arr: T[], prefix: string): Record<string, T> => {
     return arr.reduce((acc, item, index) => {
       acc[`${prefix}_${index}`] = item;
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, T>);
   };
 
   const handleSubmit = async () => {
@@ -148,10 +148,10 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
   };
 
   const tabs = [
-    { id: 'basic', label: 'Basic Info', icon: null },
-    { id: 'cameras', label: 'Camera Locations', icon: Camera },
-    { id: 'monitoring', label: 'Monitoring Schedule', icon: Calendar },
-    { id: 'alerts', label: 'Alert Settings', icon: Bell }
+    { id: 'basic' as const, label: 'Basic Info', icon: null },
+    { id: 'cameras' as const, label: 'Camera Locations', icon: Camera },
+    { id: 'monitoring' as const, label: 'Monitoring Schedule', icon: Calendar },
+    { id: 'alerts' as const, label: 'Alert Settings', icon: Bell }
   ];
 
   return (
@@ -212,7 +212,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => handleTabChange(tab.id as any)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`w-full flex items-center gap-3 p-4 text-left transition-colors ${
                     activeTab === tab.id
                       ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-500'
@@ -241,7 +241,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => handleTabChange(tab.id as any)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`py-3 px-4 lg:px-6 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'

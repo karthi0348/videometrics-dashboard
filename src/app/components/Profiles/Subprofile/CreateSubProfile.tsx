@@ -9,22 +9,49 @@ import CameraLocations from './CameraLocations';
 import MonitoringScheduleComponent from '../Subprofile/MonitoringScheduleComponent';
 import AlertSettingsComponent from '../Subprofile/AlertSettingsComponent';
 
+// Define specific types for the data structures
+interface CameraLocationData {
+  [key: string]: Omit<CameraLocation, 'id'>;
+}
+
+interface MonitoringScheduleData {
+  [key: string]: Omit<MonitoringSchedule, 'id'>;
+}
+
+interface AlertSettingsData {
+  [key: string]: Omit<AlertSettings, 'id'>;
+}
+
 // Updated interface to match backend API
 interface CreateSubProfileAPIRequest {
   sub_profile_name: string;
   description: string;
   tags: string[];
   area_type: string;
-  camera_locations: Record<string, any>;
-  monitoring_schedule: Record<string, any>;
-  alert_settings: Record<string, any>;
+  camera_locations: CameraLocationData;
+  monitoring_schedule: MonitoringScheduleData;
+  alert_settings: AlertSettingsData;
+}
+
+// Define a generic type for created sub-profile response
+interface CreatedSubProfile {
+  id: string;
+  sub_profile_name: string;
+  description: string;
+  tags: string[];
+  area_type: string;
+  camera_locations: CameraLocationData;
+  monitoring_schedule: MonitoringScheduleData;
+  alert_settings: AlertSettingsData;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface CreateSubProfileProps {
   profile: Profile;
   onCreateSubProfile?: (subProfile: CreateSubProfileAPIRequest) => Promise<void>;
   onCancel: () => void;
-  onSuccess?: (subProfile: any) => void; // Add callback for successful creation
+  onSuccess?: (subProfile: CreatedSubProfile) => void;
   loading?: boolean;
 }
 
@@ -88,12 +115,26 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Helper function to convert array to object
-  const convertArrayToObject = (arr: any[], prefix: string) => {
+  // Helper function to convert array to object with proper typing
+  const convertCameraLocationsToObject = (arr: Omit<CameraLocation, 'id'>[]): CameraLocationData => {
     return arr.reduce((acc, item, index) => {
-      acc[`${prefix}_${index}`] = item;
+      acc[`camera_${index}`] = item;
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as CameraLocationData);
+  };
+
+  const convertMonitoringSchedulesToObject = (arr: Omit<MonitoringSchedule, 'id'>[]): MonitoringScheduleData => {
+    return arr.reduce((acc, item, index) => {
+      acc[`schedule_${index}`] = item;
+      return acc;
+    }, {} as MonitoringScheduleData);
+  };
+
+  const convertAlertSettingsToObject = (arr: Omit<AlertSettings, 'id'>[]): AlertSettingsData => {
+    return arr.reduce((acc, item, index) => {
+      acc[`alert_${index}`] = item;
+      return acc;
+    }, {} as AlertSettingsData);
   };
 
   const handleSubmit = async () => {
@@ -121,9 +162,9 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
         description: formData.description.trim(),
         tags: tagsArray,
         area_type: formData.areaType.trim(),
-        camera_locations: convertArrayToObject(cameraLocations, 'camera'),
-        monitoring_schedule: convertArrayToObject(monitoringSchedules, 'schedule'),
-        alert_settings: convertArrayToObject(alertSettings, 'alert')
+        camera_locations: convertCameraLocationsToObject(cameraLocations),
+        monitoring_schedule: convertMonitoringSchedulesToObject(monitoringSchedules),
+        alert_settings: convertAlertSettingsToObject(alertSettings)
       };
 
       // Use the provided callback if available, otherwise use the service directly
@@ -135,7 +176,7 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
         
         // Call success callback if provided
         if (onSuccess) {
-          onSuccess(createdSubProfile);
+          onSuccess(createdSubProfile as CreatedSubProfile);
         }
       }
 
@@ -156,7 +197,14 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
     setShowMobileNav(false);
   };
 
-  const tabs = [
+  // Define tab interface for better type safety
+  interface Tab {
+    id: 'basic' | 'cameras' | 'monitoring' | 'alerts';
+    label: string;
+    icon: React.ComponentType<{ className?: string }> | null;
+  }
+
+  const tabs: Tab[] = [
     { id: 'basic', label: 'Basic Info', icon: null },
     { id: 'cameras', label: 'Camera Locations', icon: Camera },
     { id: 'monitoring', label: 'Monitoring Schedule', icon: Calendar },
@@ -228,7 +276,7 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => handleTabChange(tab.id as any)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`w-full flex items-center gap-3 p-4 text-left transition-colors ${
                     activeTab === tab.id
                       ? 'bg-purple-50 text-purple-600 border-r-2 border-purple-500'
@@ -257,7 +305,7 @@ const CreateSubProfile: React.FC<CreateSubProfileProps> = ({
               return (
                 <button
                   key={tab.id}
-                  onClick={() => handleTabChange(tab.id as any)}
+                  onClick={() => handleTabChange(tab.id)}
                   className={`py-3 px-4 lg:px-6 border-b-2 font-medium text-sm transition-colors whitespace-nowrap flex-shrink-0 ${
                     hasErrors
                       ? 'border-transparent text-red-500 hover:text-red-700'

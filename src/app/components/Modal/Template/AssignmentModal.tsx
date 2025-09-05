@@ -1,8 +1,25 @@
 import ErrorHandler from "@/helpers/ErrorHandler";
 import ProfileApiService from "@/helpers/service/profile/profile-api-service";
 import TemplateApiService from "@/helpers/service/templates/template-api-service";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
+
+// Define interfaces for better type safety
+interface Template {
+  id: string | number;
+  name: string;
+}
+
+interface Profile {
+  id: string | number;
+  profile_name: string;
+}
+
+interface AssignmentPayload {
+  template_id: string | number;
+  sub_profile_ids: (string | number)[];
+  priority: '1' | '2' | '3';
+}
 
 const AssignmentModal = ({
     isOpen,
@@ -11,7 +28,7 @@ const AssignmentModal = ({
 }: {
     isOpen: boolean;
     onClose: () => void;
-    template: any;
+    template: Template;
 }) => {
 
     const profileApiService: ProfileApiService = new ProfileApiService();
@@ -19,24 +36,25 @@ const AssignmentModal = ({
 
     const [selectedProfile, setSelectedProfile] = useState<string>('');
     const [selectedPriority, setSelectedPriority] = useState<'1' | '2' | '3'>('1');
-    const [profile, setProfile] = useState<any>([]);
+    const [profile, setProfile] = useState<Profile[]>([]);
 
     const handleAssign = async () => {
         try {
-            let payload = {
+            const payload: AssignmentPayload = {
                 template_id: template.id,
                 sub_profile_ids: [
                     selectedProfile
                 ],
                 priority: selectedPriority
-            }
+            };
             await templateApiService.assignSUbProfile(template.id, payload);
-            toast.success('Assigned Successfully', { containerId: 'TR' })
+            toast.success('Assigned Successfully', { containerId: 'TR' });
             onClose();
             setSelectedProfile('');
             setSelectedPriority('1');
-        } catch (err: any) {
-            return ErrorHandler(err)
+        } catch (err) {
+            const error = err as Error;
+            return ErrorHandler(error);
         }
     };
 
@@ -46,21 +64,22 @@ const AssignmentModal = ({
         setSelectedPriority('1');
     };
 
-    const getAllProfile = async () => {
+    const getAllProfile = useCallback(async () => {
         try {
-            let result = await profileApiService.getAllProfile('');
-            setProfile(result);
-        } catch (error: any) {
+            const result = await profileApiService.getAllProfile('');
+            setProfile(result as Profile[]);
+        } catch (error) {
             setProfile([]);
-            return ErrorHandler(error);
+            const errorObj = error as Error;
+            return ErrorHandler(errorObj);
         }
-    };
+    }, [profileApiService]);
 
     useEffect(() => {
         if (isOpen) {
             getAllProfile();
         }
-    }, [isOpen]);
+    }, [isOpen, getAllProfile]);
 
     if (!isOpen || !template) {
         return null;
@@ -85,7 +104,7 @@ const AssignmentModal = ({
                 {/* Content */}
                 <div className="p-6 space-y-4">
                     <p className="text-sm text-gray-600 mb-4">
-                        Select profiles and sub-profiles to assign the template '{template.name}' to.
+                        Select profiles and sub-profiles to assign the template &quot;{template.name}&quot; to.
                     </p>
 
                     {/* Profile Selection */}
@@ -100,9 +119,9 @@ const AssignmentModal = ({
                                 className="w-full px-3 py-2 border-2 border-purple-500 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 appearance-none bg-white"
                             >
                                 <option value="">Select a profile</option>
-                                {profile.map((profile: any) => (
-                                    <option key={profile.id} value={profile.id}>
-                                        {profile.profile_name}
+                                {profile.map((profileItem: Profile) => (
+                                    <option key={profileItem.id} value={profileItem.id}>
+                                        {profileItem.profile_name}
                                     </option>
                                 ))}
                             </select>
@@ -150,7 +169,7 @@ const AssignmentModal = ({
                         onClick={handleAssign}
                         disabled={!selectedProfile}
                         className={`px-4 py-2 text-white rounded-lg transition-colors ${selectedProfile
-                            ? 'bg-purple-500 hover:bg-purple'
+                            ? 'bg-purple-500 hover:bg-purple-600'
                             : 'bg-gray-300 cursor-not-allowed'
                             }`}
                     >
@@ -162,4 +181,4 @@ const AssignmentModal = ({
     );
 };
 
-export default AssignmentModal
+export default AssignmentModal;

@@ -21,7 +21,7 @@ interface ViewSubProfileModalProps {
 const ViewSubProfileModal: React.FC<ViewSubProfileModalProps> = ({
   subProfile,
   onClose,
-}:any) => {
+}) => {
   const formatDate = (date: Date) => {
     return date.toLocaleString("en-US", {
       year: "numeric",
@@ -33,16 +33,16 @@ const ViewSubProfileModal: React.FC<ViewSubProfileModalProps> = ({
   };
 
   // Helper function to extract data from either array or object format
-  const extractArrayData = (data: any) => {
+  const extractArrayData = (data: unknown): unknown[] => {
     if (!data) return [];
     if (Array.isArray(data)) return data;
-    if (typeof data === "object") return Object.values(data);
+    if (typeof data === "object" && data !== null) return Object.values(data);
     return [];
   };
 
   const cameraLocations = extractArrayData(subProfile.cameraLocations);
   const monitoringSchedules = extractArrayData(
-    subProfile.monitoringSchedule || subProfile.monitoringSchedules
+    subProfile.monitoringSchedules
   );
   const alertSettings = extractArrayData(subProfile.alertSettings);
 
@@ -147,7 +147,7 @@ const ViewSubProfileModal: React.FC<ViewSubProfileModalProps> = ({
                 </h3>
                 {subProfile.tags && subProfile.tags.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {subProfile.tags.map((tag:any, index:any) => (
+                    {subProfile.tags.map((tag: string, index: number) => (
                       <span
                         key={index}
                         className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200"
@@ -209,44 +209,56 @@ const ViewSubProfileModal: React.FC<ViewSubProfileModalProps> = ({
                 </h3>
                 {cameraLocations.length > 0 ? (
                   <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {cameraLocations.map((camera, index) => (
-                      <div
-                        key={camera.id || index}
-                        className="bg-white rounded-lg p-4 border"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="text-sm font-medium text-gray-900">
-                                {camera.name}
-                              </h4>
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  camera.isActive
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-600"
-                                }`}
-                              >
-                                {camera.isActive ? "Active" : "Inactive"}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600 mb-1">
-                              <span className="font-medium">Location:</span>{" "}
-                              {camera.location}
-                            </p>
-                            <p className="text-xs text-gray-600 mb-1">
-                              <span className="font-medium">Type:</span>{" "}
-                              {camera.cameraType}
-                            </p>
-                            {camera.ipAddress && (
-                              <p className="text-xs text-gray-500 font-mono">
-                                {camera.ipAddress}
+                    {cameraLocations.map((camera, index) => {
+                      // Type assertion with runtime checks for safety
+                      const cameraData = camera as {
+                        id?: string | number;
+                        name?: string;
+                        location?: string;
+                        cameraType?: string;
+                        ipAddress?: string;
+                        isActive?: boolean;
+                      };
+
+                      return (
+                        <div
+                          key={cameraData.id || index}
+                          className="bg-white rounded-lg p-4 border"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="text-sm font-medium text-gray-900">
+                                  {cameraData.name || 'Unnamed Camera'}
+                                </h4>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    cameraData.isActive
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-gray-100 text-gray-600"
+                                  }`}
+                                >
+                                  {cameraData.isActive ? "Active" : "Inactive"}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-600 mb-1">
+                                <span className="font-medium">Location:</span>{" "}
+                                {cameraData.location || 'Not specified'}
                               </p>
-                            )}
+                              <p className="text-xs text-gray-600 mb-1">
+                                <span className="font-medium">Type:</span>{" "}
+                                {cameraData.cameraType || 'Not specified'}
+                              </p>
+                              {cameraData.ipAddress && (
+                                <p className="text-xs text-gray-500 font-mono">
+                                  {cameraData.ipAddress}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="bg-white rounded-lg px-4 py-6 border border-dashed border-gray-300">
@@ -268,45 +280,58 @@ const ViewSubProfileModal: React.FC<ViewSubProfileModalProps> = ({
                 </h3>
                 {monitoringSchedules.length > 0 ? (
                   <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {monitoringSchedules.map((schedule, index) => (
-                      <div
-                        key={schedule.id || index}
-                        className="bg-white rounded-lg p-4 border"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="text-sm font-medium text-gray-900">
-                                {schedule.name}
-                              </h4>
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  schedule.isActive
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-600"
-                                }`}
-                              >
-                                {schedule.isActive ? "Active" : "Inactive"}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600 mb-1">
-                              <span className="font-medium">Time:</span>{" "}
-                              {schedule.startTime} - {schedule.endTime}
-                            </p>
-                            <p className="text-xs text-gray-600">
-                              <span className="font-medium">Days:</span>{" "}
-                              {schedule.days?.join(", ") || "No days specified"}
-                            </p>
-                            {schedule.timezone && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                <span className="font-medium">Timezone:</span>{" "}
-                                {schedule.timezone}
+                    {monitoringSchedules.map((schedule, index) => {
+                      // Type assertion with runtime checks for safety
+                      const scheduleData = schedule as {
+                        id?: string | number;
+                        name?: string;
+                        startTime?: string;
+                        endTime?: string;
+                        days?: string[];
+                        timezone?: string;
+                        isActive?: boolean;
+                      };
+
+                      return (
+                        <div
+                          key={scheduleData.id || index}
+                          className="bg-white rounded-lg p-4 border"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="text-sm font-medium text-gray-900">
+                                  {scheduleData.name || 'Unnamed Schedule'}
+                                </h4>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    scheduleData.isActive
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-gray-100 text-gray-600"
+                                  }`}
+                                >
+                                  {scheduleData.isActive ? "Active" : "Inactive"}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-600 mb-1">
+                                <span className="font-medium">Time:</span>{" "}
+                                {scheduleData.startTime || 'Not set'} - {scheduleData.endTime || 'Not set'}
                               </p>
-                            )}
+                              <p className="text-xs text-gray-600">
+                                <span className="font-medium">Days:</span>{" "}
+                                {scheduleData.days?.join(", ") || "No days specified"}
+                              </p>
+                              {scheduleData.timezone && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  <span className="font-medium">Timezone:</span>{" "}
+                                  {scheduleData.timezone}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="bg-white rounded-lg px-4 py-6 border border-dashed border-gray-300">
@@ -314,7 +339,7 @@ const ViewSubProfileModal: React.FC<ViewSubProfileModalProps> = ({
                       No monitoring schedules configured
                     </p>
                   </div>
-                )}
+                  )}
               </div>
 
               {/* Alert Settings */}
@@ -328,50 +353,63 @@ const ViewSubProfileModal: React.FC<ViewSubProfileModalProps> = ({
                 </h3>
                 {alertSettings.length > 0 ? (
                   <div className="space-y-3 max-h-60 overflow-y-auto">
-                    {alertSettings.map((alert, index) => (
-                      <div
-                        key={alert.id || index}
-                        className="bg-white rounded-lg p-4 border"
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="text-sm font-medium text-gray-900">
-                                {alert.name}
-                              </h4>
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  alert.enabled
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-600"
-                                }`}
-                              >
-                                {alert.enabled ? "Enabled" : "Disabled"}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-600 mb-1">
-                              <span className="font-medium">Type:</span>{" "}
-                              {alert.type}
-                            </p>
-                            {alert.threshold && (
+                    {alertSettings.map((alert, index) => {
+                      // Type assertion with runtime checks for safety
+                      const alertData = alert as {
+                        id?: string | number;
+                        name?: string;
+                        type?: string;
+                        threshold?: string | number;
+                        description?: string;
+                        notificationMethods?: string[];
+                        enabled?: boolean;
+                      };
+
+                      return (
+                        <div
+                          key={alertData.id || index}
+                          className="bg-white rounded-lg p-4 border"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="text-sm font-medium text-gray-900">
+                                  {alertData.name || 'Unnamed Alert'}
+                                </h4>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    alertData.enabled
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-gray-100 text-gray-600"
+                                  }`}
+                                >
+                                  {alertData.enabled ? "Enabled" : "Disabled"}
+                                </span>
+                              </div>
                               <p className="text-xs text-gray-600 mb-1">
-                                <span className="font-medium">Threshold:</span>{" "}
-                                {alert.threshold}
+                                <span className="font-medium">Type:</span>{" "}
+                                {alertData.type || 'Not specified'}
                               </p>
-                            )}
-                            <p className="text-xs text-gray-600">
-                              <span className="font-medium">Methods:</span>{" "}
-                              {alert.notificationMethods?.join(", ") || "None"}
-                            </p>
-                            {alert.description && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                {alert.description}
+                              {alertData.threshold && (
+                                <p className="text-xs text-gray-600 mb-1">
+                                  <span className="font-medium">Threshold:</span>{" "}
+                                  {alertData.threshold}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-600">
+                                <span className="font-medium">Methods:</span>{" "}
+                                {alertData.notificationMethods?.join(", ") || "None"}
                               </p>
-                            )}
+                              {alertData.description && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {alertData.description}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="bg-white rounded-lg px-4 py-6 border border-dashed border-gray-300">

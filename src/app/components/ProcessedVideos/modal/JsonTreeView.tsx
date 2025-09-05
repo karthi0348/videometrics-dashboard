@@ -1,7 +1,17 @@
 import React, { useState } from "react";
 
+// Define types for JSON values
+type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
+type JsonObject = { [key: string]: JsonValue };
+type JsonArray = JsonValue[];
+
+interface JsonTreeViewProps {
+  data: JsonObject;
+  level?: number;
+}
+
 // JSON Tree Component for Raw Data Display
-const JsonTreeView: React.FC<{ data: any; level?: number }> = ({ data, level = 0 }) => {
+const JsonTreeView: React.FC<JsonTreeViewProps> = ({ data, level = 0 }) => {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
   const toggleExpanded = (key: string) => {
@@ -14,7 +24,7 @@ const JsonTreeView: React.FC<{ data: any; level?: number }> = ({ data, level = 0
     setExpandedKeys(newExpanded);
   };
 
-  const renderValue = (key: string, value: any, path: string) => {
+  const renderValue = (key: string, value: JsonValue, path: string) => {
     const isExpanded = expandedKeys.has(path);
     const indent = level * 20;
 
@@ -31,7 +41,7 @@ const JsonTreeView: React.FC<{ data: any; level?: number }> = ({ data, level = 0
       return (
         <div className="flex items-center py-1" style={{ paddingLeft: `${indent}px` }}>
           <span className="text-blue-600 font-mono text-sm mr-2">{key}:</span>
-          <span className="text-green-600 text-sm">"{value}"</span>
+          <span className="text-green-600 text-sm">&quot;{value}&quot;</span>
         </div>
       );
     }
@@ -109,7 +119,7 @@ const JsonTreeView: React.FC<{ data: any; level?: number }> = ({ data, level = 0
               {keys.map((subKey) => (
                 <JsonTreeView
                   key={`${path}-${subKey}`}
-                  data={{ [subKey]: value[subKey] }}
+                  data={{ [subKey]: (value as JsonObject)[subKey] }}
                   level={level + 1}
                 />
               ))}
