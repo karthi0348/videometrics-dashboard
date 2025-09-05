@@ -18,9 +18,54 @@ import {
   MonitoringSchedule,
   AlertSettings,
 } from "@/app/types/subprofiles";
-import CameraLocations from "../../Profiles/Subprofile/CameraLocations";
-import MonitoringScheduleComponent from "../../Profiles/Subprofile/MonitoringScheduleComponent";
-import AlertSettingsComponent from "../../Profiles/Subprofile/AlertSettingsComponent";
+
+// Define proper types for the imported components
+interface CameraLocationsProps {
+  data: Omit<CameraLocation, "id">[];
+  onChange: (data: Omit<CameraLocation, "id">[]) => void;
+}
+
+interface MonitoringScheduleProps {
+  data: Omit<MonitoringSchedule, "id">[];
+  onChange: (data: Omit<MonitoringSchedule, "id">[]) => void;
+}
+
+interface AlertSettingsProps {
+  data: Omit<AlertSettings, "id">[];
+  onChange: (data: Omit<AlertSettings, "id">[]) => void;
+}
+
+// Import components with proper typing and error handling
+let CameraLocations: React.ComponentType<CameraLocationsProps> | null = null;
+let MonitoringScheduleComponent: React.ComponentType<MonitoringScheduleProps> | null = null;
+let AlertSettingsComponent: React.ComponentType<AlertSettingsProps> | null = null;
+
+// Use dynamic imports instead of require()
+const loadComponents = async () => {
+  try {
+    const { default: CameraLocationsComponent } = await import("../../Profiles/Subprofile/CameraLocations");
+    CameraLocations = CameraLocationsComponent;
+  } catch (error) {
+    console.warn("CameraLocations component not found:", error);
+  }
+
+  try {
+    const { default: MonitoringScheduleComp } = await import("../../Profiles/Subprofile/MonitoringScheduleComponent");
+    MonitoringScheduleComponent = MonitoringScheduleComp;
+  } catch (error) {
+    console.warn("MonitoringScheduleComponent not found:", error);
+  }
+
+  try {
+    const { default: AlertSettingsComp } = await import("../../Profiles/Subprofile/AlertSettingsComponent");
+    AlertSettingsComponent = AlertSettingsComp;
+  } catch (error) {
+    console.warn("AlertSettingsComponent not found:", error);
+  }
+};
+
+// Load components on module initialization
+loadComponents();
 
 interface EditSubProfileModalProps {
   subProfile: SubProfile;
@@ -502,8 +547,8 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               <div className="w-full">
                 {CameraLocations ? (
                   <CameraLocations
-                    cameraLocations={cameraLocations}
-                    setCameraLocations={setCameraLocations}
+                    data={cameraLocations}
+                    onChange={setCameraLocations}
                   />
                 ) : (
                   <div className="space-y-4">
@@ -538,8 +583,8 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               <div className="w-full">
                 {MonitoringScheduleComponent ? (
                   <MonitoringScheduleComponent
-                    monitoringSchedules={monitoringSchedules}
-                    setMonitoringSchedules={setMonitoringSchedules}
+                    data={monitoringSchedules}
+                    onChange={setMonitoringSchedules}
                   />
                 ) : (
                   <div className="space-y-4">
@@ -574,8 +619,8 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               <div className="w-full">
                 {AlertSettingsComponent ? (
                   <AlertSettingsComponent
-                    alertSettings={alertSettings}
-                    setAlertSettings={setAlertSettings}
+                    data={alertSettings}
+                    onChange={setAlertSettings}
                   />
                 ) : (
                   <div className="space-y-4">
