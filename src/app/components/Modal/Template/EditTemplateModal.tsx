@@ -183,7 +183,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
     try {
       const result = await templateApiService.getAllTemplateById(id); 
       setTemplates(result);
-    } catch (error: unknown) { 
+    } catch (error) {
       return ErrorHandler(error);
     }
   };

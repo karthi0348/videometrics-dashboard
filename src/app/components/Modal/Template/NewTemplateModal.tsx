@@ -3,7 +3,7 @@ import MetricStructureEditor from "./MetricStructureEditor";
 import ChartConfiguration from "./ChartConfiguration/ChartConfiguration";
 import SummaryConfiguration from "./SummaryConfiguration/SummaryConfiguration";
 import TemplateApiService from "@/helpers/service/templates/template-api-service";
-import ErrorHandler from "@/helpers/ErrorHandler";
+import {ErrorHandler} from "@/helpers/ErrorHandler";
 import { FormData, ChartConfig, SummaryConfig } from "@/app/components/Templates/types/templates";
 
 interface NewTemplateModalProps {

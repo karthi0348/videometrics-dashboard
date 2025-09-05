@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import ErrorHandler, { ErrorResponse } from "@/helpers/ErrorHandler";
 
 interface JsonEditorProps {
   jsonContent: string;
@@ -104,12 +105,15 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
     }
   };
 
-  const getJsonError = () => {
+  const getJsonError = (): string | null => {
     try {
       JSON.parse(jsonContent);
       return null;
     } catch (error) {
-      return error.message;
+      if (error instanceof Error) {
+        return error.message;
+      }
+      return "Unknown error occurred while parsing JSON";
     }
   };
 
@@ -162,7 +166,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
               {copySuccess ? "Copied!" : "Copy"}
             </span>
           </button>
-          
+
           <button
             type="button"
             onClick={downloadJson}
@@ -184,7 +188,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
             </svg>
             <span className="hidden sm:inline">Download</span>
           </button>
-          
+
           <button
             type="button"
             onClick={uploadJson}
@@ -206,7 +210,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
             </svg>
             <span className="hidden sm:inline">Upload</span>
           </button>
-          
+
           <button
             type="button"
             onClick={onReset}
@@ -257,7 +261,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
             JSON Text Editor
           </h4>
         </div>
-        
+
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -334,7 +338,10 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
       <div className="relative">
         <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-10 lg:w-12 bg-gray-100 border-r border-gray-300 flex flex-col text-xs text-gray-500 font-mono overflow-hidden rounded-l">
           {jsonContent.split("\n").map((_, index) => (
-            <div key={index} className="px-1 sm:px-2 leading-5 sm:leading-6 text-right min-h-[20px] sm:min-h-[24px] text-xs">
+            <div
+              key={index}
+              className="px-1 sm:px-2 leading-5 sm:leading-6 text-right min-h-[20px] sm:min-h-[24px] text-xs"
+            >
               {index + 1}
             </div>
           ))}

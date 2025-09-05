@@ -1,7 +1,10 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
-import { ChartConfigurationProps, ChartConfig } from "@/app/components/Templates/types/templates";
+import {
+  ChartConfigurationProps,
+  ChartConfig,
+} from "@/app/components/Templates/types/templates";
 import { VisualEditor } from "./VisualEditor";
 import { JsonEditor } from "./JsonEditor";
 import { FormEditor } from "./FormEditor";
@@ -13,7 +16,9 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
   config,
   onConfigChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<"visual" | "json" | "form" | "tree">("visual");
+  const [activeTab, setActiveTab] = useState<
+    "visual" | "json" | "form" | "tree"
+  >("visual");
   const [charts, setCharts] = useState<ChartConfig[]>([
     {
       chart_type: "line",
@@ -33,17 +38,20 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
   const [jsonContent, setJsonContent] = useState<string>(
     JSON.stringify(charts, null, 2)
   );
-
   React.useEffect(() => {
     if (config) {
-      setCharts(config);
+      if (Array.isArray(config)) {
+        setCharts(config);
+      } else {
+        setCharts([config]);
+      }
       setJsonContent(JSON.stringify(config, null, 2));
     }
   }, [config]);
 
   const chartTypes = [
     "Line Chart",
-    "Bar Chart", 
+    "Bar Chart",
     "Pie Chart",
     "Area Chart",
     "Scatter Plot",
@@ -51,7 +59,11 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
     "Bubble Chart",
   ];
 
-  const updateChart = (index: number, field: string, value: string | number | boolean) => {
+  const updateChart = (
+    index: number,
+    field: string,
+    value: string | number | boolean
+  ) => {
     const updatedCharts = [...charts];
     if (field.includes(".")) {
       const [parent, child] = field.split(".");
@@ -101,7 +113,7 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
     const defaultCharts = [
       {
         chart_type: "line",
-        title: "Chart 1", 
+        title: "Chart 1",
         data_source: "data_source",
         x_axis: { field: "x", label: "X-Axis" },
         y_axis: { field: "y", label: "Y-Axis" },

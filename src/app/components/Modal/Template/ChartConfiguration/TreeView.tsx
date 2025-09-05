@@ -7,7 +7,7 @@ interface TreeViewProps {
 }
 
 export const TreeView: React.FC<TreeViewProps> = ({ charts, jsonContent }) => {
-  const renderTreeView = (data: string | number | boolean, level = 0): React.ReactNode => {
+  const renderTreeView = (data: unknown, level = 0): React.ReactNode => {
     if (Array.isArray(data)) {
       return (
         <div className="space-y-2">
@@ -22,7 +22,7 @@ export const TreeView: React.FC<TreeViewProps> = ({ charts, jsonContent }) => {
                   <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
                   <span className="text-gray-700 font-mono">[{index}]</span>
                   <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded whitespace-nowrap">
-                    object
+                    {typeof item === "object" && item !== null ? "object" : typeof item}
                   </span>
                 </div>
               </div>
@@ -45,12 +45,22 @@ export const TreeView: React.FC<TreeViewProps> = ({ charts, jsonContent }) => {
                     {key}
                   </span>
                   <span className="text-xs bg-teal-100 text-teal-700 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded whitespace-nowrap">
-                    {typeof value}
+                    {typeof value === "object" && value !== null ? "object" : typeof value}
                   </span>
                 </div>
                 {typeof value === "string" && (
                   <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded break-all sm:truncate max-w-full sm:max-w-xs ml-6 sm:ml-0">
                     {value}
+                  </span>
+                )}
+                {typeof value === "number" && (
+                  <span className="text-xs text-purple-600 bg-purple-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded ml-6 sm:ml-0">
+                    {value}
+                  </span>
+                )}
+                {typeof value === "boolean" && (
+                  <span className="text-xs text-orange-600 bg-orange-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded ml-6 sm:ml-0">
+                    {String(value)}
                   </span>
                 )}
               </div>
@@ -59,6 +69,17 @@ export const TreeView: React.FC<TreeViewProps> = ({ charts, jsonContent }) => {
               )}
             </div>
           ))}
+        </div>
+      );
+    }
+
+    // Handle primitive values
+    if (typeof data === "string" || typeof data === "number" || typeof data === "boolean") {
+      return (
+        <div className="text-xs sm:text-sm text-gray-600">
+          <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+            {String(data)}
+          </span>
         </div>
       );
     }

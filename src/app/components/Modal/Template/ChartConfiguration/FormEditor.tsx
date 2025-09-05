@@ -7,6 +7,7 @@ interface FormEditorProps {
   updateChart: (index: number, field: string, value: string | number | boolean) => void;
   addChart: () => void;
   removeChart: (index: number) => void;
+  removeChartProperty?: (chartIndex: number, propertyKey: string) => void; // Add this new prop
   onReset: () => void;
 }
 
@@ -16,6 +17,7 @@ export const FormEditor: React.FC<FormEditorProps> = ({
   updateChart,
   addChart,
   removeChart,
+  removeChartProperty,
   onReset,
 }) => {
   return (
@@ -113,14 +115,11 @@ export const FormEditor: React.FC<FormEditorProps> = ({
                     </div>
                     {charts.length > 1 &&
                       key !== "x_axis" &&
-                      key !== "y_axis" && (
+                      key !== "y_axis" &&
+                      removeChartProperty && (
                         <button
                           type="button"
-                          onClick={() => {
-                            const updatedChart = { ...chart };
-                            delete updatedChart[key as keyof ChartConfig];
-                            updateChart(chartIndex, "entireChart", updatedChart);
-                          }}
+                          onClick={() => removeChartProperty(chartIndex, key)}
                           className="text-red-500 hover:text-red-700 p-1 self-start sm:self-center flex-shrink-0"
                           aria-label={`Remove property ${key}`}
                         >

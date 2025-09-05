@@ -106,14 +106,18 @@ const MetricStructureEditor: React.FC<MetricStructureEditorProps> = ({
     }
   };
 
-  const getJsonError = () => {
-    try {
-      JSON.parse(jsonContent);
-      return null;
-    } catch (error) {
+  const getJsonError = (): string | null => {
+  try {
+    JSON.parse(jsonContent);
+    return null;
+  } catch (error) {
+    if (error instanceof Error) {
       return error.message;
     }
-  };
+    return "Unknown error occurred while parsing JSON";
+  }
+};
+
 
   const addNewProperty = () => {
     try {
