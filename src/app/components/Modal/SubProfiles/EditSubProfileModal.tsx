@@ -538,7 +538,7 @@ const EditSubProfileModal: React.FC<EditSubProfileModalProps> = ({
               <div className="w-full">
                 {MonitoringScheduleComponent ? (
                   <MonitoringScheduleComponent
-                    monitoringSchedules={monitoringSchedules}
+                    monitoringSchedule={monitoringSchedules}
                     setMonitoringSchedules={setMonitoringSchedules}
                   />
                 ) : (
