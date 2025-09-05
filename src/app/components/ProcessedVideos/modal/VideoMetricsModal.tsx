@@ -15,16 +15,7 @@ interface ApiService {
   getAnalytics: (id: string) => Promise<VideoAnalytics | string>;
 }
 
-// Add these type declarations at the top of your component file or in a types file
-
-declare global {
-  interface Window {
-    jsPDF: any;
-    html2canvas: any;
-  }
-}
-
-// If you want more specific typing, you can use these interfaces instead:
+// Enhanced type declarations for PDF libraries
 interface JsPDFOptions {
   orientation?: "portrait" | "landscape";
   unit?: "mm" | "cm" | "in" | "px";
@@ -42,30 +33,56 @@ interface Html2CanvasOptions {
   scrollY?: number;
   windowWidth?: number;
   windowHeight?: number;
+  logging?: boolean;
+  foreignObjectRendering?: boolean;
+  removeContainer?: boolean;
+}
+
+interface JsPDFInstance {
+  addImage: (
+    imageData: string,
+    format: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    alias?: string,
+    compression?: string
+  ) => void;
+  addPage: () => void;
+  save: (filename: string) => void;
+  setFillColor: (r: number, g: number, b: number) => void;
+  setDrawColor: (r: number, g: number, b: number) => void;
+  setTextColor: (r: number, g: number, b: number) => void;
+  setFontSize: (size: number) => void;
+  setFont: (fontName: string, fontStyle?: string) => void;
+  setLineWidth: (width: number) => void;
+  rect: (x: number, y: number, width: number, height: number, style?: string) => void;
+  text: (text: string | string[], x: number, y: number, options?: { align?: string }) => void;
+  line: (x1: number, y1: number, x2: number, y2: number) => void;
+  circle: (x: number, y: number, radius: number, style?: string) => void;
+  splitTextToSize: (text: string, maxWidth: number) => string[];
+  internal: {
+    getNumberOfPages: () => number;
+  };
+  setPage: (page: number) => void;
+}
+
+interface JsPDFConstructor {
+  new (options?: JsPDFOptions): JsPDFInstance;
+}
+
+interface Html2CanvasFunction {
+  (element: HTMLElement, options?: Html2CanvasOptions): Promise<HTMLCanvasElement>;
 }
 
 declare global {
   interface Window {
-    jsPDF: {
-      new (options?: JsPDFOptions): {
-        addImage: (
-          imageData: string,
-          format: string,
-          x: number,
-          y: number,
-          width: number,
-          height: number,
-          alias?: string,
-          compression?: string
-        ) => void;
-        addPage: () => void;
-        save: (filename: string) => void;
-      };
+    jsPDF?: JsPDFConstructor;
+    html2canvas?: Html2CanvasFunction;
+    jspdf?: {
+      jsPDF: JsPDFConstructor;
     };
-    html2canvas: (
-      element: HTMLElement,
-      options?: Html2CanvasOptions
-    ) => Promise<HTMLCanvasElement>;
   }
 }
 
@@ -252,8 +269,8 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
 
       const checkBothLoaded = () => {
         if (html2canvasLoaded && jsPDFLoaded) {
-          const html2canvas = (window as any).html2canvas;
-          const jsPDF = (window as any).jsPDF || (window as any).jspdf?.jsPDF;
+          const html2canvas = window.html2canvas;
+          const jsPDF = window.jsPDF || window.jspdf?.jsPDF;
 
           if (html2canvas && jsPDF) {
             console.log("Both libraries confirmed loaded");
@@ -265,7 +282,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
       };
 
       // Check if html2canvas is already loaded
-      if ((window as any).html2canvas) {
+      if (window.html2canvas) {
         html2canvasLoaded = true;
       } else {
         const html2canvasScript = document.createElement("script");
@@ -274,7 +291,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
         html2canvasScript.crossOrigin = "anonymous";
         html2canvasScript.onload = () => {
           setTimeout(() => {
-            if ((window as any).html2canvas) {
+            if (window.html2canvas) {
               html2canvasLoaded = true;
               checkBothLoaded();
             } else {
@@ -288,7 +305,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
       }
 
       // Check if jsPDF is already loaded
-      if ((window as any).jsPDF || (window as any).jspdf?.jsPDF) {
+      if (window.jsPDF || window.jspdf?.jsPDF) {
         jsPDFLoaded = true;
       } else {
         const jsPDFScript = document.createElement("script");
@@ -297,7 +314,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
         jsPDFScript.crossOrigin = "anonymous";
         jsPDFScript.onload = () => {
           setTimeout(() => {
-            const jsPDF = (window as any).jsPDF || (window as any).jspdf?.jsPDF;
+            const jsPDF = window.jsPDF || window.jspdf?.jsPDF;
             if (jsPDF) {
               jsPDFLoaded = true;
               checkBothLoaded();
@@ -323,7 +340,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
   };
 
   // Enhanced PDF export function that captures charts as images
-  // Enhanced PDF export function that captures charts as images
   const handleExportToPdf = async () => {
     if (!analytics) {
       alert("No analytics data available to export.");
@@ -337,9 +353,9 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
       await loadPdfLibraries();
       console.log("Libraries loaded successfully");
 
-      // Access libraries with fallbacks
-      const html2canvas = (window as any).html2canvas;
-      const jsPDF = (window as any).jsPDF || (window as any).jspdf?.jsPDF;
+      // Access libraries with proper typing
+      const html2canvas = window.html2canvas;
+      const jsPDF = window.jsPDF || window.jspdf?.jsPDF;
 
       if (!html2canvas || typeof html2canvas !== "function") {
         throw new Error("html2canvas not properly loaded");
@@ -350,16 +366,9 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
       }
 
       // Determine jsPDF constructor
-      let PDFConstructor;
+      let PDFConstructor: JsPDFConstructor;
       if (typeof jsPDF === "function") {
         PDFConstructor = jsPDF;
-      } else if (jsPDF && typeof jsPDF.jsPDF === "function") {
-        PDFConstructor = jsPDF.jsPDF;
-      } else if (
-        (window as any).jspdf &&
-        typeof (window as any).jspdf.jsPDF === "function"
-      ) {
-        PDFConstructor = (window as any).jspdf.jsPDF;
       } else {
         throw new Error("Could not find jsPDF constructor");
       }
@@ -430,7 +439,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
               element.scrollIntoView({ behavior: "instant", block: "center" });
               await new Promise((resolve) => setTimeout(resolve, 500));
 
-              const canvas = await (window as any).html2canvas(element, {
+              const canvas = await html2canvas(element, {
                 scale: 2,
                 useCORS: true,
                 allowTaint: true,
@@ -465,7 +474,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
                 console.log(`Capturing Recharts element ${i}...`);
 
                 // Find the parent container that includes the title
-                const captureElement = element; // Use const instead of let
+                const captureElement = element;
                 let parent = element.parentElement;
                 while (
                   parent &&
@@ -476,7 +485,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
                       'h3, h4, .chart-title, [class*="title"]'
                     )
                   ) {
-                    // captureElement = parent; // Remove this reassignment
                     break;
                   }
                   parent = parent.parentElement;
@@ -546,7 +554,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
                 console.log(`Capturing SVG ${i}...`);
 
                 // Find parent container for better context
-                let captureElement = svg.parentElement || svg;
+                const captureElement = svg.parentElement || svg;
 
                 const canvas = await html2canvas(
                   captureElement as HTMLElement,
@@ -1213,18 +1221,21 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
 
       let errorMsg = "PDF export failed: ";
 
-      if (error.message.includes("not properly loaded")) {
-        errorMsg +=
-          "PDF libraries failed to load. Please refresh the page and try again.";
-      } else if (error.message.includes("constructor")) {
-        errorMsg +=
-          "PDF library initialization failed. This may be a browser compatibility issue.";
-      } else if (error.message.includes("timed out")) {
-        errorMsg +=
-          "Library loading timed out. Please check your internet connection and try again.";
+      if (error instanceof Error) {
+        if (error.message.includes("not properly loaded")) {
+          errorMsg +=
+            "PDF libraries failed to load. Please refresh the page and try again.";
+        } else if (error.message.includes("constructor")) {
+          errorMsg +=
+            "PDF library initialization failed. This may be a browser compatibility issue.";
+        } else if (error.message.includes("timed out")) {
+          errorMsg +=
+            "Library loading timed out. Please check your internet connection and try again.";
+        } else {
+          errorMsg += error.message;
+        }
       } else {
-        errorMsg +=
-          error.message || "An unknown error occurred during PDF generation.";
+        errorMsg += "An unknown error occurred during PDF generation.";
       }
 
       alert(errorMsg);
@@ -1243,9 +1254,9 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
 
   if (!isOpen) return null;
 
-  function handleRefresh(event: MouseEvent<HTMLButtonElement, MouseEvent>): void {
-    throw new Error("Function not implemented.");
-  }
+  const handleRefresh = () => {
+    loadAnalytics();
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

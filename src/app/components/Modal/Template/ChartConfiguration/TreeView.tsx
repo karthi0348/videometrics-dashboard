@@ -50,7 +50,7 @@ export const TreeView: React.FC<TreeViewProps> = ({ charts, jsonContent }) => {
                 </div>
                 {typeof value === "string" && (
                   <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded break-all sm:truncate max-w-full sm:max-w-xs ml-6 sm:ml-0">
-                    "{value}"
+                    {value}
                   </span>
                 )}
               </div>
