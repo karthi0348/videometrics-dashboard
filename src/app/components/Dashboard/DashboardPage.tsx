@@ -27,6 +27,15 @@ interface DashboardStats {
   }>;
 }
 
+// Interface for API response structure
+interface ApiRecentActivity {
+  id: number;
+  type: string;
+  description: string;
+  timestamp: string;
+  analytics_id?: string;
+}
+
 const DashboardPage: React.FC<DashboardPageProps> = ({
   videos = [],
   onNavigate,
@@ -46,6 +55,17 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const dashboardApiService = new DashboardApiService();
   const processVideoApiService = new ProcessVideoApiService(); // Add this for the modal
 
+  // Helper function to transform API recent activity to expected format
+  const transformRecentActivity = (apiActivity: ApiRecentActivity[]) => {
+    return apiActivity.map((item) => ({
+      id: item.id,
+      analytics_id: item.analytics_id,
+      status: item.type || 'unknown', // Map type to status
+      created_at: item.timestamp,
+      processing_completed_at: item.timestamp, // Use timestamp for both dates
+    }));
+  };
+
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
@@ -63,7 +83,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           processing_analytics: data.processing_analytics || 0,
           completed_analytics: data.completed_analytics || 0,
           failed_analytics: data.failed_analytics || 0,
-          recent_activity: data.recent_activity || [],
+          recent_activity: data.recent_activity ? transformRecentActivity(data.recent_activity) : [],
         };
         
         setDashboardStats(transformedData);
