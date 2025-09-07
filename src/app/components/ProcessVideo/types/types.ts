@@ -117,4 +117,6 @@ export interface ProcessVideoPageProps {
   templates?: Template[];
   onVideoProcessed?: (video: AnalyticsVideo) => void;
   onRedirectToNextPage?: () => void;
+  onNavigate?: (page: string) => void;
+
 }

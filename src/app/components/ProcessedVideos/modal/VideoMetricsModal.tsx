@@ -227,7 +227,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
     setAnalytics(null);
 
     try {
-      console.log("Fetching analytics for ID:", analyticsId);
 
       const response = await apiService.getAnalytics(analyticsId);
 
@@ -273,7 +272,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
           const jsPDF = window.jsPDF || window.jspdf?.jsPDF;
 
           if (html2canvas && jsPDF) {
-            console.log("Both libraries confirmed loaded");
             resolve();
           } else {
             reject(new Error("Libraries loaded but not accessible"));
@@ -349,7 +347,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
     setExportingPdf(true);
 
     try {
-      console.log("Loading PDF libraries...");
       await loadPdfLibraries();
       console.log("Libraries loaded successfully");
 
@@ -416,7 +413,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
       }> => {
         const chartImages: { [key: string]: string } = {};
 
-        console.log("Starting chart capture process...");
 
         // Wait for charts to render completely
         await new Promise((resolve) => setTimeout(resolve, 1000));

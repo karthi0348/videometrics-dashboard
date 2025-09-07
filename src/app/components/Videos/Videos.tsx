@@ -3,29 +3,24 @@ import { ViewMode } from '../../types';
 import VideoUploadModal from '../Modal/Video/VideoUploadModal'; 
 import VideoTable from './VideoTable';
 import { API_ENDPOINTS } from '../../config/api';
-import '../../styles/Videos.css';
 
-// --- Type Definitions ---
 interface Video {
   id: string;
   name: string;
   created_at: string;
   file_size: number;
-  // Add other video properties as needed
 }
 
 interface VideoUploadResponse {
   success: boolean;
   message: string;
   video?: Video;
-  // Add other response properties as needed
 }
 
 interface VideoUploadError {
   message: string;
   code?: string;
   details?: string;
-  // Add other error properties as needed
 }
 
 interface FilterOptions {
@@ -42,7 +37,6 @@ interface BulkDeleteResponse {
   deleted_count: number;
 }
 
-// --- Header Component ---
 interface HeaderProps {
   videoCount: number;
   viewMode: ViewMode;
@@ -82,36 +76,20 @@ const Header: React.FC<HeaderProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [showMobileActions, setShowMobileActions] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  
-  const mobileActionsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 640);
+      setIsMobile(window.innerWidth <= 768);
     };
     
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (mobileActionsRef.current && !mobileActionsRef.current.contains(event.target as Node)) {
-        setShowMobileActions(false);
-      }
-    };
-
-    if (showMobileActions) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showMobileActions]);
 
   useEffect(() => {
     const filters: FilterOptions = {
@@ -129,20 +107,10 @@ const Header: React.FC<HeaderProps> = ({
     if ('vibrate' in navigator) {
       navigator.vibrate(10);
     }
-    if (isMobile) {
-      setShowMobileActions(false);
-    }
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
   };
 
   const handleAddVideo = () => {
-    console.log('Opening video upload modal...');
     setShowUploadModal(true);
-    setShowMobileActions(false);
-    // Create a placeholder video object since onAddVideo expects a Video parameter
     const placeholderVideo: Video = {
       id: '',
       name: '',
@@ -153,7 +121,6 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleUploadSuccess = (response: VideoUploadResponse) => {
-    console.log('Video uploaded successfully:', response);
     onVideoUploadSuccess?.(response);
   };
 
@@ -178,28 +145,16 @@ const Header: React.FC<HeaderProps> = ({
       console.log(`Bulk ${action} for videos:`, selectedVideos);
       alert(`${action} action would be performed on ${selectedVideos.length} video(s)`);
     }
-    
-    setShowMobileActions(false);
   };
 
   const handleFilterToggle = () => {
     setShowFilters(!showFilters);
-    setShowMobileActions(false);
-  };
-
-  const handleSortChange = (newSortBy: typeof sortBy) => {
-    setSortBy(newSortBy);
-  };
-
-  const handleSortOrderChange = (newSortOrder: typeof sortOrder) => {
-    setSortOrder(newSortOrder);
   };
 
   const handleSelectModeToggle = () => {
     if (onSelectModeToggle) {
       onSelectModeToggle();
     }
-    setShowMobileActions(false);
   };
 
   const handleResetFilters = () => {
@@ -254,113 +209,64 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <div className="header-container">
-        <div className="header-main">
-          <div className="header-left">
-            <div className="page-title-section">
-              <div className="title-with-badge">
+      {/* Mobile Layout */}
+      {isMobile ? (
+        <div className="bg-white">
+          {/* Header Section */}
+          <div className="px-4 py-3 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
                 <h1 
-                  className={`page-title ${onTitleClick ? 'clickable' : ''} ${isNavigationTarget ? 'navigation-target' : ''}`}
+                  className={`text-xl font-bold text-gray-900 ${
+                    onTitleClick ? 'cursor-pointer hover:text-gray-700 transition-colors' : ''
+                  }`}
                   onClick={handleTitleClick}
-                  role={onTitleClick ? 'button' : undefined}
-                  tabIndex={onTitleClick ? 0 : undefined}
-                  onKeyDown={onTitleClick ? (e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleTitleClick();
-                    }
-                  } : undefined}
-                  title={onTitleClick ? 'Navigate to Videos section' : undefined}
                 >
                   Videos
-                  {onTitleClick && (
-                    <svg className="title-nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
                 </h1>
-                <div className="count-badge">
-                  <span className="count-number">{videoCount}</span>
-                  {selectedVideos.length > 0 && (
-                    <span className="selected-count">({selectedVideos.length} selected)</span>
-                  )}
-                </div>
+                <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-purple-500 rounded-full">
+                  {videoCount}
+                </span>
               </div>
-              <p className="page-subtitle">Manage and analyze your video content</p>
-            </div>
-
-            <div className="search-container">
-              <div className="search-input-wrapper">
-                <svg className="search-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search videos..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="search-input"
-                />
-                {searchQuery && (
-                  <button 
-                    className="search-clear"
-                    onClick={() => handleSearch('')}
-                    aria-label="Clear search"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="header-right" ref={mobileActionsRef}>
-            {isMobile && (
+              
               <button 
-                className="mobile-menu-toggle"
-                onClick={() => setShowMobileActions(!showMobileActions)}
-                aria-label="Toggle menu"
-                aria-expanded={showMobileActions}
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M3 7h14M3 13h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-            )}
-
-            <div className={`view-mode-toggle ${isMobile && showMobileActions ? 'mobile-open' : ''}`}>
-              {viewModes.map((mode) => (
-                <button
-                  key={mode.key}
-                  className={`view-mode-btn ${viewMode === mode.key ? 'active' : ''}`}
-                  onClick={() => handleViewModeChange(mode.key)}
-                  title={`Switch to ${mode.label} view`}
-                >
-                  {mode.icon}
-                  <span className="view-mode-label">{mode.label}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className={`header-actions ${isMobile && showMobileActions ? 'mobile-open' : ''}`}>
-              <button 
-                className="action-btn secondary"
+                className="inline-flex items-center px-3 py-1.5 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200"
                 onClick={handleFilterToggle}
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                <svg className="w-4 h-4 mr-2" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M3 3h10l-4 4v4l-2 1V7L3 3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <span>Filters</span>
-                <div className={`filter-indicator ${showFilters ? 'active' : ''}`} />
+                Filter by date
               </button>
+            </div>
+
+            {/* View Mode Buttons */}
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-1">
+                {viewModes.map((mode) => (
+                  <button
+                    key={mode.key}
+                    className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      viewMode === mode.key 
+                        ? 'bg-purple-500 text-white' 
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                    onClick={() => handleViewModeChange(mode.key)}
+                  >
+                    {mode.icon}
+                  </button>
+                ))}
+              </div>
 
               <button 
-                className={`action-btn ${isSelectMode ? 'primary' : 'outline'}`}
+                className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  isSelectMode 
+                    ? 'bg-gray-800 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
                 onClick={handleSelectModeToggle}
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mr-1">
                   {isSelectMode ? (
                     <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   ) : (
@@ -370,115 +276,342 @@ const Header: React.FC<HeaderProps> = ({
                     </>
                   )}
                 </svg>
-                <span>{isSelectMode ? 'Exit Select' : 'Select Videos'}</span>
-              </button>
-
-              <button 
-                className="action-btn primary"
-                onClick={handleAddVideo}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-                <span>Add Video</span>
+                Select Videos
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Bulk Actions Bar - Moved outside main header */}
-        {selectedVideos.length > 0 && (
-          <div className="bulk-actions-bar">
-            <div className="bulk-actions-content">
-              <div className="bulk-selection-info">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="bulk-icon">
-                  <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                  <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span className="bulk-count">
-                  <strong>{selectedVideos.length}</strong> video{selectedVideos.length > 1 ? 's' : ''} selected
-                </span>
-              </div>
-              
-              <div className="bulk-actions-buttons">
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="bg-gray-50 border-b border-gray-200 px-4 py-4">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
+                  <select 
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as 'name' | 'date' | 'size')}
+                  >
+                    <option value="date">Upload Date</option>
+                    <option value="name">Name</option>
+                    <option value="size">File Size</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Order</label>
+                  <div className="flex rounded-md shadow-sm">
+                    <button 
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-l-md border transition-colors ${
+                        sortOrder === 'desc' 
+                          ? 'bg-purple-500 text-white border-purple-500' 
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setSortOrder('desc')}
+                    >
+                      Newest
+                    </button>
+                    <button 
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-r-md border-t border-r border-b transition-colors ${
+                        sortOrder === 'asc' 
+                          ? 'bg-purple-500 text-white border-purple-500' 
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setSortOrder('asc')}
+                    >
+                      Oldest
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                    <input 
+                      type="date" 
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                    <input 
+                      type="date" 
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                    />
+                  </div>
+                </div>
+
                 <button 
-                  className="bulk-action-btn delete-btn"
+                  className="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  onClick={handleResetFilters}
+                >
+                  Reset Filters
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Selected Videos Bar */}
+          {selectedVideos.length > 0 && (
+            <div className="bg-blue-50 border-b border-blue-200 px-4 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-blue-900">
+                  {selectedVideos.length} video{selectedVideos.length > 1 ? 's' : ''} selected
+                </span>
+                <button 
+                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 disabled:opacity-50"
                   onClick={() => handleBulkAction('delete')}
                   disabled={isBulkDeleting}
                 >
-                  {isBulkDeleting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Deleting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M2 4h12M6 4V2h4v2M3 4v10h10V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  {isBulkDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Desktop Layout */
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between p-4 sm:p-6 space-y-4 lg:space-y-0">
+            <div className="flex-1 min-w-0">
+              <div className="mb-4">
+                <div className="flex items-center space-x-3 mb-2 flex-wrap">
+                  <h1 
+                    className={`text-2xl sm:text-3xl font-bold text-purple-700 flex items-center m-0 ${
+                      onTitleClick ? 'cursor-pointer hover:text-purple-800 transition-colors' : ''
+                    } ${
+                      isNavigationTarget ? 'ring-2 ring-purple-300 rounded-md px-2 py-1' : ''
+                    }`}
+                    onClick={handleTitleClick}
+                    role={onTitleClick ? 'button' : undefined}
+                    tabIndex={onTitleClick ? 0 : undefined}
+                    onKeyDown={onTitleClick ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleTitleClick();
+                      }
+                    } : undefined}
+                    title={onTitleClick ? 'Navigate to Videos section' : undefined}
+                  >
+                    Videos
+                    {onTitleClick && (
+                      <svg className="ml-2 w-4 h-4" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      <span>Delete</span>
-                    </>
-                  )}
+                    )}
+                  </h1>
+                  <div className="flex items-center space-x-2">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      {videoCount}
+                    </span>
+                    {selectedVideos.length > 0 && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {selectedVideos.length} selected
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 m-0">Manage and analyze your video content</p>
+              </div>
+
+              <div className="relative max-w-lg">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M17.5 17.5L13.875 13.875M15.8333 9.16667C15.8333 12.8486 12.8486 15.8333 9.16667 15.8333C5.48477 15.8333 2.5 12.8486 2.5 9.16667C2.5 5.48477 5.48477 2.5 9.16667 2.5C12.8486 2.5 15.8333 5.48477 15.8333 9.16667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search videos..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                />
+                {searchQuery && (
+                  <button 
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <div className="flex space-x-1">
+                {viewModes.map((mode) => (
+                  <button
+                    key={mode.key}
+                    className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      viewMode === mode.key 
+                        ? 'bg-purple-100 text-purple-700 border border-purple-300' 
+                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                    onClick={() => handleViewModeChange(mode.key)}
+                    title={`Switch to ${mode.label} view`}
+                  >
+                    {mode.icon}
+                    <span className="ml-2 hidden sm:inline">{mode.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex space-x-2">
+                <button 
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  onClick={handleFilterToggle}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <span className="ml-2 hidden sm:inline">Filters</span>
+                  <div className={`ml-2 w-2 h-2 rounded-full transition-colors ${showFilters ? 'bg-purple-500' : 'bg-transparent'}`} />
+                </button>
+
+                <button 
+                  className={`inline-flex items-center px-3 py-2 rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                    isSelectMode 
+                      ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                      : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                  onClick={handleSelectModeToggle}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    {isSelectMode ? (
+                      <path d="M13 4L6 11L3 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    ) : (
+                      <>
+                        <rect x="2" y="2" width="12" height="12" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                        <path d="M6 8l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </>
+                    )}
+                  </svg>
+                  <span className="ml-2 hidden sm:inline">{isSelectMode ? 'Exit Select' : 'Select Videos'}</span>
+                </button>
+
+                <button 
+                  className="inline-flex items-center px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-md shadow-sm hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  onClick={handleAddVideo}
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                  <span className="ml-2">Add Video</span>
                 </button>
               </div>
             </div>
           </div>
-        )}
 
-        {showFilters && (
-          <div className="filters-panel">
-            <div className="filters-content">
-              <div className="filter-group">
-                <label className="filter-label">Sort by</label>
-                <select 
-                  className="filter-select"
-                  value={sortBy}
-                  onChange={(e) => handleSortChange(e.target.value as 'name' | 'date' | 'size')}
-                >
-                  <option value="date">Upload Date</option>
-                  <option value="name">Name</option>
-                  <option value="size">File Size</option>
-                </select>
-              </div>
-
-              <div className="filter-group">
-                <label className="filter-label">Order</label>
-                <div className="sort-toggle">
+          {selectedVideos.length > 0 && (
+            <div className="bg-blue-50 border-t border-blue-200 px-4 sm:px-6 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <svg className="w-5 h-5 text-blue-600" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                    <path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  <span className="text-sm font-medium text-blue-900">
+                    <strong>{selectedVideos.length}</strong> video{selectedVideos.length > 1 ? 's' : ''} selected
+                  </span>
+                </div>
+                
+                <div className="flex items-center space-x-2">
                   <button 
-                    className={`sort-btn ${sortOrder === 'desc' ? 'active' : ''}`}
-                    onClick={() => handleSortOrderChange('desc')}
+                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+                    onClick={() => handleBulkAction('delete')}
+                    disabled={isBulkDeleting}
                   >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M7 1v12M4 10l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span>Newest</span>
-                  </button>
-                  <button 
-                    className={`sort-btn ${sortOrder === 'asc' ? 'active' : ''}`}
-                    onClick={() => handleSortOrderChange('asc')}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M7 13V1M4 4l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span>Oldest</span>
+                    {isBulkDeleting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mr-2">
+                          <path d="M2 4h12M6 4V2h4v2M3 4v10h10V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                        <span>Delete</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="filter-group">
-                <label className="filter-label">Date Range</label>
-                <div className="date-inputs">
+          {showFilters && (
+            <div className="bg-gray-50 border-t border-gray-200 px-4 sm:px-6 py-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sort by</label>
+                  <select 
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as 'name' | 'date' | 'size')}
+                  >
+                    <option value="date">Upload Date</option>
+                    <option value="name">Name</option>
+                    <option value="size">File Size</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Order</label>
+                  <div className="flex rounded-md shadow-sm">
+                    <button 
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-l-md border transition-colors ${
+                        sortOrder === 'desc' 
+                          ? 'bg-purple-600 text-white border-purple-600' 
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setSortOrder('desc')}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="inline mr-1">
+                        <path d="M7 1v12M4 10l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span className="hidden sm:inline">Newest</span>
+                    </button>
+                    <button 
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-r-md border-t border-r border-b transition-colors ${
+                        sortOrder === 'asc' 
+                          ? 'bg-purple-600 text-white border-purple-600' 
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                      onClick={() => setSortOrder('asc')}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="inline mr-1">
+                        <path d="M7 13V1M4 4l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span className="hidden sm:inline">Oldest</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
                   <input 
                     type="date" 
-                    className="date-input"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                     value={dateFrom}
                     onChange={(e) => setDateFrom(e.target.value)}
                     aria-label="Start date"
                   />
-                  <span className="date-separator">to</span>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
                   <input 
                     type="date" 
-                    className="date-input"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                     value={dateTo}
                     onChange={(e) => setDateTo(e.target.value)}
                     aria-label="End date"
@@ -486,16 +619,16 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
 
-              <div className="filter-actions">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 space-y-2 sm:space-y-0">
                 <button 
-                  className="filter-reset"
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   onClick={handleResetFilters}
                 >
                   Reset Filters
                 </button>
                 {onSelectAll && !isSelectMode && (
                   <button 
-                    className="filter-select-all"
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-100 border border-purple-300 rounded-md hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
                     onClick={onSelectAll}
                   >
                     Select All Videos
@@ -503,9 +636,22 @@ const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+
+      {/* Add Video Button - Fixed Position for Mobile */}
+      {isMobile && (
+        <button 
+          className="fixed bottom-6 right-6 z-50 inline-flex items-center px-4 py-3 bg-purple-500 text-white text-sm font-medium rounded-full shadow-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          onClick={handleAddVideo}
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="mr-2">
+            <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+          Add Video
+        </button>
+      )}
 
       <VideoUploadModal
         isOpen={showUploadModal}
@@ -575,11 +721,9 @@ const VideosPage: React.FC = () => {
 
   const handleSelectAll = useCallback(() => {
     setIsSelectMode(true);
-    console.log('Select all functionality - you need to implement this based on your current video list');
   }, []);
 
   const handleVideoUploadSuccess = useCallback((response: VideoUploadResponse) => {
-    console.log('Video uploaded successfully:', response);
     setRefreshTrigger(prev => prev + 1);
     alert('Video uploaded successfully!');
   }, []);
@@ -589,7 +733,6 @@ const VideosPage: React.FC = () => {
     alert('Failed to upload video. Please try again.');
   }, []);
 
-  // Updated bulk delete function to use the API
   const handleBulkDelete = useCallback(async (videoIds: string[]) => {
     if (videoIds.length === 0) {
       alert('No videos selected for deletion.');
@@ -600,7 +743,6 @@ const VideosPage: React.FC = () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
       
-      // Use the bulk delete endpoint from your API
       const endpoint = API_ENDPOINTS.BULK_DELETE_VIDEOS || '/video-urls/bulk-delete';
       
       const response = await fetch(endpoint, {
@@ -610,22 +752,18 @@ const VideosPage: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          video_ids: videoIds // Based on your API documentation
+          video_ids: videoIds 
         }),
       });
 
       if (response.ok) {
         const result = await response.json() as BulkDeleteResponse;
-        console.log('Bulk delete successful:', result);
         
-        // Clear selected videos and exit select mode
         setSelectedVideos([]);
         setIsSelectMode(false);
         
-        // Refresh the video list
         setRefreshTrigger(prev => prev + 1);
         
-        // Show success message
         alert(`Successfully deleted ${videoIds.length} video(s).`);
       } else {
         const errorData = await response.json() as { message: string };
@@ -641,7 +779,7 @@ const VideosPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-0 sm:py-6 lg:py-8">
         <Header
           videoCount={videoCount}
           viewMode={viewMode}
@@ -657,7 +795,7 @@ const VideosPage: React.FC = () => {
           isBulkDeleting={isBulkDeleting}
         />
 
-        <div className="mt-8">
+        <div className="mt-0 sm:mt-6">
           <VideoTable
             viewMode={viewMode}
             searchQuery={filters.search}
