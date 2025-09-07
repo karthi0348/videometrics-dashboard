@@ -2,8 +2,9 @@ import axios, { AxiosInstance } from "axios";
 
 class ApiConfig {
 
-    private baseURL = 'http://172.174.114.7:8000/';
-
+    private baseURL = process.env.NODE_ENV === 'production' 
+        ? '/api/' 
+        : 'http://172.174.114.7:8000/';
 
     private apiBaseUrl: string;
 
@@ -14,10 +15,11 @@ class ApiConfig {
     private getApiBaseURL = () => {
         return this.apiBaseUrl;
     }
+
     public getAxiosInstance = (): AxiosInstance => {
         const api = axios.create({ baseURL: this.getApiBaseURL() });
-
         return api;
     }
 }
+
 export default ApiConfig;
