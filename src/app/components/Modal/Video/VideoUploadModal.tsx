@@ -53,7 +53,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     // Set up a listener for messages from the login page
     const handleMessage = (event: MessageEvent) => {
       // Verify the origin and data type for security
-      if (event.origin !== 'http://localhost:3000/' || event.data.type !== 'AUTH_TOKEN') {
+      if (event.origin !== 'https://videometrics-ui.vercel.app/' || event.data.type !== 'AUTH_TOKEN') {
         return;
       }
       

@@ -190,13 +190,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         {
           type: "LOGOUT",
         },
-        "http://localhost:3000/"
+        "https://videometrics-ui.vercel.app/"
       );
 
       window.opener.focus();
       window.close();
     } else {
-      window.location.href = "http://localhost:3000/auth/login";
+      window.location.href = "https://videometrics-ui.vercel.app/";
     }
   }, []);
 
