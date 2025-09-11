@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Camera } from 'lucide-react';
+import { Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, Camera, RefreshCcw, User, Building, MapPin, Mail } from 'lucide-react';
 import { Profile } from '@/app/types/profiles';
 import { SubProfile, UpdateSubProfileAPIRequest } from '@/app/types/subprofiles';
 import { SubProfileService } from '@/app/services/subprofile-service';
@@ -167,35 +167,41 @@ const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
     });
   };
 
+  const getStatusCount = (status: string) => {
+    if (status === "all") return subProfiles.length;
+    return subProfiles.filter((p) => p.isActive === (status === "active")).length;
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--purple-secondary)' }}></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100 p-4 md:p-6 lg:p-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Error Alert */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-            <div className="ml-auto pl-3">
-              <div className="-mx-1.5 -my-1.5">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100 p-4 md:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Error Alert */}
+        {error && (
+          <div className="bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-2xl p-4 shadow-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+              <div className="ml-auto pl-3">
                 <button
                   onClick={() => setError(null)}
-                  className="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-50 focus:ring-red-600"
+                  className="inline-flex bg-red-50 rounded-md p-1.5 text-red-500 hover:bg-red-100"
                 >
-                  <span className="sr-only">Dismiss</span>
                   <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>
@@ -203,241 +209,269 @@ const SubProfileList: React.FC<SubProfileListProps> = ({ profile }) => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 style={{ color: 'var(--purple-secondary)' }} className="text-3xl font-bold">Sub-Profiles</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage sub-profiles for {profile.name} ({filteredSubProfiles.length} of {subProfiles.length})
-          </p>
-        </div>
-        
-        <button
-          onClick={() => setShowCreateModal(true)}
-          disabled={creating}
-          className="inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
-          style={{ backgroundColor: 'var(--purple-secondary)' }}
-        >
-          <Plus className="w-4 h-4" />
-          Create Sub-Profile
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1 relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search sub-profiles..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent focus:ring-purple-500"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-400" />
-          <select
-            value={filterByActive === null ? 'all' : filterByActive ? 'active' : 'inactive'}
-            onChange={(e) => {
-              const value = e.target.value;
-              setFilterByActive(value === 'all' ? null : value === 'active');
-            }}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-        </div>
-        <button
-          onClick={fetchSubProfiles}
-          className="px-3 py-2 text-gray-600 hover:text-white hover:bg-purple-400 rounded-lg transition-colors"
-          title="Refresh"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Sub-profiles Grid */}
-      {filteredSubProfiles.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--purple-accent)' }}>
-            <Camera className="w-12 h-12 text-white" />
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 border border-purple-200">
+              <Camera className="w-7 h-7 text-purple-600" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Sub-Profiles
+              </h1>
+              <p className="text-gray-600 mt-2 text-sm md:text-base">
+                Manage sub-profiles for {profile.name} ({filteredSubProfiles.length} of {subProfiles.length})
+              </p>
+            </div>
           </div>
-          <h3 style={{ color: 'var(--purple-tertiary)' }} className="text-lg font-bold mb-2">No sub-profiles found</h3>
-          <p className="text-gray-500 mb-6">
-            {searchTerm || filterByActive !== null 
-              ? "No sub-profiles match your current filters."
-              : "Get started by creating your first sub-profile."
-            }
-          </p>
-          {!searchTerm && filterByActive === null && (
+          
+          <div className="lg:ml-auto">
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors hover:opacity-90"
-              style={{ backgroundColor: 'var(--purple-secondary)' }}
+              disabled={creating}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-semibold shadow-lg hover:from-purple-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
               Create Sub-Profile
             </button>
-          )}
+          </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSubProfiles.map((subProfile) => (
-            <div
-              key={subProfile.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:border-purple-300 transition-all duration-200"
+
+
+        {/* Search and Filters Section */}
+        <div className="border-0 shadow-lg bg-white/80 backdrop-blur-sm rounded-2xl p-6">
+          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+            {/* Search Input */}
+            <div className="relative flex-1 w-full lg:max-w-md">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search sub-profiles..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-purple-200 rounded-xl focus:ring-2 focus:border-purple-400 focus:ring-purple-400 bg-white/50 backdrop-blur-sm"
+              />
+            </div>
+
+            {/* Filter Dropdown */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <select
+                value={filterByActive === null ? 'all' : filterByActive ? 'active' : 'inactive'}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFilterByActive(value === 'all' ? null : value === 'active');
+                }}
+                className="w-full sm:w-[140px] px-3 py-3 border border-purple-200 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white/50 backdrop-blur-sm"
+              >
+                <option value="all">All ({getStatusCount("all")})</option>
+                <option value="active">Active ({getStatusCount("active")})</option>
+                <option value="inactive">Inactive ({getStatusCount("inactive")})</option>
+              </select>
+            </div>
+
+            {/* Refresh Button */}
+            <button
+              onClick={fetchSubProfiles}
+              className="flex items-center gap-2 px-4 py-3 border border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300 rounded-xl transition-colors w-full sm:w-auto"
             >
-              {/* Card Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h3 style={{ color: 'var(--purple-tertiary)' }} className="text-lg font-bold mb-1 truncate">
-                    {subProfile.name}
-                  </h3>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white" style={{ backgroundColor: 'var(--purple-secondary)' }}>
-                    {subProfile.areaType}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => handleToggleActive(subProfile)}
-                    className={`w-3 h-3 rounded-full transition-colors ${
-                      subProfile.isActive 
-                        ? 'bg-green-400 hover:bg-green-500' 
-                        : 'bg-gray-300 hover:bg-gray-400'
-                    }`}
-                    title={`${subProfile.isActive ? 'Active' : 'Inactive'} - Click to toggle`}
-                  />
-                  <div className="relative">
-                    <button className="p-1 hover:bg-gray-100 rounded">
-                      <MoreVertical className="w-4 h-4 text-gray-400" />
-                    </button>
+              <RefreshCcw className="w-4 h-4" />
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Sub-profiles Grid */}
+        {filteredSubProfiles.length === 0 ? (
+          <div className="border-0 shadow-lg bg-white/80 backdrop-blur-sm rounded-2xl">
+            <div className="text-center py-16">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center">
+                <Camera className="w-8 h-8 text-purple-500" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2 text-gray-900">
+                No sub-profiles found
+              </h3>
+              <p className="text-gray-600 max-w-md mx-auto mb-6">
+                {searchTerm || filterByActive !== null 
+                  ? "Try adjusting your search or filter criteria to find what you're looking for"
+                  : "Get started by creating your first sub-profile to monitor different areas"
+                }
+              </p>
+              {!searchTerm && filterByActive === null && (
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-semibold shadow-lg hover:from-purple-700 hover:to-indigo-700 transform hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <Plus className="w-5 h-5" />
+                  Create Sub-Profile
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredSubProfiles.map((subProfile) => (
+              <div
+                key={subProfile.id}
+                className="group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border-0 bg-white/90 backdrop-blur-sm overflow-hidden rounded-2xl shadow-lg"
+              >
+                {/* Card Header */}
+                <div className="p-6 pb-3">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold text-gray-900 truncate mb-2">
+                        {subProfile.name}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                          {subProfile.areaType}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <div className={`w-2 h-2 rounded-full ${
+                            subProfile.isActive ? "bg-green-500" : "bg-red-500"
+                          }`} />
+                          <span className={`text-xs font-medium ${
+                            subProfile.isActive ? "text-green-600" : "text-red-600"
+                          }`}>
+                            {subProfile.isActive ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <button className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                        <MoreVertical className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Description */}
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-                {subProfile.description || 'No description available'}
-              </p>
+                <div className="px-6 space-y-4">
+                  {/* Description */}
+                  <p className="text-sm text-gray-600 line-clamp-2">
+                    {subProfile.description || 'No description available'}
+                  </p>
 
-              {/* Tags */}
-              {subProfile.tags && subProfile.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {subProfile.tags.slice(0, 3).map((tag, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center px-2 py-1 rounded text-xs text-white"
-                      style={{ backgroundColor: 'var(--purple-medium)' }}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                  {subProfile.tags.length > 3 && (
-                    <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-500">
-                      +{subProfile.tags.length - 3} more
-                    </span>
+                  {/* Tags */}
+                  {subProfile.tags && subProfile.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {subProfile.tags.slice(0, 3).map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {subProfile.tags.length > 3 && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-lg text-xs bg-gray-100 text-gray-500">
+                          +{subProfile.tags.length - 3} more
+                        </span>
+                      )}
+                    </div>
                   )}
-                </div>
-              )}
 
-              {/* Stats */}
-              <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-                <span>
-                  {subProfile.cameraLocations?.length || 0} cameras
-                </span>
-                <span>
-                  {subProfile.monitoringSchedules?.length || 0} schedules
-                </span>
-                <span>
-                  {subProfile.alertSettings?.length || 0} alerts
-                </span>
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-3">
+                      <div className="text-lg font-bold text-purple-600">
+                        {subProfile.cameraLocations?.length || 0}
+                      </div>
+                      <div className="text-xs text-gray-600">Cameras</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg p-3">
+                      <div className="text-lg font-bold text-indigo-600">
+                        {subProfile.monitoringSchedules?.length || 0}
+                      </div>
+                      <div className="text-xs text-gray-600">Schedules</div>
+                    </div>
+                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg p-3">
+                      <div className="text-lg font-bold text-blue-600">
+                        {subProfile.alertSettings?.length || 0}
+                      </div>
+                      <div className="text-xs text-gray-600">Alerts</div>
+                    </div>
+                  </div>
+
+                  {/* Created Date */}
+                  <div className="text-xs text-gray-500 pt-2 border-t border-gray-100">
+                    Updated: {formatDate(subProfile.updatedAt)}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-2 pt-4">
+                    <button
+                      onClick={() => handleViewSubProfile(subProfile.id)}
+                      className="flex items-center gap-2 flex-1 px-3 py-2 text-sm border border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300 rounded-lg transition-colors"
+                    >
+                      <Eye className="w-4 h-4" />
+                      View Details
+                    </button>
+                     <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => setEditingSubProfile(subProfile)}
+                      className="p-2 text-blue-400 hover:text-blue-600 hover:bg-purple-50 rounded-lg transition-colors"
+                      title="Edit"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingSubProfile(subProfile)}
+                      className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  </div>
+                  
+                </div>
+
+                <div className="p-6 pt-3">
+                 
+                </div>
               </div>
+            ))}
+          </div>
+        )}
 
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <div className="text-xs text-gray-500">
-                  Updated {formatDate(subProfile.updatedAt)}
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => handleViewSubProfile(subProfile.id)}
-                    className="p-2 text-gray-400 rounded transition-colors"
-                
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--purple-accent)';
-                      e.currentTarget.style.color = 'white';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.backgroundColor = '';
-                      e.currentTarget.style.color = '';
-                    }}
-                    title="View Details"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setEditingSubProfile(subProfile)}
-                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-                    title="Edit"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setDeletingSubProfile(subProfile)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+        {/* Modals */}
+        {showCreateModal && (
+          <CreateSubProfile
+            profile={profile}
+            onCreateSubProfile={handleCreateSubProfile}
+            onCancel={() => setShowCreateModal(false)}
+            loading={creating}
+          />
+        )}
 
-      {/* Modals */}
-      {showCreateModal && (
-        <CreateSubProfile
-          profile={profile}
-          onCreateSubProfile={handleCreateSubProfile}
-          onCancel={() => setShowCreateModal(false)}
-          loading={creating}
-        />
-      )}
+        {viewingSubProfile && (
+          <ViewSubProfileModal
+            subProfile={viewingSubProfile}
+            onClose={() => setViewingSubProfile(null)}
+          />
+        )}
 
-      {viewingSubProfile && (
-        <ViewSubProfileModal
-          subProfile={viewingSubProfile}
-          onClose={() => setViewingSubProfile(null)}
-        />
-      )}
+        {editingSubProfile && (
+          <EditSubProfileModal
+            subProfile={editingSubProfile}
+            onSave={handleUpdateSubProfile}
+            onCancel={() => setEditingSubProfile(null)}
+            loading={updating}
+          />
+        )}
 
-      {editingSubProfile && (
-        <EditSubProfileModal
-          subProfile={editingSubProfile}
-          onSave={handleUpdateSubProfile}
-          onCancel={() => setEditingSubProfile(null)}
-          loading={updating}
-        />
-      )}
-
-      {deletingSubProfile && (
-        <DeleteSubProfileModal
-          subProfile={deletingSubProfile}
-          onConfirm={handleDeleteSubProfile}
-          onCancel={() => setDeletingSubProfile(null)}
-          loading={deleting}
-        />
-      )}
+        {deletingSubProfile && (
+          <DeleteSubProfileModal
+            subProfile={deletingSubProfile}
+            onConfirm={handleDeleteSubProfile}
+            onCancel={() => setDeletingSubProfile(null)}
+            loading={deleting}
+          />
+        )}
+      </div>
     </div>
   );
 };

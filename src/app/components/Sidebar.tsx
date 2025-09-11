@@ -6,9 +6,20 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import UserApiService from "@/helpers/service/user/user-api-service";
 
+// Material-UI Icons
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import BoltIcon from '@mui/icons-material/Bolt';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import PeopleIcon from '@mui/icons-material/People';
+import SettingsIcon from '@mui/icons-material/Settings';
+import HelpIcon from '@mui/icons-material/Help';
+import LogoutIcon from '@mui/icons-material/Logout';
+
 interface MenuItem {
   name: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string }>;
   key: string;
 }
 
@@ -71,14 +82,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [userLoading, setUserLoading] = useState<boolean>(true);
 
   const menuItems: MenuItem[] = [
-    { name: "Dashboard", icon: "📊", key: "dashboard" },
-    { name: "Videos", icon: "🎬", key: "videos" },
-    { name: "Processed Videos", icon: "⚡", key: "processed" },
-    { name: "Process Video", icon: "🔄", key: "process" },
-    { name: "Templates", icon: "📋", key: "templates" },
-    { name: "Profiles", icon: "👥", key: "profiles" },
-    { name: "Settings", icon: "⚙️", key: "settings" },
-    { name: "Help", icon: "💬", key: "help" },
+    { name: "Dashboard", icon: DashboardIcon, key: "dashboard" },
+    { name: "Videos", icon: VideoLibraryIcon, key: "videos" },
+    { name: "Processed Videos", icon: BoltIcon, key: "processed" },
+    { name: "Process Video", icon: RefreshIcon, key: "process" },
+    { name: "Templates", icon: AssignmentIcon, key: "templates" },
+    { name: "Profiles", icon: PeopleIcon, key: "profiles" },
+    { name: "Settings", icon: SettingsIcon, key: "settings" },
+    { name: "Help", icon: HelpIcon, key: "help" },
   ];
 
   // Fetch user data on component mount
@@ -170,10 +181,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const handleMenuClick = useCallback(
     (item: MenuItem) => {
-      setActiveItem(item.name);
+      setActiveItem(item.key);
       onNavigate?.(item.key);
 
-      // Auto-close mobile menu after selection
       if (isMobile) {
         setMobileMenuOpen(false);
       }
@@ -308,48 +318,51 @@ const Sidebar: React.FC<SidebarProps> = ({
               Main Menu
             </div>
 
-            {menuItems.slice(0, 4).map((item: MenuItem) => (
-              <div
-                key={item.name}
-                className={`
-                  relative mx-3 mb-1 px-3 py-3 rounded-lg cursor-pointer
-                  transition-all duration-200 ease-in-out
-                  hover:bg-gray-50 active:bg-gray-100
-                  ${
-                    activeItem === item.name
-                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
-                      : "text-gray-700 hover:text-gray-900"
-                  }
-                  flex items-center group
-                `}
-                onClick={() => handleMenuClick(item)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    handleMenuClick(item);
-                  }
-                }}
-                aria-pressed={activeItem === item.name}
-                aria-label={`Navigate to ${item.name}`}
-              >
-                <span
-                  className="text-xl mr-3 group-hover:scale-110 transition-transform duration-200"
-                  role="img"
-                  aria-label={`${item.name} icon`}
+            {menuItems.slice(0, 4).map((item: MenuItem) => {
+              const IconComponent = item.icon;
+              return (
+                <div
+                  key={item.key}
+                  className={`
+                    relative mx-3 mb-1 px-3 py-3 rounded-lg cursor-pointer
+                    transition-all duration-200 ease-in-out
+                    hover:bg-gray-50 active:bg-gray-100
+                    ${
+                      activeItem === item.key
+                        ? "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
+                        : "text-gray-700 hover:text-gray-900"
+                    }
+                    flex items-center group
+                  `}
+                  onClick={() => handleMenuClick(item)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleMenuClick(item);
+                    }
+                  }}
+                  aria-pressed={activeItem === item.key}
+                  aria-label={`Navigate to ${item.name}`}
                 >
-                  {item.icon}
-                </span>
-                <span className="font-medium">{item.name}</span>
-                {activeItem === item.name && (
-                  <div
-                    className="absolute right-3 w-2 h-2 bg-blue-500 rounded-full"
-                    aria-hidden="true"
+                  <IconComponent 
+                    className={`
+                      mr-3 transition-all duration-200 group-hover:scale-110
+                      ${activeItem === item.key ? 'text-blue-600' : 'text-gray-600 group-hover:text-gray-800'}
+                    `}
+                    sx={{ fontSize: 20 }}
                   />
-                )}
-              </div>
-            ))}
+                  <span className="font-medium">{item.name}</span>
+                  {activeItem === item.key && (
+                    <div
+                      className="absolute right-3 w-2 h-2 bg-blue-500 rounded-full"
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <div>
@@ -357,48 +370,51 @@ const Sidebar: React.FC<SidebarProps> = ({
               Tools & Settings
             </div>
 
-            {menuItems.slice(4).map((item: MenuItem) => (
-              <div
-                key={item.name}
-                className={`
-                  relative mx-3 mb-1 px-3 py-3 rounded-lg cursor-pointer
-                  transition-all duration-200 ease-in-out
-                  hover:bg-gray-50 active:bg-gray-100
-                  ${
-                    activeItem === item.name
-                      ? "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
-                      : "text-gray-700 hover:text-gray-900"
-                  }
-                  flex items-center group
-                `}
-                onClick={() => handleMenuClick(item)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    handleMenuClick(item);
-                  }
-                }}
-                aria-pressed={activeItem === item.name}
-                aria-label={`Navigate to ${item.name}`}
-              >
-                <span
-                  className="text-xl mr-3 group-hover:scale-110 transition-transform duration-200"
-                  role="img"
-                  aria-label={`${item.name} icon`}
+            {menuItems.slice(4).map((item: MenuItem) => {
+              const IconComponent = item.icon;
+              return (
+                <div
+                  key={item.key}
+                  className={`
+                    relative mx-3 mb-1 px-3 py-3 rounded-lg cursor-pointer
+                    transition-all duration-200 ease-in-out
+                    hover:bg-gray-50 active:bg-gray-100
+                    ${
+                      activeItem === item.key
+                        ? "bg-blue-50 text-blue-700 border-l-4 border-blue-500"
+                        : "text-gray-700 hover:text-gray-900"
+                    }
+                    flex items-center group
+                  `}
+                  onClick={() => handleMenuClick(item)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleMenuClick(item);
+                    }
+                  }}
+                  aria-pressed={activeItem === item.key}
+                  aria-label={`Navigate to ${item.name}`}
                 >
-                  {item.icon}
-                </span>
-                <span className="font-medium">{item.name}</span>
-                {activeItem === item.name && (
-                  <div
-                    className="absolute right-3 w-2 h-2 bg-blue-500 rounded-full"
-                    aria-hidden="true"
+                  <IconComponent 
+                    className={`
+                      mr-3 transition-all duration-200 group-hover:scale-110
+                      ${activeItem === item.key ? 'text-blue-600' : 'text-gray-600 group-hover:text-gray-800'}
+                    `}
+                    sx={{ fontSize: 20 }}
                   />
-                )}
-              </div>
-            ))}
+                  <span className="font-medium">{item.name}</span>
+                  {activeItem === item.key && (
+                    <div
+                      className="absolute right-3 w-2 h-2 bg-blue-500 rounded-full"
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </nav>
 
@@ -463,34 +479,10 @@ const Sidebar: React.FC<SidebarProps> = ({
               disabled={userLoading}
               aria-label="Logout from account"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 16 16"
-                fill="none"
-                aria-hidden="true"
+              <LogoutIcon 
                 className="group-hover:scale-110 transition-transform duration-200"
-              >
-                <path
-                  d="M6 2H3C2.45 2 2 2.45 2 3V13C2 13.55 2.45 14 3 14H6"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M10 11L13 8L10 5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M13 8H6"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-              </svg>
+                sx={{ fontSize: 16 }}
+              />
               {width >= 360 && <span>Logout</span>}
             </button>
           </div>

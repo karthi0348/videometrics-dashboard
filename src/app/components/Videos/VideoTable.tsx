@@ -1,7 +1,59 @@
 import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Button,
+  ButtonGroup,
+  IconButton,
+  Checkbox,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  Avatar,
+  Stack,
+  Grid,
+  Pagination,
+  CircularProgress,
+  Alert,
+  AlertTitle,
+  Tooltip,
+  Badge,
+  Skeleton,
+  useTheme,
+  useMediaQuery,
+  Fab,
+  CardActions,
+  Divider,
+  LinearProgress,
+  Container
+} from '@mui/material';
+import {
+  PlayArrow as PlayIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Visibility as ViewIcon,
+  Schedule as ClockIcon,
+  CalendarToday as CalendarIcon,
+  Storage as StorageIcon,
+  VideoLibrary as VideoIcon,
+  CheckCircle as CheckCircleIcon,
+  Refresh as RefreshIcon,
+  Movie as MovieIcon,
+  CloudUpload as UploadIcon
+} from '@mui/icons-material';
 import { API_ENDPOINTS } from "../../config/api";
-import VideoActionsModal from "../Modal/Video/VideoActionsModal";
-import { Play, Video } from "lucide-react";
+import PlayVideoModal from "../Modal/Video/PlayVideoModal";
+import EditVideoModal from "../Modal/Video/EditVideoModal";
+import DeleteVideoModal from "../Modal/Video/DeleteVideoModal";
+
 // Types based on your API response
 interface Video {
   id: string;
@@ -27,7 +79,6 @@ interface VideoTableProps {
   dateTo?: string;
   refreshTrigger?: number;
   onVideoCount?: (count: number) => void;
-  // Select functionality props
   isSelectMode?: boolean;
   selectedVideos?: string[];
   onVideoSelect?: (videoId: string) => void;
@@ -36,7 +87,9 @@ interface VideoTableProps {
 
 interface VideoCardProps {
   video: Video;
-  onVideoClick: (video: Video) => void;
+  onPlayVideo: (video: Video) => void;
+  onEditVideo: (video: Video) => void;
+  onDeleteVideo: (video: Video) => void;
   isSelectMode?: boolean;
   isSelected?: boolean;
   onSelect?: (videoId: string) => void;
@@ -45,35 +98,23 @@ interface VideoCardProps {
 
 const VideoCard: React.FC<VideoCardProps> = ({
   video,
-  onVideoClick,
+  onPlayVideo,
+  onEditVideo,
+  onDeleteVideo,
   isSelectMode = false,
   isSelected = false,
   onSelect,
   onDeselect,
 }) => {
-  const formatFileSize = (bytes: number | undefined): string => {
-    if (!bytes) return "-";
-    const sizes = ["B", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
-  };
+  const theme = useTheme();
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-  const [isHovered, setIsHovered] = useState(false);
   const formatDuration = (seconds: number | undefined): string => {
     if (!seconds) return "0:00";
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
+
   const handleCardClick = () => {
     if (isSelectMode) {
       if (isSelected) {
@@ -81,178 +122,243 @@ const VideoCard: React.FC<VideoCardProps> = ({
       } else {
         onSelect?.(video.id);
       }
-    } else {
-      onVideoClick(video);
     }
   };
-  const getGradientColor = (id: string) => {
-    const gradients = [
-      "from-blue-400 to-purple-600", 
+
+  const getVideoThumbnail = () => {
+    const colors = [
+  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+
     ];
-    const idx = parseInt(id, 36) % gradients.length;
-    return gradients[idx];
+    const idx = parseInt(video.id, 36) % colors.length;
+    return colors[idx];
   };
-  const gradientColor = getGradientColor(video.id);
+
   return (
-    <div
-      className={`bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all cursor-pointer group relative ${
-        isSelected ? "ring-2 ring-blue-500 bg-blue-50" : ""
-      }`}
+    <Card
       onClick={handleCardClick}
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        cursor: isSelectMode ? 'pointer' : 'default',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: isSelected ? 'translateY(-4px)' : 'translateY(0)',
+        boxShadow: isSelected 
+          ? `0 8px 25px ${theme.palette.primary.main}25, 0 0 0 2px ${theme.palette.primary.main}`
+          : '0 2px 8px rgba(0,0,0,0.1)',
+        '&:hover': {
+          transform: isSelectMode ? 'translateY(-6px)' : 'translateY(-2px)',
+          boxShadow: isSelected
+            ? `0 12px 35px ${theme.palette.primary.main}35, 0 0 0 2px ${theme.palette.primary.main}`
+            : '0 8px 25px rgba(0,0,0,0.15)',
+        },
+        borderRadius: 3,
+        overflow: 'hidden',
+        bgcolor: isSelected ? `${theme.palette.primary.main}08` : 'background.paper'
+      }}
     >
-      {/* Selection indicator */}
+      {/* Selection Checkbox */}
       {isSelectMode && (
-        <div className="absolute top-3 right-3 z-10">
-          <div
-            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-              isSelected
-                ? "bg-blue-500 border-blue-500"
-                : "bg-white border-gray-300 group-hover:border-blue-400"
-            }`}
-          >
-            {isSelected && (
-              <svg
-                className="w-4 h-4 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            )}
-          </div>
-        </div>
+        <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
+          <Checkbox
+            checked={isSelected}
+            onChange={handleCardClick}
+            icon={<Box sx={{ 
+              width: 24, 
+              height: 24, 
+              borderRadius: '50%', 
+              border: '2px solid white',
+              bgcolor: 'rgba(0,0,0,0.3)',
+              backdropFilter: 'blur(4px)'
+            }} />}
+            checkedIcon={<CheckCircleIcon sx={{ color: theme.palette.primary.main }} />}
+            sx={{
+              color: 'white',
+              '& .MuiSvgIcon-root': { fontSize: 28 }
+            }}
+          />
+        </Box>
       )}
 
-       
-      <div
-        className={`bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all cursor-pointer relative ${
-          isSelected ? "ring-2 ring-blue-500 bg-blue-50" : ""
-        }`}
-        onClick={handleCardClick}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+      {/* Video Thumbnail */}
+      <CardMedia
+        onClick={(e) => {
+          e.stopPropagation();
+          onPlayVideo(video);
+        }}
+        sx={{
+          height: 200,
+          background: getVideoThumbnail(),
+          position: 'relative',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+
+        }}
       >
-        {/* Thumbnail */}
-        <div className="relative aspect-video">
-          {/* Gradient background */}
-          <div
-            className={`absolute inset-0 bg-gradient-to-br ${gradientColor}`}
+        {/* Decorative Pattern */}
+        <Box sx={{
+          position: 'absolute',
+          inset: 0,
+          opacity: 0.1,
+          background: `
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(255,255,255,0.2) 0%, transparent 50%)
+          `
+        }} />
+
+        {/* Play Button Overlay */}
+        <Box
+          className="play-overlay"
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            bgcolor: 'rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            opacity: 0.8,
+            border: '3px solid rgba(255,255,255,0.3)',
+            '&:hover': {
+              bgcolor: 'rgba(0,0,0,0.8)',
+              borderColor: 'rgba(255,255,255,0.5)'
+            }
+          }}
+        >
+          <PlayIcon sx={{ fontSize: 36, color: 'white', ml: 0.5 }} />
+        </Box>
+
+        {/* Duration Badge */}
+        {video.duration && (
+          <Chip
+            icon={<ClockIcon sx={{ fontSize: '16px !important' }} />}
+            label={formatDuration(video.duration)}
+            size="small"
+            sx={{
+              position: 'absolute',
+              bottom: 12,
+              right: 12,
+              bgcolor: 'rgba(0,0,0,0.8)',
+              color: 'white',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              '& .MuiChip-icon': { color: 'white' }
+            }}
+          />
+        )}
+      </CardMedia>
+
+      {/* Card Content */}
+      <CardContent sx={{ flexGrow: 1, p: 3 }}>
+        <Typography 
+          variant="h6" 
+          component="div" 
+          gutterBottom
+          sx={{ 
+            fontWeight: 600,
+            fontSize: '1.1rem',
+            lineHeight: 1.3,
+            mb: 1,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
+          }}
+        >
+          {video.video_name}
+        </Typography>
+
+        {video.description && (
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ 
+              mb: 2,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              lineHeight: 1.4
+            }}
           >
-            <div className="absolute inset-0 opacity-10">
-              <svg
-                className="w-full h-full"
-                viewBox="0 0 60 60"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <defs>
-                  <pattern
-                    id={`grid-${video.id}`}
-                    width="12"
-                    height="12"
-                    patternUnits="userSpaceOnUse"
-                  >
-                    <path
-                      d="M 12 0 L 0 0 0 12"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="0.5"
-                    />
-                  </pattern>
-                </defs>
-                <rect
-                  width="100%"
-                  height="100%"
-                  fill={`url(#grid-${video.id})`}
-                />
-              </svg>
-            </div>
-          </div>
+            {video.description}
+          </Typography>
+        )}
 
-          {/* Video Icon */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 bg-black bg-opacity-20 backdrop-blur-sm rounded-full flex items-center justify-center">
-              <Video className="w-8 h-8 text-white opacity-60" />
-            </div>
-          </div>
-
-          {/* Hover Play Overlay */}
-          <div
-            className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${
-              isHovered ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <div className="w-16 h-16 bg-white bg-opacity-90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
-              <Play className="w-8 h-8 text-gray-800 ml-1" />
-            </div>
-          </div>
-
-          {/* Duration Badge */}
-          <div className="absolute bottom-3 right-3">
-            <div className="bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded-md font-medium">
-              {formatDuration(video.duration)}
-            </div>
-          </div>
-
-          {/* Selection indicator */}
-          {isSelectMode && (
-            <div className="absolute top-3 right-3 z-10">
-              <div
-                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                  isSelected
-                    ? "bg-blue-500 border-blue-500"
-                    : "bg-white border-gray-300 group-hover:border-blue-400"
-                }`}
-              >
-                {isSelected && (
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Info */}
-        <div className="p-4">
-          <h3
-            className="font-semibold text-gray-900 mb-1 truncate"
-            title={video.video_name}
-          >
-            {video.video_name}
-          </h3>
-          {video.description && (
-            <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-              {video.description}
-            </p>
-          )}
-          <p className="text-sm text-gray-500">
-            Uploaded{" "}
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+          <CalendarIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+          <Typography variant="caption" color="text.secondary">
             {new Date(video.created_at).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
               year: "numeric",
             })}
-          </p>
-        </div>
-      </div>
-    </div>
+          </Typography>
+        </Stack>
+      </CardContent>
+
+      {/* Action Buttons */}
+      {!isSelectMode && (
+        <CardActions sx={{ p: 3, pt: 0 }}>
+          <Stack direction="row" spacing={1} width="100%">
+            <Button
+              variant="contained"
+              startIcon={<EditIcon />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditVideo(video);
+              }}
+              sx={{
+                flex: 1,
+                py: 1.5,
+                borderRadius: 2,
+                fontWeight: 600,
+                textTransform: 'none',
+                background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
+                boxShadow: '0 4px 12px rgba(33, 150, 243, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #1976D2 0%, #1565C0 100%)',
+                  boxShadow: '0 6px 16px rgba(33, 150, 243, 0.4)',
+                  transform: 'translateY(-1px)'
+                }
+              }}
+            >
+              Edit
+            </Button>
+            
+            <Button
+              variant="outlined"
+              startIcon={<DeleteIcon />}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteVideo(video);
+              }}
+              color="error"
+              sx={{
+                flex: 1,
+                py: 1.5,
+                borderRadius: 2,
+                fontWeight: 600,
+                textTransform: 'none',
+                borderWidth: 2,
+                '&:hover': {
+                  borderWidth: 2,
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 12px rgba(244, 67, 54, 0.3)'
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </Stack>
+        </CardActions>
+      )}
+    </Card>
   );
 };
 
@@ -270,13 +376,21 @@ const VideoTable: React.FC<VideoTableProps> = ({
   onVideoSelect,
   onVideoDeselect,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalVideos, setTotalVideos] = useState(0);
+  
+  // Modal states
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  
   const pageSize = 12;
 
   const fetchVideos = async (page: number = 1) => {
@@ -290,7 +404,6 @@ const VideoTable: React.FC<VideoTableProps> = ({
         return;
       }
 
-      // Build query parameters
       const params = new URLSearchParams({
         page: page.toString(),
         page_size: pageSize.toString(),
@@ -317,7 +430,6 @@ const VideoTable: React.FC<VideoTableProps> = ({
 
       const data = await response.json();
 
-      // Handle different response formats
       let videoList: Video[] = [];
       let total = 0;
 
@@ -337,7 +449,7 @@ const VideoTable: React.FC<VideoTableProps> = ({
         videoList = videoList.filter((video) => {
           const videoDate = new Date(video.created_at);
           const fromDate = dateFrom ? new Date(dateFrom) : null;
-          const toDate = dateTo ? new Date(dateTo + "T23:59:59") : null; // Include full day
+          const toDate = dateTo ? new Date(dateTo + "T23:59:59") : null;
 
           if (fromDate && videoDate < fromDate) return false;
           if (toDate && videoDate > toDate) return false;
@@ -346,7 +458,7 @@ const VideoTable: React.FC<VideoTableProps> = ({
         total = videoList.length;
       }
 
-      // Sort videos client-side if needed
+      // Sort videos client-side
       const sortedVideos = [...videoList].sort((a, b) => {
         let aValue, bValue;
 
@@ -382,46 +494,46 @@ const VideoTable: React.FC<VideoTableProps> = ({
     }
   };
 
-  // Fetch videos on component mount and when dependencies change
   useEffect(() => {
     fetchVideos(1);
     setCurrentPage(1);
   }, [searchQuery, sortBy, sortOrder, dateFrom, dateTo, refreshTrigger]);
 
-  // Handle pagination
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = (_: React.ChangeEvent<unknown>, newPage: number) => {
     setCurrentPage(newPage);
     fetchVideos(newPage);
   };
 
-  const handleVideoClick = (video: Video) => {
-    if (!isSelectMode) {
-      setSelectedVideo(video);
-      setIsModalOpen(true);
-    }
+  const handlePlayVideo = (video: Video) => {
+    setSelectedVideo(video);
+    setIsPlayModalOpen(true);
+  };
+
+  const handleEditVideo = (video: Video) => {
+    setSelectedVideo(video);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteVideo = (video: Video) => {
+    setSelectedVideo(video);
+    setIsDeleteModalOpen(true);
   };
 
   const handleModalClose = () => {
-    setIsModalOpen(false);
+    setIsPlayModalOpen(false);
+    setIsEditModalOpen(false);
+    setIsDeleteModalOpen(false);
     setSelectedVideo(null);
   };
 
-  const handleVideoDeleted = () => {
-    // Refresh the video list after deletion
-    fetchVideos(currentPage);
-  };
-
   const handleVideoUpdated = () => {
-    // Refresh the video list after update
     fetchVideos(currentPage);
+    handleModalClose();
   };
 
-  const handleVideoSelect = (videoId: string) => {
-    onVideoSelect?.(videoId);
-  };
-
-  const handleVideoDeselect = (videoId: string) => {
-    onVideoDeselect?.(videoId);
+  const handleVideoDeleted = () => {
+    fetchVideos(currentPage);
+    handleModalClose();
   };
 
   const formatFileSize = (bytes: number | undefined): string => {
@@ -450,366 +562,449 @@ const VideoTable: React.FC<VideoTableProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-gray-600">Loading videos...</span>
-        </div>
-      </div>
+      <Container>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
+          <Box sx={{ position: 'relative', mb: 4 }}>
+            <CircularProgress size={60} thickness={4} />
+            <Box sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)'
+            }}>
+              <VideoIcon sx={{ fontSize: 24, color: 'primary.main' }} />
+            </Box>
+          </Box>
+          <Typography variant="h6" gutterBottom color="text.primary" fontWeight={600}>
+            Loading Videos
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Please wait while we fetch your content...
+          </Typography>
+        </Box>
+      </Container>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-          <svg
-            className="w-8 h-8 text-red-600"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-            />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          Error Loading Videos
-        </h3>
-        <p className="text-gray-600 mb-4 text-center max-w-md">{error}</p>
-        <button
-          onClick={() => fetchVideos(currentPage)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+      <Container>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 3, 
+            borderRadius: 3,
+            '& .MuiAlert-message': { width: '100%' }
+          }}
         >
-          Try Again
-        </button>
-      </div>
+          <AlertTitle sx={{ fontWeight: 'bold' }}>Something went wrong</AlertTitle>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            {error}
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<RefreshIcon />}
+            onClick={() => fetchVideos(currentPage)}
+            size="small"
+            sx={{
+              textTransform: 'none',
+              borderRadius: 2,
+              mt: 1
+            }}
+          >
+            Try Again
+          </Button>
+        </Alert>
+      </Container>
     );
   }
 
   if (videos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-          <svg
-            className="w-8 h-8 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+      <Container>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          py: 8,
+          textAlign: 'center'
+        }}>
+          <Avatar
+            sx={{
+              width: 80,
+              height: 80,
+              bgcolor: 'grey.100',
+              mb: 3
+            }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-            />
-          </svg>
-        </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
-          No Videos Found
-        </h3>
-        <p className="text-gray-600 text-center max-w-md">
-          {searchQuery || dateFrom || dateTo
-            ? `No videos match your current filters. Try adjusting your search criteria.`
-            : "Upload your first video to get started."}
-        </p>
-      </div>
+            <VideoIcon sx={{ fontSize: 40, color: 'grey.400' }} />
+          </Avatar>
+          
+          <Typography variant="h5" gutterBottom fontWeight={600}>
+            No videos found
+          </Typography>
+          
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: 400 }}>
+            {searchQuery || dateFrom || dateTo
+              ? "No videos match your current filters. Try adjusting your search criteria."
+              : "Upload your first video to get started with your collection."}
+          </Typography>
+
+          {!(searchQuery || dateFrom || dateTo) && (
+            <Button
+              variant="contained"
+              startIcon={<UploadIcon />}
+              size="large"
+              sx={{
+                textTransform: 'none',
+                borderRadius: 3,
+                py: 1.5,
+                px: 4,
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
+                }
+              }}
+            >
+              Upload Your First Video
+            </Button>
+          )}
+        </Box>
+      </Container>
     );
   }
 
   // Grid View
   if (viewMode === "grid") {
     return (
-      <>
-        <div className="space-y-6">
-          {isSelectMode && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-5 h-5 text-blue-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span className="text-blue-800 font-medium">
-                    Click on videos to select them
-                  </span>
-                </div>
-                <span className="text-blue-600 text-sm">
-                  {selectedVideos.length} of {videos.length} selected
-                </span>
-              </div>
-            </div>
-          )}
+      <Container>
+        {isSelectMode && (
+          <Alert 
+            icon={<CheckCircleIcon />} 
+            severity="info"
+            sx={{ 
+              mb: 3, 
+              borderRadius: 3,
+              bgcolor: `${theme.palette.primary.main}08`,
+              border: `1px solid ${theme.palette.primary.main}20`
+            }}
+          >
+            <AlertTitle sx={{ fontWeight: 'bold' }}>Selection Mode Active</AlertTitle>
+            Click on videos to select them. {selectedVideos.length} of {videos.length} selected.
+          </Alert>
+        )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {videos.map((video) => (
+        <Grid container spacing={3}>
+          {videos.map((video) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={video.id}>
               <VideoCard
-                key={video.id}
                 video={video}
-                onVideoClick={handleVideoClick}
+                onPlayVideo={handlePlayVideo}
+                onEditVideo={handleEditVideo}
+                onDeleteVideo={handleDeleteVideo}
                 isSelectMode={isSelectMode}
                 isSelected={selectedVideos.includes(video.id)}
-                onSelect={handleVideoSelect}
-                onDeselect={handleVideoDeselect}
+                onSelect={onVideoSelect}
+                onDeselect={onVideoDeselect}
               />
-            ))}
-          </div>
+            </Grid>
+          ))}
+        </Grid>
 
-          {/* Pagination */}
-          {totalVideos > pageSize && (
-            <div className="flex items-center justify-center space-x-2 pt-4">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              <span className="px-4 py-2 text-sm text-gray-700">
-                Page {currentPage} of {Math.ceil(totalVideos / pageSize)}
-              </span>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage >= Math.ceil(totalVideos / pageSize)}
-                className="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </div>
+        {totalVideos > pageSize && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Pagination
+              count={Math.ceil(totalVideos / pageSize)}
+              page={currentPage}
+              onChange={handlePageChange}
+              color="primary"
+              size={isMobile ? "medium" : "large"}
+              showFirstButton
+              showLastButton
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  borderRadius: 2,
+                  fontWeight: 500,
+                  '&.Mui-selected': {
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
+                    }
+                  }
+                }
+              }}
+            />
+          </Box>
+        )}
 
-        {/* Video Actions Modal */}
-        <VideoActionsModal
+        {/* Modals */}
+        <PlayVideoModal
           video={selectedVideo}
-          isOpen={isModalOpen}
+          isOpen={isPlayModalOpen}
           onClose={handleModalClose}
-          onVideoDeleted={handleVideoDeleted}
+        />
+
+        <EditVideoModal
+          video={selectedVideo}
+          isOpen={isEditModalOpen}
+          onClose={handleModalClose}
           onVideoUpdated={handleVideoUpdated}
         />
-      </>
+
+        <DeleteVideoModal
+          video={selectedVideo}
+          isOpen={isDeleteModalOpen}
+          onClose={handleModalClose}
+          onVideoDeleted={handleVideoDeleted}
+        />
+      </Container>
     );
   }
 
-  // List/Table View
+  // Table/List View
   return (
-    <>
-      <div className="space-y-4">
-        {isSelectMode && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <svg
-                  className="w-5 h-5 text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-blue-800 font-medium">Select videos</span>
-              </div>
-              <span className="text-blue-600 text-sm">
-                {selectedVideos.length} of {videos.length} selected
-              </span>
-            </div>
-          </div>
-        )}
+    <Container>
+      {isSelectMode && (
+        <Alert 
+          icon={<CheckCircleIcon />} 
+          severity="info"
+          sx={{ 
+            mb: 3, 
+            borderRadius: 3,
+            bgcolor: `${theme.palette.primary.main}08`,
+            border: `1px solid ${theme.palette.primary.main}20`
+          }}
+        >
+          <AlertTitle sx={{ fontWeight: 'bold' }}>Selection Mode Active</AlertTitle>
+          Select videos from the list below. {selectedVideos.length} of {videos.length} selected.
+        </Alert>
+      )}
 
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  {isSelectMode && (
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 w-12">
+      <Paper elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+        <TableContainer>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ bgcolor: 'grey.50' }}>
+                {isSelectMode && (
+                  <TableCell padding="checkbox">
+                    <Typography variant="subtitle2" fontWeight={600}>
                       Select
-                    </th>
-                  )}
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
-                    Video
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
-                    Size
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
-                    Duration
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-gray-900">
-                    Uploaded
-                  </th>
-                  <th className="text-center py-3 px-4 font-medium text-gray-900">
+                    </Typography>
+                  </TableCell>
+                )}
+                <TableCell>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <VideoIcon sx={{ fontSize: 18 }} />
+                    <Typography variant="subtitle2" fontWeight={600}>
+                      Video
+                    </Typography>
+                  </Stack>
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <StorageIcon sx={{ fontSize: 18 }} />
+                    <Typography variant="subtitle2" fontWeight={600}>
+                      Size
+                    </Typography>
+                  </Stack>
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <ClockIcon sx={{ fontSize: 18 }} />
+                    <Typography variant="subtitle2" fontWeight={600}>
+                      Duration
+                    </Typography>
+                  </Stack>
+                </TableCell>
+                <TableCell>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <CalendarIcon sx={{ fontSize: 18 }} />
+                    <Typography variant="subtitle2" fontWeight={600}>
+                      Uploaded
+                    </Typography>
+                  </Stack>
+                </TableCell>
+                <TableCell align="center">
+                  <Typography variant="subtitle2" fontWeight={600}>
                     Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {videos.map((video) => (
-                  <tr
-                    key={video.id}
-                    className={`hover:bg-gray-50 transition-colors ${
-                      selectedVideos.includes(video.id) ? "bg-blue-50" : ""
-                    }`}
-                  >
-                    {isSelectMode && (
-                      <td className="py-4 px-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedVideos.includes(video.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              handleVideoSelect(video.id);
-                            } else {
-                              handleVideoDeselect(video.id);
-                            }
-                          }}
-                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                        />
-                      </td>
-                    )}
-                    <td className="py-4 px-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <svg
-                            className="w-5 h-5 text-gray-400"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                        <div className="min-w-0">
-                          <p
-                            className={`font-medium text-gray-900 truncate ${
-                              !isSelectMode
-                                ? "cursor-pointer hover:text-blue-600 transition-colors"
-                                : ""
-                            }`}
-                            title={video.video_name}
-                            onClick={
-                              !isSelectMode
-                                ? () => handleVideoClick(video)
-                                : undefined
-                            }
-                          >
-                            {video.video_name}
-                          </p>
-                          {video.description && (
-                            <p
-                              className="text-sm text-gray-500 truncate"
-                              title={video.description}
-                            >
-                              {video.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-gray-600">
-                      {formatFileSize(video.file_size)}
-                    </td>
-                    <td className="py-4 px-4 text-gray-600">
-                      {formatDuration(video.duration)}
-                    </td>
-                    <td className="py-4 px-4 text-gray-600">
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {videos.map((video, index) => (
+                <TableRow
+                  key={video.id}
+                  sx={{
+                    bgcolor: selectedVideos.includes(video.id) 
+                      ? `${theme.palette.primary.main}08` 
+                      : index % 2 === 0 
+                        ? 'grey.25' 
+                        : 'background.paper',
+                    '&:hover': {
+                      bgcolor: selectedVideos.includes(video.id)
+                        ? `${theme.palette.primary.main}12`
+                        : 'action.hover'
+                    },
+                    transition: 'background-color 0.2s'
+                  }}
+                >
+                  {isSelectMode && (
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedVideos.includes(video.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            onVideoSelect?.(video.id);
+                          } else {
+                            onVideoDeselect?.(video.id);
+                          }
+                        }}
+                        color="primary"
+                      />
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <Chip
+                      size="small"
+                      label={formatFileSize(video.file_size)}
+                      sx={{
+                        bgcolor: 'primary.50',
+                        color: 'primary.700',
+                        fontWeight: 500
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      size="small"
+                      label={formatDuration(video.duration)}
+                      sx={{
+                        bgcolor: 'success.50',
+                        color: 'success.700',
+                        fontWeight: 500
+                      }}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
                       {formatDate(video.created_at)}
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex justify-center">
-                        {!isSelectMode && (
-                          <button
-                            onClick={() => handleVideoClick(video)}
-                            className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm flex items-center gap-1.5"
-                            title="View video details"
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    {!isSelectMode && (
+                      <Stack direction="row" spacing={1} justifyContent="center">
+                        <Tooltip title="View Video">
+                          <IconButton
+                            onClick={() => handlePlayVideo(video)}
+                            size="small"
+                            sx={{
+                              bgcolor: 'primary.50',
+                              color: 'primary.main',
+                              '&:hover': {
+                                bgcolor: 'primary.100',
+                                transform: 'scale(1.1)'
+                              }
+                            }}
                           >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                              />
-                            </svg>
-                            View
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                            <ViewIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        
+                        <Tooltip title="Edit Video">
+                          <IconButton
+                            onClick={() => handleEditVideo(video)}
+                            size="small"
+                            sx={{
+                              bgcolor: 'info.50',
+                              color: 'info.main',
+                              '&:hover': {
+                                bgcolor: 'info.100',
+                                transform: 'scale(1.1)'
+                              }
+                            }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        
+                        <Tooltip title="Delete Video">
+                          <IconButton
+                            onClick={() => handleDeleteVideo(video)}
+                            size="small"
+                            sx={{
+                              bgcolor: 'error.50',
+                              color: 'error.main',
+                              '&:hover': {
+                                bgcolor: 'error.100',
+                                transform: 'scale(1.1)'
+                              }
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
 
-        {/* Pagination */}
-        {totalVideos > pageSize && (
-          <div className="flex items-center justify-center space-x-2">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            <span className="px-4 py-2 text-sm text-gray-700">
-              Page {currentPage} of {Math.ceil(totalVideos / pageSize)}
-            </span>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= Math.ceil(totalVideos / pageSize)}
-              className="px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </div>
+      {totalVideos > pageSize && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Pagination
+            count={Math.ceil(totalVideos / pageSize)}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            size={isMobile ? "medium" : "large"}
+            showFirstButton
+            showLastButton
+            sx={{
+              '& .MuiPaginationItem-root': {
+                borderRadius: 2,
+                fontWeight: 500,
+                '& .MuiPaginationItem-root.Mui-selected': {
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
+                  }
+                }
+              }
+            }}
+          />
+        </Box>
+      )}
 
-      {/* Video Actions Modal */}
-      <VideoActionsModal
+      {/* Modals */}
+      <PlayVideoModal
         video={selectedVideo}
-        isOpen={isModalOpen}
+        isOpen={isPlayModalOpen}
         onClose={handleModalClose}
-        onVideoDeleted={handleVideoDeleted}
+      />
+
+      <EditVideoModal
+        video={selectedVideo}
+        isOpen={isEditModalOpen}
+        onClose={handleModalClose}
         onVideoUpdated={handleVideoUpdated}
       />
-    </>
+
+      <DeleteVideoModal
+        video={selectedVideo}
+        isOpen={isDeleteModalOpen}
+        onClose={handleModalClose}
+        onVideoDeleted={handleVideoDeleted}
+      />
+    </Container>
   );
 };
 

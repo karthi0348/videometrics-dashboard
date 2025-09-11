@@ -11,6 +11,7 @@ import SubProfiles from "@/app/components/Profiles/Subprofile/SubProfiles";
 import CreateProfile from "@/app/components/Profiles/CreateProfile";
 import { API_ENDPOINTS } from "../../config/api";
 import { SubProfileService } from "@/app/services/subprofile-service";
+import { Button } from "@/components/ui/button";
 
 interface ApiProfileResponse {
   id?: string | number;
@@ -376,59 +377,34 @@ const ProfilesPage: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div className="flex items-center gap-4">
-            <h1
-              className="text-sm font-mono"
-              style={{ color: "var(--purple-secondary)" }}
+          <h1 className="text-sm font-mono text-violet-600">
+            Profiles
+          </h1>
+          <span className="text-sm font-medium text-violet-500">
+            Manage your profiles and sub-profiles
+          </span>
+        </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          {activeView !== "create" && (
+            <Button 
+              className="flex-1 sm:flex-none bg-violet-600 hover:bg-violet-700 text-white"
+              onClick={() => handleViewChange("create")}
+              disabled={loading}
             >
-              Profiles
-            </h1>
-            <span
-              className="text-sm font-medium"
-              style={{ color: "var(--purple-tertiary)" }}
+              <Plus className="w-4 h-4 mr-2" />
+              Create Profile
+            </Button>
+          )}
+          {activeView !== "list" && (
+            <Button
+              variant="outline"
+              onClick={() => handleViewChange("list")}
+              className="flex-1 sm:flex-none border-violet-200 text-violet-600 hover:bg-violet-50 hover:border-violet-300"
             >
-              Manage your profiles and sub-profiles
-            </span>
-          </div>
-          <div className="flex gap-2">
-            {activeView !== "create" && (
-              <button
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg shadow transition-colors disabled:opacity-50"
-                style={{ backgroundColor: "var(--purple-secondary)" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "var(--purple-tertiary)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "var(--purple-secondary)";
-                }}
-                onClick={() => handleViewChange("create")}
-                disabled={loading}
-              >
-                <Plus className="w-4 h-4" />
-                Create Profile
-              </button>
-            )}
-            {activeView !== "list" && (
-              <button
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg shadow transition-colors"
-                style={{
-                  backgroundColor: "rgb(196, 127, 254, 0.1)",
-                  color: "var(--purple-secondary)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "rgb(196, 127, 254, 0.2)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "rgb(196, 127, 254, 0.1)";
-                }}
-                onClick={() => handleViewChange("list")}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to List
-              </button>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to List
+            </Button>
+
             )}
           </div>
         </div>
@@ -485,7 +461,6 @@ const ProfilesPage: React.FC = () => {
 
         {/* Content Area */}
         <div
-          className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 relative border"
           style={{
             boxShadow:
               "0 25px 50px -12px rgb(81, 77, 223, 0.1), 0 10px 25px -5px rgb(81, 77, 223, 0.05)",

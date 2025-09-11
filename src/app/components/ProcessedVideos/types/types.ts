@@ -60,4 +60,36 @@ export interface VideoMetricsModalProps {
   mockMode?: boolean;
 }
 
+export interface VideoAnalytics {
+  generated_summary: any;
+  generated_summary: any;
+  generated_summary: any;
+  generated_summary: any;
+  generated_summary: any;
+  generated_summary: any;
+  uuid: any;
+  processing_duration_seconds(processing_duration_seconds: any): unknown;
+  parsed_metrics(parsed_metrics: any): unknown;
+  generated_charts: any;
+  priority: any;
+  processing_started_at: string | number | Date;
+  processing_completed_at: string | number | Date;
+  video_metadata: any;
+  generated_summary: any;
+  id: number;
+  video_id: number;
+  profile_name?: string;
+  sub_profile_name?: string;
+  template_name?: string;
+  status: string;
+  confidence_score?: number;
+  insights?: InsightData[];
+}
+
+export interface GeneratedChart {
+  chart_id: string;
+  type: string;
+  data: any;
+  labels: string[];
+}
 

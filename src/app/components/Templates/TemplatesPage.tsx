@@ -8,8 +8,51 @@ import AssignmentModal from "../Modal/Template/AssignmentModal";
 import DeleteModal from "../Common/DeleteModal";
 import { toast } from "react-toastify";
 import EditTemplateModal from "../Modal/Template/EditTemplateModal";
-import TemplateSettingsModal from "../Modal/Template/TemplateSettingsModal"; // Import the separated modal
+import TemplateSettingsModal from "../Modal/Template/TemplateSettingsModal";
 import { Template } from "@/app/components/Templates/types/templates";
+
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Plus,
+  Search,
+  RefreshCw,
+  Settings,
+  Edit,
+  Trash2,
+  Users,
+  Eye,
+  EyeOff,
+  MoreVertical,
+  BarChart3,
+  FileText,
+  Server,
+  Lightbulb,
+  Zap,
+  Lock,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
+  Filter,
+  TrendingUp
+} from "lucide-react";
 
 const TemplatesPage: React.FC = () => {
   const templateApiService: TemplateApiService = new TemplateApiService();
@@ -19,9 +62,7 @@ const TemplatesPage: React.FC = () => {
   const [selectedEditTemplateId, setSelectedEditTemplateId] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
-    null
-  );
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<any>("");
   const [filterVisibility, setFilterVisibility] = useState<any>("");
@@ -34,7 +75,7 @@ const TemplatesPage: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  //delete
+  // Delete state
   const [deleteModal, setDeleteModal] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -72,7 +113,6 @@ const TemplatesPage: React.FC = () => {
     setSelectedEditTemplateId(id);
   };
 
-  // Delete Data
   const handleDelete = async () => {
     if (selectedId) {
       setDeleteLoading(true);
@@ -99,91 +139,66 @@ const TemplatesPage: React.FC = () => {
 
   const getIcon = (iconName: string) => {
     const icons: { [key: string]: JSX.Element } = {
-      "chart-bar": (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-        />
-      ),
-      clipboard: (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-        />
-      ),
-      server: (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
-        />
-      ),
-      lightbulb: (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-        />
-      ),
-      "lightning-bolt": (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M13 10V3L4 14h7v7l9-11h-7z"
-        />
-      ),
-      "lock-closed": (
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-        />
-      ),
+      "chart-bar": <BarChart3 className="h-5 w-5" />,
+      clipboard: <FileText className="h-5 w-5" />,
+      server: <Server className="h-5 w-5" />,
+      lightbulb: <Lightbulb className="h-5 w-5" />,
+      "lightning-bolt": <Zap className="h-5 w-5" />,
+      "lock-closed": <Lock className="h-5 w-5" />,
     };
     return icons[iconName] || icons["chart-bar"];
   };
 
   const getColorClasses = (color: string) => {
     const colorMap: {
-      [key: string]: { bg: string; text: string; badge: string; hover: string };
+      [key: string]: { 
+        bg: string; 
+        text: string; 
+        badge: string; 
+        hover: string;
+        gradient: string;
+        border: string;
+      };
     } = {
       purple: {
-        bg: "bg-purple-100",
+        bg: "bg-gradient-to-br from-purple-100/50 to-purple-200/30",
         text: "text-purple-600",
-        badge: "bg-purple-100 text-purple-700",
-        hover: "hover:bg-purple-50",
+        badge: "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border-purple-300",
+        hover: "hover:from-purple-200/50 hover:to-purple-300/30",
+        gradient: "from-purple-500 to-purple-600",
+        border: "border-purple-200/50"
       },
       blue: {
-        bg: "bg-blue-100",
+        bg: "bg-gradient-to-br from-blue-100/50 to-blue-200/30",
         text: "text-blue-600",
-        badge: "bg-blue-100 text-blue-700",
-        hover: "hover:bg-blue-50",
+        badge: "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300",
+        hover: "hover:from-blue-200/50 hover:to-blue-300/30",
+        gradient: "from-blue-500 to-blue-600",
+        border: "border-blue-200/50"
       },
       green: {
-        bg: "bg-green-100",
+        bg: "bg-gradient-to-br from-green-100/50 to-green-200/30",
         text: "text-green-600",
-        badge: "bg-green-100 text-green-700",
-        hover: "hover:bg-green-50",
+        badge: "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300",
+        hover: "hover:from-green-200/50 hover:to-green-300/30",
+        gradient: "from-green-500 to-green-600",
+        border: "border-green-200/50"
       },
       orange: {
-        bg: "bg-orange-100",
+        bg: "bg-gradient-to-br from-orange-100/50 to-orange-200/30",
         text: "text-orange-600",
-        badge: "bg-orange-100 text-orange-700",
-        hover: "hover:bg-orange-50",
+        badge: "bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300",
+        hover: "hover:from-orange-200/50 hover:to-orange-300/30",
+        gradient: "from-orange-500 to-orange-600",
+        border: "border-orange-200/50"
       },
       red: {
-        bg: "bg-red-100",
+        bg: "bg-gradient-to-br from-red-100/50 to-red-200/30",
         text: "text-red-600",
-        badge: "bg-red-100 text-red-700",
-        hover: "hover:bg-red-50",
+        badge: "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300",
+        hover: "hover:from-red-200/50 hover:to-red-300/30",
+        gradient: "from-red-500 to-red-600",
+        border: "border-red-200/50"
       },
     };
     return colorMap[color] || colorMap.purple;
@@ -211,32 +226,17 @@ const TemplatesPage: React.FC = () => {
       const url = `?${params.toString()}`;
       let result = await templateApiService.getAllTemplate(url);
 
-      // Handle different API response structures
       if (result && typeof result === "object") {
         if (Array.isArray(result)) {
-          // If result is directly an array
           setTemplates(result);
           setTotalCount(result.length);
         } else if (result.data && Array.isArray(result.data)) {
-          // If result has a data property with array
           setTemplates(result.data);
-          setTotalCount(
-            result.total ||
-              result.totalCount ||
-              result.count ||
-              result.data.length
-          );
+          setTotalCount(result.total || result.totalCount || result.count || result.data.length);
         } else if (result.templates && Array.isArray(result.templates)) {
-          // If result has a templates property with array
           setTemplates(result.templates);
-          setTotalCount(
-            result.total ||
-              result.totalCount ||
-              result.count ||
-              result.templates.length
-          );
+          setTotalCount(result.total || result.totalCount || result.count || result.templates.length);
         } else {
-          // Fallback
           setTemplates([]);
           setTotalCount(0);
         }
@@ -247,18 +247,15 @@ const TemplatesPage: React.FC = () => {
     } catch (error: any) {
       setTemplates([]);
       setTotalCount(0);
-      toast.error("Failed to refresh templates", {
-        containerId: "TR",
-      });
+      toast.error("Failed to refresh templates", { containerId: "TR" });
       return ErrorHandler(error);
     } finally {
       setIsRefreshing(false);
     }
   };
 
-  // Handle refresh button click
   const handleRefresh = async () => {
-    setPage(1); // Reset to first page
+    setPage(1);
     await getAllTemplate();
   };
 
@@ -266,420 +263,365 @@ const TemplatesPage: React.FC = () => {
     getAllTemplate();
   }, [searchQuery, filterStatus, filterVisibility, page, pageSize]);
 
+  if (isRefreshing && templates.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+        <div className="p-6 space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-[300px]" />
+            <Skeleton className="h-4 w-[500px]" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <Card key={i} className="bg-white/70 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <Skeleton className="h-32 w-full mb-4" />
+                  <Skeleton className="h-4 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100">
       {/* Header Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Analytics Templates
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Create and manage analysis templates for your video content
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-              >
-                <svg
-                  className={`w-4 h-4 inline mr-2 ${
-                    isRefreshing ? "animate-spin" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                {isRefreshing ? "Refreshing..." : "Refresh"}
-              </button>
-              <button
-                onClick={() => setShowModal(true)}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg transition-colors flex items-center gap-2 text-sm sm:text-base"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                New Template
-              </button>
-            </div>
-          </div>
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-indigo-600/10"></div>
+        <div className="relative p-6 space-y-6">
+          <Card className="bg-white/80 backdrop-blur-sm border-purple-200/50 shadow-lg">
+            <CardContent className="p-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                <div className="space-y-2">
+                  <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                    Analytics Templates
+                  </h1>
+                  <p className="text-xl text-slate-600">
+                    Create and manage analysis templates for your video content
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className="bg-white/50 border-purple-200/50 hover:bg-purple-50/50"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+                    {isRefreshing ? "Refreshing..." : "Refresh"}
+                  </Button>
+                  <Button
+                    onClick={() => setShowModal(true)}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Template
+                  </Button>
+                </div>
+              </div>
 
-          {/* Search and Filters */}
-          <div className="mt-6 flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <svg
-                className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <input
-                type="text"
-                placeholder="Search templates..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-              />
-            </div>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="beta">Beta</option>
-            </select>
-            <select
-              value={filterVisibility}
-              onChange={(e) => setFilterVisibility(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-            >
-              <option value="">All Visibility</option>
-              <option value="public">Public</option>
-              <option value="private">Private</option>
-            </select>
-          </div>
+              {/* Search and Filters */}
+              <div className="mt-8 flex flex-col lg:flex-row gap-4">
+                <div className="relative flex-1">
+                  <div className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search templates..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-white/50 border-purple-200/50 focus:border-purple-500 focus:ring-purple-500"
+                  />
+                </div>
+                <Select value={filterStatus || "all"} onValueChange={(value) => setFilterStatus(value === "all" ? "" : value)}>
+                  <SelectTrigger className="w-full lg:w-[180px] bg-white/50 border-purple-200/50">
+                    <Filter className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="beta">Beta</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={filterVisibility || "all"} onValueChange={(value) => setFilterVisibility(value === "all" ? "" : value)}>
+                  <SelectTrigger className="w-full lg:w-[180px] bg-white/50 border-purple-200/50">
+                    <Eye className="w-4 h-4 mr-2" />
+                    <SelectValue placeholder="All Visibility" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Visibility</SelectItem>
+                    <SelectItem value="public">Public</SelectItem>
+                    <SelectItem value="private">Private</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Stats */}
-          <div className="mt-4 flex items-center gap-6 text-sm text-gray-600">
-            <span>Total: {totalCount}</span>
-            <span>Showing: {templates.length}</span>
-            <span>
-              Active:{" "}
-              {templates.filter((t: any) => t.status === "active").length}
-            </span>
-            <span>
-              Beta: {templates.filter((t: any) => t.status === "beta").length}
-            </span>
-          </div>
+              {/* Stats */}
+              <div className="mt-6 flex flex-wrap gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"></div>
+                  <span className="text-slate-600">Total: <span className="font-semibold text-slate-800">{totalCount}</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"></div>
+                  <span className="text-slate-600">Active: <span className="font-semibold text-green-700">{templates.filter((t: any) => t.status === "active").length}</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full"></div>
+                  <span className="text-slate-600">Beta: <span className="font-semibold text-yellow-700">{templates.filter((t: any) => t.status === "beta").length}</span></span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* Templates Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="px-6 pb-6">
         {templates.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <svg
-                className="w-8 h-8 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No templates found
-            </h3>
-            <p className="text-gray-500 mb-4">
-              {searchQuery || filterStatus || filterVisibility
-                ? "Try adjusting your filters or search criteria"
-                : "Get started by creating your first analytics template"}
-            </p>
-            {!searchQuery && !filterStatus && !filterVisibility && (
-              <button
-                onClick={() => setShowModal(true)}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                Create Template
-              </button>
-            )}
-          </div>
+          <Card className="bg-white/70 backdrop-blur-sm border-purple-200/50">
+            <CardContent className="text-center py-16">
+              <div className="w-16 h-16 mx-auto bg-gradient-to-br from-purple-100 to-blue-100 rounded-full flex items-center justify-center mb-6">
+                <FileText className="w-8 h-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                No templates found
+              </h3>
+              <p className="text-slate-600 mb-6 max-w-md mx-auto">
+                {searchQuery || filterStatus || filterVisibility
+                  ? "Try adjusting your filters or search criteria to find what you're looking for"
+                  : "Get started by creating your first analytics template to analyze your video content"}
+              </p>
+              {!searchQuery && !filterStatus && !filterVisibility && (
+                <Button
+                  onClick={() => setShowModal(true)}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Template
+                </Button>
+              )}
+            </CardContent>
+          </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {templates.map((template: any) => {
               const colorClasses = getColorClasses(template.color);
               return (
-                <div
+                <Card
                   key={template.id}
-                  className={`bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200 ${colorClasses.hover}`}
+                  className={`group bg-white/80 backdrop-blur-sm ${colorClasses.border} hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden`}
                 >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 ${colorClasses.bg} rounded-xl flex items-center justify-center`}
-                      >
-                        <svg
-                          className={`w-5 h-5 ${colorClasses.text}`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          {getIcon(template.icon)}
-                        </svg>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          {/* Settings Icon */}
-                          <button
-                            onClick={() => handleOpenSettings(template)}
-                            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-purple-100 rounded transition-colors"
-                            title="Template Settings"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                              />
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                              />
-                            </svg>
-                          </button>
-                          <h2 className="text-lg font-semibold text-gray-900">
-                            {template.template_name}
-                          </h2>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span
-                            className={`px-2 py-1 text-xs rounded-full ${
-                              template.is_public
-                                ? colorClasses.badge
-                                : "bg-gray-100 text-gray-700"
-                            }`}
-                          >
-                            {template.is_public ? "Public" : "Private"}
-                          </span>
-
-                          <span
-                            className={`px-2 py-1 text-xs rounded-full ${
-                              template.status === "active"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {template.status}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <button
-                        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                        onClick={() => handleOpenEdit(template.id)}
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        onClick={() => deleteTemplate(template.id)}
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {template.description}
-                  </p>
-
-                  {template.tags && template.tags.length > 0 && (
-                    <div className="mb-4">
-                      <div className="flex flex-wrap gap-1">
-                        {template.tags
-                          .slice(0, 3)
-                          .map((tag: any, index: any) => (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        {template.tags.length > 3 && (
-                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
-                            +{template.tags.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mb-4 space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Uses:</span>
-                      <span className="text-gray-900 font-medium">
-                        {template.usage_count || 0}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Assigned to:</span>
-                      <span className="text-gray-900 font-medium">
-                        {template.assignedProfiles || 0} profile
-                        {(template.assignedProfiles || 0) !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Current Assignments Section */}
-                  {tempId === template.id && showAssignments && (
-                    <div className="mb-4 p-3 bg-gray-50 rounded-lg border">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
-                        Current Assignments:
-                      </h4>
-                      {assesmentInfo.length > 0 ? (
-                        <div className="text-sm text-gray-600">
-                          <div className="mt-2 space-y-1">
-                            {assesmentInfo.map((item: any, idx: any) => (
-                              <div
-                                key={idx}
-                                className="flex items-center justify-between py-1"
-                              >
-                                <span className="text-gray-700">
-                                  Sub-Profile Id : {item.sub_profile_id}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  Priority : {item.priority}
-                                </span>
-                              </div>
-                            ))}
+                  <CardHeader className="pb-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-start gap-4">
+                        <div className={`w-12 h-12 ${colorClasses.bg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                          <div className={`${colorClasses.text}`}>
+                            {getIcon(template.icon)}
                           </div>
                         </div>
-                      ) : (
-                        <p className="text-sm text-gray-500">
-                          No assignments found
-                        </p>
-                      )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenSettings(template)}
+                              className="p-1 h-auto hover:bg-purple-100"
+                            >
+                              <Settings className="w-4 h-4 text-slate-400 hover:text-purple-600" />
+                            </Button>
+                            <CardTitle className="text-lg font-semibold text-slate-800 group-hover:text-purple-700 transition-colors truncate">
+                              {template.template_name}
+                            </CardTitle>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              className={`${template.is_public ? colorClasses.badge : "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border-slate-300"} text-xs`}
+                            >
+                              {template.is_public ? (
+                                <><Eye className="w-3 h-3 mr-1" />Public</>
+                              ) : (
+                                <><EyeOff className="w-3 h-3 mr-1" />Private</>
+                              )}
+                            </Badge>
+                            <Badge 
+                              className={`text-xs ${template.status === "active" 
+                                ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-300" 
+                                : "bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-300"}`}
+                            >
+                              {template.status === "active" ? "Active" : "Beta"}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => handleOpenEdit(template.id)}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit Template
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => deleteTemplate(template.id)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Template
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                  )}
+                  </CardHeader>
 
-                  <div className="flex flex-col sm:flex-row gap-2 w-full">
-                    <button className="flex-1 px-2 py-2 text-gray-700 bg-purple-200 rounded-lg hover:bg-purple-300 transition-colors text-xs font-medium">
-                      Use Template
-                    </button>
-                    <button
-                      onClick={() => handleOpenAssignment(template)}
-                      className="flex-1 sm:flex-none px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-xs font-medium"
-                    >
-                      Assign
-                    </button>
-                    <button
-                      onClick={() => toggleAssignments(template.id)}
-                      className="flex-1 sm:flex-none px-2 py-2 text-gray-700 bg-purple-200 rounded-lg hover:bg-purple-300 transition-colors text-xs font-medium whitespace-nowrap"
-                    >
-                      {tempId === template.id && showAssignments
-                        ? "Hide assignment"
-                        : "View assignments"}
-                    </button>
-                  </div>
-                </div>
+                  <CardContent className="space-y-4">
+                    <CardDescription className="text-slate-600 text-sm line-clamp-2">
+                      {template.description}
+                    </CardDescription>
+
+                    {template.tags && template.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {template.tags.slice(0, 3).map((tag: any, index: any) => (
+                          <Badge key={index} variant="outline" className="text-xs bg-slate-50 text-slate-600 border-slate-200">
+                            {tag}
+                          </Badge>
+                        ))}
+                        {template.tags.length > 3 && (
+                          <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600 border-slate-200">
+                            +{template.tags.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4 py-3 px-4 bg-gradient-to-r from-slate-50/50 to-purple-50/50 rounded-lg">
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <TrendingUp className="w-3 h-3 text-slate-500" />
+                          <span className="text-xs text-slate-500">Uses</span>
+                        </div>
+                        <span className="text-sm font-semibold text-slate-700">{template.usage_count || 0}</span>
+                      </div>
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-1 mb-1">
+                          <Users className="w-3 h-3 text-slate-500" />
+                          <span className="text-xs text-slate-500">Assigned</span>
+                        </div>
+                        <span className="text-sm font-semibold text-slate-700">{template.assignedProfiles || 0}</span>
+                      </div>
+                    </div>
+
+                    {/* Current Assignments Section */}
+                    {tempId === template.id && showAssignments && (
+                      <Card className="bg-gradient-to-br from-purple-50/50 to-blue-50/50 border-purple-200/50">
+                        <CardContent className="p-4">
+                          <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            Current Assignments
+                          </h4>
+                          {assesmentInfo.length > 0 ? (
+                            <div className="space-y-2">
+                              {assesmentInfo.map((item: any, idx: any) => (
+                                <div key={idx} className="flex items-center justify-between py-2 px-3 bg-white/50 rounded-lg border border-purple-100/50">
+                                  <span className="text-sm text-slate-700">Sub-Profile: {item.sub_profile_id}</span>
+                                  <Badge variant="outline" className="text-xs">Priority: {item.priority}</Badge>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-4">
+                              <Users className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+                              <p className="text-sm text-slate-500">No assignments found</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    <div className="flex gap-2 pt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200/50 hover:from-purple-100 hover:to-blue-100 text-purple-700"
+                      >
+                        Use Template
+                      </Button>
+                      <Button
+                        onClick={() => handleOpenAssignment(template)}
+                        size="sm"
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0"
+                      >
+                        <Users className="w-4 h-4 mr-1" />
+                        Assign
+                      </Button>
+                      <Button
+                        onClick={() => toggleAssignments(template.id)}
+                        variant="outline"
+                        size="sm"
+                        className="bg-gradient-to-r from-slate-50 to-purple-50 border-purple-200/50 hover:from-slate-100 hover:to-purple-100"
+                      >
+                        {tempId === template.id && showAssignments ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
         )}
-      </div>
 
-      {/* Pagination */}
-      <div className="flex justify-center items-center mt-6 gap-4">
-        <button
-          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-          disabled={page === 1}
-          className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors"
-        >
-          Previous
-        </button>
-
-        <div className="flex items-center gap-2">
-          <span className="text-gray-600">
-            Page {page} of {Math.ceil(totalCount / pageSize) || 1}
-          </span>
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setPage(1);
-            }}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            <option value={5}>5 per page</option>
-            <option value={6}>6 per page</option>
-            <option value={10}>10 per page</option>
-            <option value={20}>20 per page</option>
-          </select>
-        </div>
-
-        <button
-          onClick={() =>
-            setPage((prev) =>
-              prev < Math.ceil(totalCount / pageSize) ? prev + 1 : prev
-            )
-          }
-          disabled={
-            page >= Math.ceil(totalCount / pageSize) || totalCount === 0
-          }
-          className="px-4 py-2 bg-gray-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors"
-        >
-          Next
-        </button>
+        {/* Pagination */}
+        {totalCount > 0 && (
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={page === 1}
+                    className="bg-white/50 border-purple-200/50"
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-2" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <span>Page {page} of {Math.ceil(totalCount / pageSize) || 1}</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={() => setPage((prev) => prev < Math.ceil(totalCount / pageSize) ? prev + 1 : prev)}
+                    disabled={page >= Math.ceil(totalCount / pageSize) || totalCount === 0}
+                    className="bg-white/50 border-purple-200/50"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+                <Select value={pageSize.toString()} onValueChange={(value) => { setPageSize(Number(value)); setPage(1); }}>
+                  <SelectTrigger className="w-[140px] bg-white/50 border-purple-200/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 per page</SelectItem>
+                    <SelectItem value="6">6 per page</SelectItem>
+                    <SelectItem value="10">10 per page</SelectItem>
+                    <SelectItem value="20">20 per page</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+        )}
       </div>
 
       {/* Modals */}

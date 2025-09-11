@@ -42,7 +42,7 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-purple-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100 relative overflow-hidden">
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-purple-200/40 to-purple-300/20 rounded-full blur-3xl animate-pulse"></div>

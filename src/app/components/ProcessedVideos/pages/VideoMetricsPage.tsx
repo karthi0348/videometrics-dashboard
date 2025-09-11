@@ -1,18 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import ProcessVideoApiService from "@/helpers/service/processvideo/ProcessVideoApiservice";
+
 import { VideoAnalytics, GeneratedChart } from "../types/types";
 import ChartDisplay from "./ChartDisplay";
 import SummaryView from "./SummaryView";
 import RawDataView from "./RawDataView";
 
-interface VideoMetricsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface VideoMetricsPageProps {
   analyticsId: string | null;
-  apiService: ApiService | null;
-  mockMode: boolean;
-}
-interface ApiService {
-  getAnalytics: (id: string) => Promise<VideoAnalytics | string>;
+  mockMode?: boolean;
+  onNavigate?: (page: string, analyticsId?: string) => void;
 }
 
 // Enhanced type declarations for PDF libraries
@@ -86,6 +83,7 @@ declare global {
   }
 }
 
+// Mock data for fallback
 const mockAnalytics: VideoAnalytics = {
   id: 27,
   uuid: "6cca6d41-7695-43cc-ac7d-45a50a85b2ac",
@@ -178,17 +176,14 @@ const mockAnalytics: VideoAnalytics = {
   error_message: null,
   processing_started_at: "2025-08-30T17:18:12.000000Z",
   processing_completed_at: "2025-08-30T17:19:49.636490Z",
-  processing_duration_seconds: 97.63649,
   created_at: "2025-08-30T17:18:12.000000Z",
   updated_at: "2025-08-30T17:19:49.636490Z",
 };
 
-const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
-  isOpen,
-  onClose,
+const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
   analyticsId,
-  apiService,
-  mockMode,
+  mockMode = false,
+  onNavigate,
 }) => {
   const [loading, setLoading] = useState(false);
   const [analytics, setAnalytics] = useState<VideoAnalytics | null>(null);
@@ -197,16 +192,20 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
   );
   const [error, setError] = useState<string>("");
   const [exportingPdf, setExportingPdf] = useState(false);
-  const modalContentRef = useRef<HTMLDivElement>(null);
+  const pageContentRef = useRef<HTMLDivElement>(null);
+  const [apiService] = useState(() => new ProcessVideoApiService());
 
   useEffect(() => {
-    if (isOpen && analyticsId) {
+    if (analyticsId) {
       loadAnalytics();
     }
-  }, [isOpen, analyticsId]);
+  }, [analyticsId]);
 
   const loadAnalytics = useCallback(async () => {
     if (mockMode) {
+      setLoading(true);
+      // Simulate loading delay for mock mode
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setLoading(false);
       setAnalytics(mockAnalytics);
       return;
@@ -217,17 +216,11 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
       return;
     }
 
-    if (!apiService) {
-      setError("API service not available");
-      return;
-    }
-
     setLoading(true);
     setError("");
     setAnalytics(null);
 
     try {
-
       const response = await apiService.getAnalytics(analyticsId);
 
       let data: VideoAnalytics;
@@ -239,7 +232,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
           throw new Error("Invalid JSON response from server");
         }
       } else if (typeof response === "object" && response !== null) {
-        data = response;
+        data = response as VideoAnalytics;
       } else {
         throw new Error("Unexpected response format");
       }
@@ -383,20 +376,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
       const contentWidth = pageWidth - margin * 2;
       let currentY = margin;
 
-      // Helper function to add text with word wrapping
-      const addWrappedText = (
-        text: string,
-        x: number,
-        y: number,
-        maxWidth: number,
-        fontSize: number = 10
-      ) => {
-        pdf.setFontSize(fontSize);
-        const lines = pdf.splitTextToSize(text, maxWidth);
-        pdf.text(lines, x, y);
-        return y + lines.length * (fontSize * 0.35); // Return new Y position
-      };
-
       // Helper function to check if we need a new page
       const checkPageBreak = (requiredSpace: number) => {
         if (currentY + requiredSpace > pageHeight - margin) {
@@ -412,7 +391,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
         [key: string]: string;
       }> => {
         const chartImages: { [key: string]: string } = {};
-
 
         // Wait for charts to render completely
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -469,31 +447,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
               try {
                 console.log(`Capturing Recharts element ${i}...`);
 
-                // Find the parent container that includes the title
-                const captureElement = element;
-                let parent = element.parentElement;
-                while (
-                  parent &&
-                  parent.offsetHeight < element.offsetHeight + 100
-                ) {
-                  if (
-                    parent.querySelector(
-                      'h3, h4, .chart-title, [class*="title"]'
-                    )
-                  ) {
-                    break;
-                  }
-                  parent = parent.parentElement;
-                }
-
-                const finalCaptureElement = parent || captureElement;
-                finalCaptureElement.scrollIntoView({
-                  behavior: "instant",
-                  block: "center",
-                });
-                await new Promise((resolve) => setTimeout(resolve, 500));
-
-                const canvas = await html2canvas(captureElement, {
+                const canvas = await html2canvas(element, {
                   scale: 2,
                   useCORS: true,
                   allowTaint: true,
@@ -531,7 +485,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
           canvasElements.forEach((canvas, index) => {
             if (canvas.offsetWidth > 100 && canvas.offsetHeight > 100) {
               try {
-                // For canvas, we can directly get the data URL
                 const dataURL = canvas.toDataURL("image/png", 0.9);
                 chartImages[`canvas_${index}`] = dataURL;
                 console.log(`✓ Canvas ${index} captured directly`);
@@ -549,7 +502,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
               try {
                 console.log(`Capturing SVG ${i}...`);
 
-                // Find parent container for better context
                 const captureElement = svg.parentElement || svg;
 
                 const canvas = await html2canvas(
@@ -571,67 +523,6 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
                 console.warn(`✗ Failed to capture SVG ${i}:`, error);
               }
             }
-          }
-        }
-
-        // Final strategy: Look for chart containers by class names
-        if (Object.keys(chartImages).length === 0) {
-          const chartSelectors = [
-            '[class*="chart"]',
-            '[class*="Chart"]',
-            '[class*="graph"]',
-            '[class*="Graph"]',
-            ".visualization",
-            ".plot-container",
-            '[data-testid*="chart"]',
-          ];
-
-          for (const selector of chartSelectors) {
-            const elements = document.querySelectorAll(selector);
-            console.log(
-              `Found ${elements.length} elements with selector: ${selector}`
-            );
-
-            for (let i = 0; i < Math.min(elements.length, 3); i++) {
-              // Limit to first 3
-              const element = elements[i] as HTMLElement;
-
-              if (element.offsetWidth > 100 && element.offsetHeight > 100) {
-                try {
-                  console.log(
-                    `Capturing generic chart element ${i} for selector ${selector}...`
-                  );
-
-                  element.scrollIntoView({
-                    behavior: "instant",
-                    block: "center",
-                  });
-                  await new Promise((resolve) => setTimeout(resolve, 300));
-
-                  const canvas = await html2canvas(element, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: "#ffffff",
-                    logging: true,
-                    foreignObjectRendering: true,
-                    removeContainer: true,
-                  });
-
-                  chartImages[
-                    `generic_${selector.replace(/[^a-zA-Z0-9]/g, "_")}_${i}`
-                  ] = canvas.toDataURL("image/png", 0.9);
-                  console.log(`✓ Generic chart element captured`);
-                } catch (error) {
-                  console.warn(
-                    `✗ Failed to capture generic chart element:`,
-                    error
-                  );
-                }
-              }
-            }
-
-            if (Object.keys(chartImages).length > 0) break;
           }
         }
 
@@ -721,7 +612,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
       pdf.text("Analysis ID:", margin + 30, infoY + 8);
       pdf.text("Video UUID:", margin + 30, infoY + 16);
       pdf.text("Confidence Score:", margin + 30, infoY + 24);
-      pdf.text("Processing Time:", margin + 30, infoY + 32);
+      pdf.text("Processing Status:", margin + 30, infoY + 32);
       pdf.text("Total Metrics:", margin + 30, infoY + 40);
       pdf.text("Charts Generated:", margin + 30, infoY + 48);
       pdf.text("Chart Images Captured:", margin + 30, infoY + 56);
@@ -735,11 +626,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
         infoY + 16
       );
       pdf.text(`${analytics.confidence_score}%`, margin + 70, infoY + 24);
-      pdf.text(
-        `${Math.round(analytics.processing_duration_seconds)}s`,
-        margin + 70,
-        infoY + 32
-      );
+      pdf.text(`${analytics.status.toUpperCase()}`, margin + 70, infoY + 32);
       pdf.text(
         `${Object.keys(analytics.parsed_metrics).length}`,
         margin + 70,
@@ -808,7 +695,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
       pdf.text("KEY PERFORMANCE METRICS", margin + 5, currentY + 6);
       currentY += 20;
 
-      // Metrics grid - Enhanced with more details
+      // Metrics grid
       pdf.setTextColor(0, 0, 0);
       const metrics = Object.entries(analytics.parsed_metrics);
       const metricsPerRow = 2;
@@ -822,13 +709,13 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
           const [key, value] = metrics[i + j];
           const x = margin + j * (metricBoxWidth + 5);
 
-          // Metric box with gradient effect
+          // Metric box
           pdf.setFillColor(248, 249, 250);
           pdf.setDrawColor(15, 118, 110);
           pdf.setLineWidth(0.5);
           pdf.rect(x, currentY, metricBoxWidth, metricBoxHeight, "FD");
 
-          // Icon area (simple colored square)
+          // Icon area
           pdf.setFillColor(15, 118, 110);
           pdf.rect(x + 5, currentY + 5, 8, 8, "F");
 
@@ -845,7 +732,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
           pdf.setTextColor(15, 118, 110);
           pdf.text(value.toString(), x + 5, currentY + 25);
 
-          // Unit and description
+          // Unit
           pdf.setFontSize(7);
           pdf.setFont("helvetica", "normal");
           pdf.setTextColor(120, 120, 120);
@@ -864,338 +751,78 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
         currentY += metricBoxHeight + 10;
       }
 
-      // === PAGE 3-N: DETAILED CHARTS WITH IMAGES ===
-      pdf.addPage();
-      currentY = margin;
+      // Add chart images if captured
+      if (Object.keys(chartImages).length > 0) {
+        pdf.addPage();
+        currentY = margin;
 
-      // Page header
-      pdf.setFillColor(15, 118, 110);
-      pdf.rect(margin, currentY, contentWidth, 8, "F");
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("VISUAL ANALYTICS & CHARTS", margin + 5, currentY + 6);
-      currentY += 20;
-
-      // Chart analysis with images
-      pdf.setTextColor(0, 0, 0);
-      analytics.generated_charts.forEach((chart, index) => {
-        checkPageBreak(100); // More space needed for images
-
-        // Chart header with full styling
-        pdf.setFillColor(240, 248, 255);
-        pdf.setDrawColor(15, 118, 110);
-        pdf.rect(margin, currentY, contentWidth, 12, "FD");
-
+        // Charts section header
+        pdf.setFillColor(15, 118, 110);
+        pdf.rect(margin, currentY, contentWidth, 8, "F");
+        pdf.setTextColor(255, 255, 255);
         pdf.setFontSize(12);
         pdf.setFont("helvetica", "bold");
-        pdf.setTextColor(15, 118, 110);
-        pdf.text(`${index + 1}. ${chart.title}`, margin + 5, currentY + 8);
+        pdf.text("ANALYTICS CHARTS", margin + 5, currentY + 6);
+        currentY += 20;
 
-        // Status badge with color coding
-        const statusColor =
-          chart.status === "excellent"
-            ? [40, 167, 69]
-            : chart.status === "good"
-            ? [255, 193, 7]
-            : [220, 53, 69];
-        pdf.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
-        pdf.rect(pageWidth - margin - 30, currentY + 3, 25, 6, "F");
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFontSize(8);
-        pdf.setFont("helvetica", "bold");
-        pdf.text(
-          chart.status.toUpperCase(),
-          pageWidth - margin - 17,
-          currentY + 7,
-          { align: "center" }
-        );
+        // Add each chart image
+        for (const [chartId, imageData] of Object.entries(chartImages)) {
+          checkPageBreak(120); // Reserve space for chart
 
-        currentY += 18;
+          pdf.setTextColor(0, 0, 0);
+          pdf.setFontSize(10);
+          pdf.setFont("helvetica", "bold");
+          pdf.text(`Chart: ${chartId}`, margin, currentY);
+          currentY += 10;
 
-        // Try to find and add the chart image
-        const chartImage =
-          chartImages[chart.id] || chartImages[`chart_${index}`];
-        if (chartImage) {
           try {
-            // Calculate image dimensions to fit within content area
-            const maxImageWidth = contentWidth * 0.8;
-            const maxImageHeight = 60; // mm
-
             // Add the chart image
             pdf.addImage(
-              chartImage,
+              imageData,
               "PNG",
-              margin + (contentWidth - maxImageWidth) / 2, // Center the image
+              margin,
               currentY,
-              maxImageWidth,
-              maxImageHeight,
-              undefined,
-              "MEDIUM"
+              contentWidth,
+              100 // Fixed height
             );
-
-            currentY += maxImageHeight + 10;
-
-            console.log(`Added chart image for ${chart.title}`);
+            currentY += 110;
           } catch (error) {
-            console.warn(
-              `Failed to add chart image for ${chart.title}:`,
-              error
-            );
-
-            // Fallback: Add placeholder text
-            pdf.setFillColor(248, 249, 250);
-            pdf.setDrawColor(200, 200, 200);
-            pdf.rect(margin, currentY, contentWidth, 30, "FD");
-
-            pdf.setTextColor(120, 120, 120);
-            pdf.setFontSize(10);
-            pdf.setFont("helvetica", "italic");
-            pdf.text(
-              "Chart visualization not captured",
-              pageWidth / 2,
-              currentY + 20,
-              { align: "center" }
-            );
-
-            currentY += 35;
+            console.warn(`Failed to add chart ${chartId} to PDF:`, error);
+            pdf.setTextColor(255, 0, 0);
+            pdf.setFont("helvetica", "normal");
+            pdf.text(`Failed to load chart: ${chartId}`, margin, currentY);
+            currentY += 10;
           }
-        } else {
-          // No image available - create a data representation
-          pdf.setFillColor(248, 249, 250);
-          pdf.setDrawColor(200, 200, 200);
-          pdf.rect(margin, currentY, contentWidth, 40, "FD");
-
-          pdf.setTextColor(15, 118, 110);
-          pdf.setFontSize(9);
-          pdf.setFont("helvetica", "bold");
-          pdf.text(
-            `${chart.plot_type.toUpperCase()} CHART DATA`,
-            margin + 5,
-            currentY + 8
-          );
-
-          pdf.setTextColor(0, 0, 0);
-          pdf.setFontSize(8);
-          pdf.setFont("helvetica", "normal");
-
-          if (chart.series) {
-            if (chart.series.category && chart.series.value) {
-              chart.series.category.forEach((category, idx) => {
-                const value = Array.isArray(chart.series.value)
-                  ? chart.series.value[idx]
-                  : chart.series.value;
-                pdf.text(
-                  `• ${category}: ${value}`,
-                  margin + 5,
-                  currentY + 15 + idx * 5
-                );
-              });
-            }
-          } else if (chart.value !== undefined) {
-            pdf.text(`• Value: ${chart.value}`, margin + 5, currentY + 15);
-            if (chart.styling?.unit) {
-              pdf.text(
-                `• Unit: ${chart.styling.unit}`,
-                margin + 5,
-                currentY + 20
-              );
-            }
-          }
-
-          currentY += 45;
-        }
-
-        // All insights section
-        checkPageBreak(20);
-
-        pdf.setFillColor(252, 248, 227);
-        pdf.setDrawColor(255, 193, 7);
-        pdf.rect(margin, currentY, contentWidth, 6, "FD");
-        pdf.setTextColor(133, 77, 14);
-        pdf.setFontSize(9);
-        pdf.setFont("helvetica", "bold");
-        pdf.text("KEY INSIGHTS", margin + 5, currentY + 4);
-        currentY += 12;
-
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(9);
-        pdf.setFont("helvetica", "normal");
-
-        chart.insights.forEach((insight, insightIndex) => {
-          checkPageBreak(15);
-
-          // Bullet point
-          pdf.setFillColor(15, 118, 110);
-          pdf.circle(margin + 3, currentY - 1, 1, "F");
-
-          // Insight text with better formatting
-          currentY = addWrappedText(
-            `${insightIndex + 1}. ${insight}`,
-            margin + 8,
-            currentY,
-            contentWidth - 8,
-            9
-          );
-          currentY += 4;
-        });
-
-        currentY += 10;
-      });
-
-      // === COMPREHENSIVE SUMMARY SECTION ===
-      pdf.addPage();
-      currentY = margin;
-
-      // Page header
-      pdf.setFillColor(15, 118, 110);
-      pdf.rect(margin, currentY, contentWidth, 8, "F");
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("COMPREHENSIVE ANALYSIS SUMMARY", margin + 5, currentY + 6);
-      currentY += 20;
-
-      // Summary metadata
-      if (analytics.generated_summary) {
-        pdf.setFillColor(240, 248, 255);
-        pdf.setDrawColor(15, 118, 110);
-        pdf.rect(margin, currentY, contentWidth, 20, "FD");
-
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(9);
-        pdf.setFont("helvetica", "bold");
-
-        pdf.text("Summary Type:", margin + 5, currentY + 6);
-        pdf.text("Word Count:", margin + 5, currentY + 12);
-        pdf.text("Generated:", margin + 5, currentY + 18);
-
-        pdf.setFont("helvetica", "normal");
-        pdf.text(
-          analytics.generated_summary.summary_type || "Detailed",
-          margin + 40,
-          currentY + 6
-        );
-        pdf.text(
-          `${analytics.generated_summary.word_count || 0} words`,
-          margin + 40,
-          currentY + 12
-        );
-        pdf.text(
-          new Date(analytics.generated_summary.generated_at).toLocaleString(),
-          margin + 40,
-          currentY + 18
-        );
-
-        // Right side
-        pdf.setFont("helvetica", "bold");
-        pdf.text("Format:", margin + 110, currentY + 6);
-        pdf.text("Sections:", margin + 110, currentY + 12);
-        pdf.text("Characters:", margin + 110, currentY + 18);
-
-        pdf.setFont("helvetica", "normal");
-        pdf.text(
-          analytics.generated_summary.format || "Plain",
-          margin + 135,
-          currentY + 6
-        );
-        pdf.text(
-          `${analytics.generated_summary.sections?.length || 0} sections`,
-          margin + 135,
-          currentY + 12
-        );
-        pdf.text(
-          `${analytics.generated_summary.character_count || 0}`,
-          margin + 135,
-          currentY + 18
-        );
-
-        currentY += 30;
-
-        // Full summary content with better formatting
-        if (analytics.generated_summary.content) {
-          const summaryContent = analytics.generated_summary.content
-            .replace(/\*\*(.*?)\*\*/g, "$1") // Remove markdown bold
-            .split("\n\n")
-            .filter((paragraph) => paragraph.trim());
-
-          pdf.setTextColor(0, 0, 0);
-
-          summaryContent.forEach((paragraph, index) => {
-            checkPageBreak(35);
-
-            // Check if it's a header
-            const isHeader =
-              /^[A-Z][A-Z\s]+$/.test(paragraph.split("\n")[0]) ||
-              /^[A-Z][^:]*:/.test(paragraph) ||
-              paragraph.startsWith("**") ||
-              paragraph.includes("Key Metrics") ||
-              paragraph.includes("Recommendations");
-
-            if (isHeader) {
-              // Header styling
-              pdf.setFillColor(15, 118, 110);
-              pdf.rect(margin, currentY - 2, contentWidth, 6, "F");
-              pdf.setTextColor(255, 255, 255);
-              pdf.setFont("helvetica", "bold");
-              pdf.setFontSize(10);
-
-              const headerText = paragraph.replace(/\*/g, "").trim();
-              pdf.text(headerText, margin + 3, currentY + 2);
-              currentY += 12;
-            } else {
-              // Regular paragraph
-              pdf.setFont("helvetica", "normal");
-              pdf.setFontSize(9);
-              pdf.setTextColor(0, 0, 0);
-
-              currentY = addWrappedText(
-                paragraph,
-                margin,
-                currentY,
-                contentWidth,
-                9
-              );
-              currentY += 6;
-            }
-          });
         }
       }
 
-      // Add page numbers to all pages
-      const totalPages = pdf.internal.getNumberOfPages();
-      for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i);
+      // Add summary if available
+      if (analytics.generated_summary?.content) {
+        pdf.addPage();
+        currentY = margin;
 
-        // Footer line
-        pdf.setDrawColor(15, 118, 110);
-        pdf.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+        // Summary section header
+        pdf.setFillColor(15, 118, 110);
+        pdf.rect(margin, currentY, contentWidth, 8, "F");
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(12);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("ANALYSIS SUMMARY", margin + 5, currentY + 6);
+        currentY += 20;
 
-        // Footer text
-        pdf.setTextColor(100, 100, 100);
-        pdf.setFontSize(8);
+        // Add summary content with proper text wrapping
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(10);
         pdf.setFont("helvetica", "normal");
 
-        if (i === 1) {
-          pdf.text(
-            "Complete Customer Flow Analytics Report with Visual Charts",
-            margin,
-            pageHeight - 8
-          );
-        } else {
-          pdf.text(
-            `Generated on ${dateStr} - Charts & Data Included`,
-            margin,
-            pageHeight - 8
-          );
+        const summaryText = analytics.generated_summary.content;
+        const lines = pdf.splitTextToSize(summaryText, contentWidth);
+        
+        for (const line of lines) {
+          checkPageBreak(8);
+          pdf.text(line, margin, currentY);
+          currentY += 6;
         }
-
-        pdf.text(
-          `Page ${i} of ${totalPages}`,
-          pageWidth - margin,
-          pageHeight - 8,
-          { align: "right" }
-        );
       }
 
       // Generate filename with timestamp
@@ -1203,7 +830,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
         .toISOString()
         .replace(/[:.]/g, "-")
         .substring(0, 19);
-      const filename = `complete-analytics-report-with-charts-${analytics.id}-${timestamp}.pdf`;
+      const filename = `analytics-report-${analytics.id}-${timestamp}.pdf`;
 
       console.log("Saving PDF...");
       pdf.save(filename);
@@ -1240,47 +867,107 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
     }
   };
 
-  useEffect(() => {
-    if (!isOpen) {
-      setAnalytics(null);
-      setError("");
-      setLoading(false);
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
   const handleRefresh = () => {
     loadAnalytics();
   };
 
+  const handleBackToProcessed = () => {
+    if (onNavigate) {
+      onNavigate('processed');
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      {/* Adjusted positioning and sizing to account for sidebar */}
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-6 ml-64 max-h-[90vh] flex flex-col">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Customer Flow Analysis
-            </h2>
-            {analyticsId && (
-              <p className="text-sm text-gray-500 mt-1">
-                Video Analytics Report
-              </p>
-            )}
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleExportToPdf}
-              disabled={exportingPdf || loading || !analytics}
-              className="flex items-center px-3 py-2 text-sm font-medium text-white bg-teal-600 rounded-md hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Export to PDF"
-            >
-              {exportingPdf ? (
-                <>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div ref={pageContentRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Page Header */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={handleBackToProcessed}
+                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
                   <svg
-                    className="w-4 h-4 mr-2 animate-spin"
+                    className="w-4 h-4 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
+                  Back to Videos
+                </button>
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                    Customer Flow Analysis
+                  </h1>
+                  {analyticsId && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Analytics ID: {analyticsId}
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleExportToPdf}
+                  disabled={exportingPdf || loading || !analytics}
+                  className="flex items-center px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Export to PDF"
+                >
+                  {exportingPdf ? (
+                    <>
+                      <svg
+                        className="w-4 h-4 mr-2 animate-spin"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      Exporting...
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      Export PDF
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  onClick={handleRefresh}
+                  disabled={loading}
+                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 rounded-lg hover:bg-gray-100"
+                  title="Refresh data"
+                >
+                  <svg
+                    className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1292,70 +979,14 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
-                  Exporting...
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  Export PDF
-                </>
-              )}
-            </button>
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
-              title="Refresh data"
-            >
-              <svg
-                className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Modal Content - This will be captured for PDF */}
-        <div ref={modalContentRef} className="flex-1 overflow-y-auto">
+        {/* Main Content */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           {loading ? (
             <div className="flex items-center justify-center p-12">
               <div className="text-center">
@@ -1419,7 +1050,7 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
                     </h3>
                     <div className="mt-2 text-sm text-green-700">
                       <p>Analysis Type: Customer Flow Analysis</p>
-                      <p>Processing Status: Completed</p>
+                      <p>Processing Status: {analytics.status}</p>
                       <p>Confidence Score: {analytics.confidence_score}%</p>
                     </div>
                   </div>
@@ -1463,52 +1094,46 @@ const VideoMetricsModal: React.FC<VideoMetricsModalProps> = ({
               </div>
 
               {/* Content based on active view */}
-              {activeView === "charts" && (
-                <ChartDisplay
-                  charts={analytics.generated_charts}
-                  analyticsId={mockMode ? null : analyticsId}
-                  apiService={mockMode ? null : apiService}
-                  mockMode={mockMode}
-                />
-              )}
-              {activeView === "summary" && analytics.generated_summary && (
-                <div className="p-6">
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="font-semibold text-gray-900 mb-3">
-                      Analysis Summary
-                    </h3>
-                    <div className="prose max-w-none text-gray-700">
-                      <div className="whitespace-pre-line">
-                        {analytics.generated_summary.content}
+              <div className="pb-6">
+                {activeView === "charts" && (
+                  <ChartDisplay
+                    charts={analytics.generated_charts}
+                    analyticsId={mockMode ? null : analyticsId}
+                    apiService={mockMode ? null : apiService}
+                    mockMode={mockMode}
+                  />
+                )}
+                {activeView === "summary" && analytics.generated_summary && (
+                  <div className="px-6">
+                    <div className="bg-gray-50 rounded-lg p-6">
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Analysis Summary
+                      </h3>
+                      <div className="prose max-w-none text-gray-700">
+                        <div className="whitespace-pre-line">
+                          {analytics.generated_summary.content}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-              {activeView === "raw" && <RawDataView data={analytics} />}
+                )}
+                {activeView === "raw" && <RawDataView data={analytics} />}
+              </div>
             </div>
           ) : activeView === "charts" && analyticsId && !loading && !error ? (
             // Show chart display even when analytics is not loaded yet
-            <ChartDisplay
-              analyticsId={analyticsId}
-              apiService={apiService}
-              mockMode={mockMode}
-            />
+            <div className="pb-6">
+              <ChartDisplay
+                analyticsId={analyticsId}
+                apiService={apiService}
+                mockMode={mockMode}
+              />
+            </div>
           ) : null}
-        </div>
-
-        {/* Modal Footer */}
-        <div className="p-6 border-t border-gray-200 flex justify-end space-x-2">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 hover:bg-gray-50 transition-colors"
-          >
-            Close
-          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default VideoMetricsModal;
+export default VideoMetricsPage;

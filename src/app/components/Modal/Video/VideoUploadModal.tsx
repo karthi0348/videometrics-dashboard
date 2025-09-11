@@ -34,36 +34,64 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
   const [dragOver, setDragOver] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [authReceived, setAuthReceived] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Check local storage for an existing token first
-    const storedToken = localStorage.getItem('accessToken');
+    // Check local storage for existing tokens with both key names
+    const storedToken = localStorage.getItem('authToken') || localStorage.getItem('accessToken');
     if (storedToken) {
       setAccessToken(storedToken);
+      setAuthReceived(true);
       try {
         const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        setUser(storedUser);
+        if (storedUser && storedUser.id) {
+          setUser(storedUser);
+        }
       } catch (e) {
-        console.error("Failed to parse user data from localStorage");
+        console.error("Failed to parse user data from localStorage", e);
       }
     }
 
     // Set up a listener for messages from the login page
     const handleMessage = (event: MessageEvent) => {
-      // Verify the origin and data type for security
-      if (event.origin !== 'https://videometrics-ui.vercel.app/' || event.data.type !== 'AUTH_TOKEN') {
+      console.log('Received message:', event.data, 'from origin:', event.origin);
+      
+      // Accept messages from the login page (localhost:3000)
+      if (event.origin !== 'http://localhost:3000') {
+        console.log('Message rejected - invalid origin:', event.origin);
         return;
       }
       
-      const { accessToken: newAccessToken, user: newUser } = event.data;
-      
-      // Store the new token and user info in state and local storage
-      setAccessToken(newAccessToken);
-      setUser(newUser);
-      localStorage.setItem('accessToken', newAccessToken);
-      localStorage.setItem('user', JSON.stringify(newUser));
+      if (event.data && event.data.type === 'AUTH_TOKEN') {
+        const { accessToken: newAccessToken, user: newUser } = event.data;
+        
+        console.log('Auth token received:', newAccessToken ? 'Token present' : 'No token');
+        console.log('User data received:', newUser);
+        
+        if (newAccessToken) {
+          // Store the new token and user info in state and local storage
+          setAccessToken(newAccessToken);
+          setUser(newUser);
+          setAuthReceived(true);
+          
+          // Store in localStorage with both key names for compatibility
+          localStorage.setItem('authToken', newAccessToken);
+          localStorage.setItem('accessToken', newAccessToken);
+          localStorage.setItem('user', JSON.stringify(newUser));
+          
+          console.log('Auth token and user data stored successfully');
+          
+          // Send confirmation back to login page to stop sending messages
+          if (event.source) {
+            (event.source as Window).postMessage(
+              { type: 'AUTH_RECEIVED', success: true },
+              event.origin
+            );
+          }
+        }
+      }
     };
 
     window.addEventListener('message', handleMessage);
@@ -72,6 +100,30 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
       window.removeEventListener('message', handleMessage);
     };
   }, []);
+
+  // Send logout message to parent when component unmounts or user logs out
+  const handleLogout = () => {
+    // Clear local storage
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+    sessionStorage.clear();
+    
+    // Reset state
+    setAccessToken(null);
+    setUser(null);
+    setAuthReceived(false);
+    
+    // Send logout message to login page if it's the opener
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage(
+        { type: 'LOGOUT' },
+        'http://localhost:3000'
+      );
+    }
+    
+    console.log('Logged out successfully');
+  };
 
   if (!isOpen) return null;
 
@@ -247,12 +299,6 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
   // Show authentication prompt if no token
   if (!accessToken) {
     return (
@@ -261,19 +307,36 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
         onClick={handleBackdropClick}
       >
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Authentication Required</h2>
-          <p className="text-gray-600 mb-6">Please log in to upload videos.</p>
-          <button
-            onClick={handleClose}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-          >
-            Close
-          </button>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            {authReceived ? 'Authentication Error' : 'Waiting for Authentication'}
+          </h2>
+          <p className="text-gray-600 mb-6">
+            {authReceived 
+              ? 'Authentication failed. Please try logging in again.' 
+              : 'Please complete the login process in the parent window.'
+            }
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={handleClose}
+              className="w-full px-4 py-2 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-colors"
+            >
+              Close
+            </button>
+            {authReceived && (
+              <button
+                onClick={handleLogout}
+                className="w-full px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors"
+              >
+                Reset Authentication
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -293,25 +356,38 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Upload Video</h2>
             <p className="text-sm text-gray-500 mt-1">Add a new video to your library</p>
+            {user && (
+              <p className="text-xs text-blue-600 mt-1">
+                Logged in as: {user.username} ({user.email})
+              </p>
+            )}
           </div>
-          {!isUploading && (
+          <div className="flex items-center space-x-2">
             <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
-              aria-label="Close"
+              onClick={handleLogout}
+              className="text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full p-2 transition-all duration-200"
+              title="Logout"
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </button>
-          )}
+            {!isUploading && (
+              <button
+                onClick={handleClose}
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
+                aria-label="Close"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          {/* User Info Display */}
-          
-
           {/* Video Name Input */}
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">

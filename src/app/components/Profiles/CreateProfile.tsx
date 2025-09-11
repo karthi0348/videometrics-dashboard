@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { Profile } from '@/app/types/profiles';
 import { API_ENDPOINTS } from '../../config/api';
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Building, 
+  Briefcase, 
+  FileText, 
+  Hash, 
+  Check, 
+  Loader2, 
+  X,
+  AlertCircle,
+  UserPlus
+} from 'lucide-react';
 
 interface CreateProfileProps {
   onCreateProfile: (newProfile: Profile) => void;
@@ -23,6 +38,7 @@ interface CreateProfilePayload {
 const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tagInput, setTagInput] = useState('');
   
   const [formData, setFormData] = useState<CreateProfilePayload>({
     profile_name: '',
@@ -44,11 +60,21 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
     if (error) setError(null);
   };
 
-  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      const tag = tagInput.trim().toLowerCase();
+      if (tag && !formData.tags.includes(tag)) {
+        setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
+        setTagInput("");
+      }
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: value.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }));
   };
 
@@ -69,8 +95,8 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
     return response.json();
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsLoading(true);
     setError(null);
 
@@ -105,202 +131,314 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
     }
   };
 
+  const isFormValid = () => {
+    return (
+      formData.profile_name.trim() &&
+      formData.contact_email.trim() &&
+      formData.contact_person.trim() &&
+      formData.description.trim() &&
+      formData.location.trim() &&
+      formData.industry_sector.trim() &&
+      formData.business_type.trim() &&
+      formData.phone_number.trim()
+    );
+  };
+
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold" style={{ color: 'var(--purple-secondary)' }}>
-        Create New Profile
-      </h2>
+    <div className="min-h-screen rounded-2xl p-4 sm:p-6 lg:p-8  bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100 p-4 md:p-6 lg:p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 border border-purple-200">
+            <UserPlus className="w-6 h-6 text-purple-600" />
+          </div>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            Create New Profile
+          </h1>
+        </div>
+        <p className="text-gray-600">
+          Add a new profile to manage your business contacts and relationships
+        </p>
+      </div>
       
+      {/* Error Alert */}
       {error && (
-        <div className="p-4 text-sm border rounded-lg"
-             style={{
-               color: 'rgb(153, 27, 27)',
-               backgroundColor: 'rgb(254, 226, 226)',
-               borderColor: 'rgb(252, 165, 165)'
-             }}>
-          {error}
+        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
+          <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-red-700">
+            <p className="font-medium">Error creating profile</p>
+            <p className="text-red-600 mt-1">{error}</p>
+          </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <FormField 
-            label="Profile Name" 
-            name="profile_name" 
-            type="text" 
-            value={formData.profile_name} 
-            onChange={handleChange} 
-            required 
-            disabled={isLoading}
-          />
-          <FormField 
-            label="Contact Email" 
-            name="contact_email" 
-            type="email" 
-            value={formData.contact_email} 
-            onChange={handleChange} 
-            required 
-            disabled={isLoading}
-          />
-          <FormField 
-            label="Contact Person" 
-            name="contact_person" 
-            type="text" 
-            value={formData.contact_person} 
-            onChange={handleChange} 
-            required 
-            disabled={isLoading}
-          />
-          <FormField 
-            label="Phone Number" 
-            name="phone_number" 
-            type="tel" 
-            value={formData.phone_number} 
-            onChange={handleChange} 
-            required 
-            disabled={isLoading}
-          />
-          <FormField 
-            label="Location" 
-            name="location" 
-            type="text" 
-            value={formData.location} 
-            onChange={handleChange} 
-            required 
-            disabled={isLoading}
-          />
-          <FormField 
-            label="Industry Sector" 
-            name="industry_sector" 
-            type="text" 
-            value={formData.industry_sector} 
-            onChange={handleChange} 
-            required 
-            disabled={isLoading}
-          />
-          <FormField 
-            label="Business Type" 
-            name="business_type" 
-            type="text" 
-            value={formData.business_type} 
-            onChange={handleChange} 
-            required 
-            disabled={isLoading}
-          />
-          
-          <div className="md:col-span-2">
-            <label htmlFor="description" className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
-              Description <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={3}
-              className="mt-1 block w-full rounded-md shadow-sm disabled:bg-gray-50 disabled:text-gray-500"
-              style={{
-                borderColor: 'rgb(196, 127, 254, 0.3)'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = 'var(--purple-secondary)';
-                e.target.style.boxShadow = '0 0 0 3px rgb(81, 77, 223, 0.1)';
-                e.target.style.outline = 'none';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = 'rgb(196, 127, 254, 0.3)';
-                e.target.style.boxShadow = 'none';
-              }}
-              required
-              disabled={isLoading}
-            />
+      {/* Form */}
+      <div className="space-y-8">
+        {/* Basic Information Card */}
+        <div className="border border-gray-200 rounded-xl bg-white shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <User className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+                <p className="text-sm text-gray-500">Profile details and contact information</p>
+              </div>
+            </div>
           </div>
           
-          <div className="md:col-span-2">
-            <label htmlFor="tags" className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
-              Tags (comma-separated)
-            </label>
-            <input
-              id="tags"
-              type="text"
-              value={formData.tags.join(', ')}
-              onChange={handleTagsChange}
-              placeholder="e.g., technology, consulting, enterprise"
-              className="mt-1 block w-full rounded-md shadow-sm disabled:bg-gray-50 disabled:text-gray-500"
-              style={{
-                borderColor: 'rgb(196, 127, 254, 0.3)'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = 'var(--purple-secondary)';
-                e.target.style.boxShadow = '0 0 0 3px rgb(81, 77, 223, 0.1)';
-                e.target.style.outline = 'none';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = 'rgb(196, 127, 254, 0.3)';
-                e.target.style.boxShadow = 'none';
-              }}
-              disabled={isLoading}
-            />
-            <p className="mt-1 text-xs" style={{ color: 'var(--purple-accent)' }}>
-              Separate multiple tags with commas
-            </p>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Profile Name */}
+              <FormField 
+                label="Profile Name" 
+                name="profile_name" 
+                type="text" 
+                value={formData.profile_name} 
+                onChange={handleChange} 
+                required 
+                disabled={isLoading}
+                placeholder="Enter profile name"
+                icon={<User className="w-4 h-4" />}
+              />
+
+              {/* Contact Email */}
+              <FormField 
+                label="Contact Email" 
+                name="contact_email" 
+                type="email" 
+                value={formData.contact_email} 
+                onChange={handleChange} 
+                required 
+                disabled={isLoading}
+                placeholder="contact@company.com"
+                icon={<Mail className="w-4 h-4" />}
+              />
+
+              {/* Contact Person */}
+              <FormField 
+                label="Contact Person" 
+                name="contact_person" 
+                type="text" 
+                value={formData.contact_person} 
+                onChange={handleChange} 
+                required 
+                disabled={isLoading}
+                placeholder="John Doe"
+                icon={<User className="w-4 h-4" />}
+              />
+
+              {/* Phone Number */}
+              <FormField 
+                label="Phone Number" 
+                name="phone_number" 
+                type="tel" 
+                value={formData.phone_number} 
+                onChange={handleChange} 
+                required 
+                disabled={isLoading}
+                placeholder="+1 (555) 123-4567"
+                icon={<Phone className="w-4 h-4" />}
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Description <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  rows={4}
+                  placeholder="Describe this profile, business relationship, or key details..."
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none disabled:bg-gray-50 disabled:text-gray-500"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Provide a detailed description of this profile
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={isLoading}
-            className="px-6 py-2 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: 'rgb(196, 127, 254, 0.1)',
-              color: 'var(--purple-secondary)'
-            }}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.2)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading) {
-                e.currentTarget.style.backgroundColor = 'rgb(196, 127, 254, 0.1)';
-              }
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isLoading || !formData.profile_name || !formData.contact_email || !formData.contact_person}
-            className="px-6 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            style={{ backgroundColor: 'var(--purple-secondary)' }}
-            onMouseEnter={(e) => {
-              if (!e.currentTarget.disabled) {
-                e.currentTarget.style.backgroundColor = 'var(--purple-secondary)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!e.currentTarget.disabled) {
-                e.currentTarget.style.backgroundColor = 'var(--purple-secondary)';
-              }
-            }}
-          >
-            {isLoading && (
-              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-            )}
-            {isLoading ? 'Creating...' : 'Create Profile'}
-          </button>
+        {/* Business Information Card */}
+        <div className="border border-gray-200 rounded-xl bg-white shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Building className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Business Information</h3>
+                <p className="text-sm text-gray-500">Location and industry details</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Location */}
+              <FormField 
+                label="Location" 
+                name="location" 
+                type="text" 
+                value={formData.location} 
+                onChange={handleChange} 
+                required 
+                disabled={isLoading}
+                placeholder="New York, NY"
+                icon={<MapPin className="w-4 h-4" />}
+              />
+
+              {/* Industry Sector */}
+              <FormField 
+                label="Industry Sector" 
+                name="industry_sector" 
+                type="text" 
+                value={formData.industry_sector} 
+                onChange={handleChange} 
+                required 
+                disabled={isLoading}
+                placeholder="Technology, Healthcare, Finance..."
+                icon={<Building className="w-4 h-4" />}
+              />
+
+              {/* Business Type */}
+              <div className="md:col-span-2">
+                <FormField 
+                  label="Business Type" 
+                  name="business_type" 
+                  type="text" 
+                  value={formData.business_type} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={isLoading}
+                  placeholder="Corporation, Partnership, LLC, Startup..."
+                  icon={<Briefcase className="w-4 h-4" />}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </form>
+
+        {/* Tags Card */}
+        <div className="border border-gray-200 rounded-xl bg-white shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Hash className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Tags</h3>
+                <p className="text-sm text-gray-500">Optional categorization tags</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-6 space-y-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Add Tags
+              </label>
+              <div className="relative">
+                <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  placeholder="e.g., technology, consulting, enterprise (press Enter to add)"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleAddTag}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
+                  disabled={isLoading}
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Press Enter or comma to add tags
+              </p>
+            </div>
+            
+            {formData.tags.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">Added Tags:</p>
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 text-sm rounded-full border border-blue-200"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="text-blue-400 hover:text-blue-600 transition-colors"
+                        disabled={isLoading}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Form Actions */}
+        <div className="border-t border-gray-200 pt-6">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              {isFormValid() ? (
+                <div className="flex items-center gap-2 text-green-600">
+                  <Check className="w-4 h-4" />
+                  Profile is ready to create
+                </div>
+              ) : (
+                <span>Please complete all required fields</span>
+              )}
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onCancel}
+                disabled={isLoading}
+                className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!isFormValid() || isLoading}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    Create Profile
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
-// Reusable form field component with improved styling
+// Enhanced form field component with icons and modern styling
 const FormField = ({ 
   label, 
   name, 
@@ -309,7 +447,8 @@ const FormField = ({
   onChange, 
   required = false, 
   disabled = false,
-  placeholder 
+  placeholder,
+  icon
 }: {
   label: string;
   name: string;
@@ -319,34 +458,30 @@ const FormField = ({
   required?: boolean;
   disabled?: boolean;
   placeholder?: string;
+  icon?: React.ReactNode;
 }) => (
-  <div>
-    <label htmlFor={name} className="block text-sm font-medium" style={{ color: 'var(--purple-secondary)' }}>
-      {label} {required && <span style={{ color: 'rgb(239, 68, 68)' }}>*</span>}
+  <div className="space-y-2">
+    <label htmlFor={name} className="block text-sm font-medium text-gray-700">
+      {label} {required && <span className="text-red-500">*</span>}
     </label>
-    <input
-      id={name}
-      name={name}
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className="mt-1 block w-full rounded-md shadow-sm disabled:bg-gray-50 disabled:text-gray-500"
-      style={{
-        borderColor: 'rgb(196, 127, 254, 0.3)'
-      }}
-      onFocus={(e) => {
-        e.target.style.borderColor = 'var(--purple-secondary)';
-        e.target.style.boxShadow = '0 0 0 3px rgb(81, 77, 223, 0.1)';
-        e.target.style.outline = 'none';
-      }}
-      onBlur={(e) => {
-        e.target.style.borderColor = 'rgb(196, 127, 254, 0.3)';
-        e.target.style.boxShadow = 'none';
-      }}
-      required={required}
-      disabled={disabled}
-    />
+    <div className="relative">
+      {icon && (
+        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+          {icon}
+        </div>
+      )}
+      <input
+        id={name}
+        name={name}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors disabled:bg-gray-50 disabled:text-gray-500`}
+        required={required}
+        disabled={disabled}
+      />
+    </div>
   </div>
 );
 

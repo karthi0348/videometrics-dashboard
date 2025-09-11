@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
+import ClientAuthHandler from '../lib/ClientAuthHandler';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -16,11 +17,11 @@ export const metadata: Metadata = {
   robots: 'index, follow',
 };
 
-interface RootLayoutProps {
+export default function RootLayout({
+  children,
+}: {
   children: React.ReactNode;
-}
-
-export default function RootLayout({ children }: RootLayoutProps) {
+}) {
   return (
     <html lang="en" className="h-100">
       <head>
@@ -28,6 +29,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <meta name="theme-color" content="#1976d2" />
       </head>
       <body className={`${inter.className} h-100`}>
+        {/* Client side auth handler */}
+        <ClientAuthHandler />
         <ToastContainer containerId={'TR'} />
         <ToastContainer containerId={'BC'} />
         <div id="root" className="h-100">
@@ -44,4 +47,3 @@ export default function RootLayout({ children }: RootLayoutProps) {
     </html>
   );
 }
-

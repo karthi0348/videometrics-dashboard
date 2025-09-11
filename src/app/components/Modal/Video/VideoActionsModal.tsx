@@ -24,6 +24,14 @@ interface VideoActionsModalProps {
 
 type ModalTab = 'view' | 'edit' | 'delete';
 
+// Streaming API response interface
+interface StreamingResponse {
+  success: boolean;
+  streaming_url: string;
+  expires_at: string;
+  original_url: string;
+}
+
 const VideoActionsModal: React.FC<VideoActionsModalProps> = ({
   video,
   isOpen,
@@ -34,6 +42,7 @@ const VideoActionsModal: React.FC<VideoActionsModalProps> = ({
   const [activeTab, setActiveTab] = useState<ModalTab>('view');
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoadingStream, setIsLoadingStream] = useState(false);
   const [editData, setEditData] = useState({
     video_name: '',
     description: ''
@@ -50,6 +59,7 @@ const VideoActionsModal: React.FC<VideoActionsModalProps> = ({
     }
     setIsDeleting(false);
     setIsUpdating(false);
+    setIsLoadingStream(false);
   }, [video, isOpen]);
 
   const formatFileSize = (bytes: number | undefined): string => {
@@ -82,9 +92,59 @@ const VideoActionsModal: React.FC<VideoActionsModalProps> = ({
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const handlePlayVideo = () => {
-    if (video?.video_url) {
-      window.open(video.video_url, '_blank');
+  const getStreamingUrl = async (videoUrl: string, expirationMinutes: number = 60): Promise<string | null> => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch('http://172.174.114.7:8000/get-streaming-url', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          video_url: videoUrl,
+          expiration_minutes: expirationMinutes
+        }),
+      });
+
+      if (response.ok) {
+        const data: StreamingResponse = await response.json();
+        if (data.success) {
+          return data.streaming_url;
+        } else {
+          throw new Error('Failed to get streaming URL');
+        }
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to get streaming URL');
+      }
+    } catch (error) {
+      console.error('Error getting streaming URL:', error);
+      return null;
+    }
+  };
+
+  const handlePlayVideo = async () => {
+    if (!video?.video_url) return;
+
+    setIsLoadingStream(true);
+    try {
+      // Get streaming URL from the API
+      const streamingUrl = await getStreamingUrl(video.video_url);
+      
+      if (streamingUrl) {
+        // Open the streaming URL in a new tab
+        window.open(streamingUrl, '_blank');
+      } else {
+        // Fallback to original URL if streaming API fails
+        alert('Failed to get streaming URL. Opening original video URL.');
+        window.open(video.video_url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error playing video:', error);
+      alert('Failed to play video. Please try again.');
+    } finally {
+      setIsLoadingStream(false);
     }
   };
 
@@ -232,12 +292,22 @@ const VideoActionsModal: React.FC<VideoActionsModalProps> = ({
                     </div>
                     <button
                       onClick={handlePlayVideo}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      disabled={isLoadingStream}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center mx-auto"
                     >
-                      <svg className="w-5 h-5 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293L12 11l.707-.707A1 1 0 0113.414 10H15M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Play Video
+                      {isLoadingStream ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293L12 11l.707-.707A1 1 0 0113.414 10H15M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Play Video
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

@@ -6,5 +6,8 @@ export interface User {
 }
 
 export interface ApiResponse {
+  access_token(arg0: string, access_token: any): unknown;
+  user(user: any): string;
+  expires_in: number;
   message: string;
 }

@@ -17,6 +17,13 @@ import {
   ProcessedVideoNotification
 } from "./types/types";
 
+// Shadcn UI components
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, RefreshCw, Video, Clock, CheckCircle, XCircle, AlertCircle, Play, BarChart3, X, Eye } from "lucide-react";
+
 interface VideoItem {
   id: number;
   video_name: string;
@@ -656,163 +663,109 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
     };
   }, [pollingInterval]);
 
+  const getPriorityColor = (priority: Priority) => {
+    switch (priority) {
+      case "high":
+        return "bg-red-500/20 text-red-700 border-red-300";
+      case "low":
+        return "bg-gray-500/20 text-gray-700 border-gray-300";
+      default:
+        return "bg-blue-500/20 text-blue-700 border-blue-300";
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100 flex items-center justify-center px-4">
-        <div className="bg-white rounded-lg shadow-sm border border-purple-200 p-6 sm:p-8 max-w-md w-full">
-          <div className="flex items-center justify-center mb-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-            Loading Process Video
-          </h3>
-          <p className="text-gray-600 text-sm text-center">
-            Fetching videos, profiles, and sub-profiles...
-          </p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50 flex items-center justify-center px-4">
+        <Card className="backdrop-blur-xl bg-white/60 border-white/30 shadow-2xl max-w-md w-full">
+          <CardContent className="p-8">
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Video className="w-6 h-6 text-violet-600" />
+                </div>
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-center mb-3 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+              Loading Process Video
+            </h3>
+            <p className="text-gray-600 text-sm text-center">
+              Fetching videos, profiles, and sub-profiles...
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-purple-100">
+    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-purple-200">
+      <div className="backdrop-blur-xl bg-white/70 border-b border-white/30 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-4 sm:py-6 space-y-4 sm:space-y-0">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center py-6 space-y-4 sm:space-y-0">
             <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-purple-700 truncate">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 Process Video
               </h1>
-              <p className="text-gray-600 mt-1 text-sm">
+              <p className="text-gray-600/80 mt-1 text-sm">
                 Upload and analyze your videos with powerful AI-driven metrics
               </p>
             </div>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-              <button
+              <Button
                 onClick={handleRefresh}
-                className="inline-flex items-center justify-center px-4 py-2 border border-purple-300 rounded-lg text-sm font-medium text-purple-700 bg-white hover:bg-purple-50 transition-colors"
+                variant="outline"
+                className="backdrop-blur-sm bg-white/60 border-white/40 hover:bg-white/80 transition-all duration-200"
                 disabled={loading}
               >
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                <span className="whitespace-nowrap">
-                  {loading ? "Refreshing..." : "Refresh"}
-                </span>
-              </button>
-              <button
+                <RefreshCw className="w-4 h-4 mr-2" />
+                {loading ? "Refreshing..." : "Refresh"}
+              </Button>
+              <Button
                 onClick={handleAllVideos}
-                className="inline-flex items-center justify-center px-4 py-2 border border-purple-300 rounded-lg text-sm font-medium text-purple-700 bg-white hover:bg-purple-50 transition-colors"
+                variant="outline"
+                className="backdrop-blur-sm bg-white/60 border-white/40 hover:bg-white/80 transition-all duration-200"
               >
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
-                <span className="whitespace-nowrap">All Videos</span>
-              </button>
+                <Video className="w-4 h-4 mr-2" />
+                All Videos
+              </Button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Progress Steps */}
-      <div className="bg-white border-b border-purple-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="backdrop-blur-sm bg-white/50 border-b border-white/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-wrap items-center gap-4 lg:gap-8">
-            <div className="flex items-center min-w-0">
-              <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-medium flex-shrink-0">
-                1
+            {[
+              { step: 1, title: "Select Video", active: true },
+              { step: 2, title: "Select Analytics", active: true },
+              { step: 3, title: "Process", active: true },
+              { step: 4, title: "View Results", active: false, completed: false }
+            ].map((item, index) => (
+              <div key={item.step} className="flex items-center min-w-0">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold flex-shrink-0 transition-all duration-300 ${
+                  item.active 
+                    ? "bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg" 
+                    : item.completed
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-300 text-gray-600"
+                }`}>
+                  {item.completed ? <CheckCircle className="w-5 h-5" /> : item.step}
+                </div>
+                <span className={`ml-3 text-sm font-medium truncate transition-colors ${
+                  item.active ? "text-violet-600" : item.completed ? "text-green-600" : "text-gray-500"
+                }`}>
+                  {item.title}
+                </span>
+                {index < 3 && (
+                  <div className="w-8 h-0.5 bg-gradient-to-r from-violet-300 to-purple-300 ml-4 hidden sm:block" />
+                )}
               </div>
-              <span className="ml-2 text-sm font-medium text-gray-900 truncate">
-                Select Video
-              </span>
-              <svg
-                className="w-4 h-4 ml-2 lg:ml-4 text-gray-400 flex-shrink-0 hidden sm:block"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-
-            <div className="flex items-center min-w-0">
-              <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-medium flex-shrink-0">
-                2
-              </div>
-              <span className="ml-2 text-sm font-medium text-gray-900 truncate">
-                Select Analytics
-              </span>
-              <svg
-                className="w-4 h-4 ml-2 lg:ml-4 text-gray-400 flex-shrink-0 hidden sm:block"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-
-            <div className="flex items-center min-w-0">
-              <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-medium flex-shrink-0">
-                3
-              </div>
-              <span className="ml-2 text-sm font-medium text-gray-900 truncate">
-                Process
-              </span>
-              <svg
-                className="w-4 h-4 ml-2 lg:ml-4 text-gray-400 flex-shrink-0 hidden sm:block"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-
-            <div className="flex items-center min-w-0">
-              <div className="flex items-center justify-center w-8 h-8 bg-green-500 text-white rounded-full text-sm font-medium flex-shrink-0">
-                4
-              </div>
-              <span className="ml-2 text-sm font-medium text-green-600 truncate">
-                View Results
-              </span>
-            </div>
+            ))}
           </div>
         </div>
       </div>
@@ -821,44 +774,16 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       {(success || error) && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {success && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-              <div className="flex">
-                <svg
-                  className="w-5 h-5 text-green-400 mt-0.5 mr-3 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                <div className="text-green-800 text-sm" dangerouslySetInnerHTML={{ __html: success }} />
-              </div>
-            </div>
+            <Alert className="mb-4 backdrop-blur-sm bg-emerald-50/80 border-emerald-200/50">
+              <CheckCircle className="h-4 w-4 text-emerald-600" />
+              <AlertDescription className="text-emerald-800" dangerouslySetInnerHTML={{ __html: success }} />
+            </Alert>
           )}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-              <div className="flex">
-                <svg
-                  className="w-5 h-5 text-red-400 mt-0.5 mr-3 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-                <div className="text-red-800 text-sm">{error}</div>
-              </div>
-            </div>
+            <Alert className="mb-4 backdrop-blur-sm bg-red-50/80 border-red-200/50">
+              <AlertCircle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">{error}</AlertDescription>
+            </Alert>
           )}
         </div>
       )}
@@ -866,94 +791,70 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       {/* Completed Videos Notifications */}
       {completedVideos.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             {completedVideos.map((video) => (
-              <div
-                key={video.uuid}
-                className={`border rounded-lg p-4 ${
-                  video.status === "completed"
-                    ? "bg-green-50 border-green-200"
-                    : "bg-red-50 border-red-200"
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                  <div className="flex items-start sm:items-center">
-                    <svg
-                      className={`w-5 h-5 mr-3 mt-0.5 sm:mt-0 flex-shrink-0 ${
-                        video.status === "completed"
-                          ? "text-green-400"
-                          : "text-red-400"
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+              <Card key={video.uuid} className={`backdrop-blur-sm border-white/30 ${
+                video.status === "completed"
+                  ? "bg-emerald-50/80 border-emerald-200/50"
+                  : "bg-red-50/80 border-red-200/50"
+              }`}>
+                <CardContent className="p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                    <div className="flex items-start sm:items-center">
                       {video.status === "completed" ? (
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M5 13l4 4L19 7"
-                        />
+                        <CheckCircle className="w-5 h-5 mr-3 mt-0.5 sm:mt-0 text-emerald-500 flex-shrink-0" />
                       ) : (
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M6 18L18 6M6 6l12 12"
-                        />
+                        <XCircle className="w-5 h-5 mr-3 mt-0.5 sm:mt-0 text-red-500 flex-shrink-0" />
                       )}
-                    </svg>
-                    <div
-                      className={`min-w-0 flex-1 ${
-                        video.status === "completed"
-                          ? "text-green-800"
-                          : "text-red-800"
-                      }`}
-                    >
-                      <strong className="block truncate">
-                        Video &ldquo;{video.video_name}&rdquo;{" "}
-                        {video.status === "completed" ? "completed" : "failed"}{" "}
-                        processing!
-                      </strong>
+                      <div className={`min-w-0 flex-1 ${
+                        video.status === "completed" ? "text-emerald-800" : "text-red-800"
+                      }`}>
+                        <div className="font-semibold truncate">
+                          Video "{video.video_name}" {video.status === "completed" ? "completed" : "failed"} processing!
+                        </div>
+                        {video.status === "completed" && (
+                          <p className="text-sm mt-1 opacity-80">
+                            Ready to view in Processed Videos tab.
+                          </p>
+                        )}
+                        {video.error_message && (
+                          <p className="text-sm mt-1 break-words opacity-80">
+                            Error: {video.error_message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex space-x-2 flex-shrink-0">
                       {video.status === "completed" && (
-                        <p className="text-sm mt-1">
-                          Ready to view in Processed Videos tab.
-                        </p>
+                        <Button
+                          onClick={() => handleViewAnalytics(video.uuid)}
+                          size="sm"
+                          className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          View Results
+                        </Button>
                       )}
-                      {video.error_message && (
-                        <p className="text-sm mt-1 break-words">
-                          Error: {video.error_message}
-                        </p>
-                      )}
+                      <Button
+                        onClick={() => clearCompletedNotification(video.uuid)}
+                        size="sm"
+                        variant="outline"
+                        className="backdrop-blur-sm bg-white/60 border-white/40 hover:bg-white/80"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 sm:ml-4 flex-shrink-0">
-                    {video.status === "completed" && (
-                      <button
-                        onClick={() => handleViewAnalytics(video.uuid)}
-                        className="text-sm bg-green-100 text-green-700 px-3 py-1 rounded-md hover:bg-green-200 transition-colors text-center whitespace-nowrap"
-                      >
-                        View Results
-                      </button>
-                    )}
-                    <button
-                      onClick={() => clearCompletedNotification(video.uuid)}
-                      className="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-200 transition-colors text-center whitespace-nowrap"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {/* Process Video Form */}
           <div className="order-1">
             <ProcessVideoForm
@@ -967,128 +868,101 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
           {/* Processing Queue */}
           <div className="order-2">
-            <div className="bg-white rounded-lg shadow-sm border border-purple-200 p-4 sm:p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-6 h-6 text-purple-500 mr-3 flex-shrink-0">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <h2 className="text-lg font-semibold text-gray-900 truncate">
-                  Processing Queue
-                </h2>
-                {processingQueue.length > 0 && pollingInterval && (
-                  <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 whitespace-nowrap">
-                    Auto-updating
-                  </span>
-                )}
-              </div>
-              <p className="text-gray-600 text-sm mb-6">
-                Videos currently being processed ({processingQueue.length})
-              </p>
-
-              {processingQueue.length === 0 ? (
-                <div className="text-center py-8 sm:py-12">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-purple-300">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="1.5"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+            <Card className="min-h-screen rounded-2xl p-4 sm:p-6 lg:p-8  bg-gradient-to-br from-blue-300 via-purple-300 to-indigo-100 p-4 md:p-6 lg:p-8">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-6">
+                  <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-600/20 mr-4">
+                    <Clock className="w-6 h-6 text-blue-600" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-                    No videos currently processing
-                  </h3>
-                  <p className="text-gray-500 text-sm">
-                    Videos being processed will appear here and auto-update
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-80 sm:max-h-96 overflow-y-auto">
-                  {processingQueue.map((video) => (
-                    <div
-                      key={video.uuid}
-                      className="border border-purple-200 rounded-lg p-3 sm:p-4"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center min-w-0 flex-1">
-                          <div className="animate-spin w-5 h-5 mr-3 text-purple-500 flex-shrink-0">
-                            <svg fill="none" viewBox="0 0 24 24">
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
-                          </div>
-                          <span className="text-sm font-medium text-gray-900 truncate">
-                            {video.video_name}
-                          </span>
-                        </div>
-                        <div className="flex items-center space-x-2 flex-shrink-0">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              video.priority === "high"
-                                ? "bg-red-100 text-red-800"
-                                : video.priority === "low"
-                                ? "bg-gray-100 text-gray-800"
-                                : "bg-purple-100 text-purple-800"
-                            }`}
-                          >
-                            {video.priority}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-500 mb-3 space-y-1">
-                        <div>
-                          Status:{" "}
-                          <span className="font-medium">{video.status}</span>
-                        </div>
-                        <div>
-                          Estimated completion:{" "}
-                          <span className="font-medium">
-                            {video.estimated_completion}
-                          </span>
-                        </div>
-                        <div className="break-all">
-                          UUID: <span className="font-mono">{video.uuid}</span>
-                        </div>
-                      </div>
-                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                        <button
-                          onClick={() => handleViewAnalytics(video.uuid)}
-                          className="text-xs bg-purple-50 text-purple-700 px-3 py-1 rounded-md hover:bg-purple-100 transition-colors text-center"
-                        >
-                          View Analytics
-                        </button>
-                        <button
-                          onClick={() => removeFromQueue(video.uuid)}
-                          className="text-xs bg-gray-50 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-100 transition-colors text-center"
-                        >
-                          Remove from Queue
-                        </button>
-                      </div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      Processing Queue
+                    </h2>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-sm text-gray-600/80">
+                        Videos currently being processed ({processingQueue.length})
+                      </p>
+                      {processingQueue.length > 0 && pollingInterval && (
+                        <Badge variant="outline" className="bg-blue-500/10 text-blue-700 border-blue-200 text-xs">
+                          Auto-updating
+                        </Badge>
+                      )}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
-            </div>
+
+                {processingQueue.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 mx-auto mb-6 text-purple-300/50">
+                      <Clock className="w-full h-full" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                      No videos currently processing
+                    </h3>
+                    <p className="text-gray-500/80 text-sm">
+                      Videos being processed will appear here and auto-update
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {processingQueue.map((video) => (
+                      <Card key={video.uuid} className="backdrop-blur-sm bg-white/60 border-white/40">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center min-w-0 flex-1">
+                              <Loader2 className="w-5 h-5 mr-3 text-violet-500 animate-spin flex-shrink-0" />
+                              <span className="text-sm font-semibold text-gray-700 truncate">
+                                {video.video_name}
+                              </span>
+                            </div>
+                            <Badge variant="outline" className={getPriorityColor(video.priority)}>
+                              {video.priority}
+                            </Badge>
+                          </div>
+                          
+                          <div className="text-xs text-gray-600/80 space-y-1 mb-4">
+                            <div className="flex justify-between">
+                              <span>Status:</span>
+                              <span className="font-medium">{video.status}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>ETA:</span>
+                              <span className="font-medium">{video.estimated_completion}</span>
+                            </div>
+                            <div className="break-all">
+                              <span>UUID: </span>
+                              <code className="font-mono text-xs bg-gray-100/50 px-1 rounded">
+                                {video.uuid}
+                              </code>
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleViewAnalytics(video.uuid)}
+                              size="sm"
+                              variant="outline"
+                              className="flex-1 backdrop-blur-sm bg-violet-50/80 border-violet-200/50 hover:bg-violet-100/80 text-violet-700"
+                            >
+                              <BarChart3 className="w-3 h-3 mr-1" />
+                              Analytics
+                            </Button>
+                            <Button
+                              onClick={() => removeFromQueue(video.uuid)}
+                              size="sm"
+                              variant="outline"
+                              className="backdrop-blur-sm bg-gray-50/80 border-gray-200/50 hover:bg-gray-100/80 text-gray-700"
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

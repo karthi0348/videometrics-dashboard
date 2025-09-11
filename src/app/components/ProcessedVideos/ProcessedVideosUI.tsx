@@ -224,14 +224,14 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
         <div className="p-4">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center space-x-2 flex-1 min-w-0">
-             {isSelectMode && (
-  <input
-    type="checkbox"
-    checked={selectedVideos.has(video.id)}
-    onChange={() => handleSelectVideo(video.id)}
-    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 flex-shrink-0"
-  />
-)}
+              {isSelectMode && (
+                <input
+                  type="checkbox"
+                  checked={selectedVideos.has(video.id)}
+                  onChange={() => handleSelectVideo(video.id)}
+                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 flex-shrink-0"
+                />
+              )}
 
               <h3
                 className="font-semibold text-gray-900 text-sm truncate"
@@ -316,7 +316,9 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
           <div className="flex space-x-2">
             {video.processing_status === "completed" ? (
               <button
-                onClick={() => handleViewMetrics(video.id.toString())}
+                onClick={() =>
+                  handleViewMetrics(video.analytics_id || video.id.toString())
+                }
                 className="flex-1 bg-teal-50 hover:bg-teal-100 text-teal-700 font-medium py-2 px-3 rounded-lg transition-colors duration-200 border border-teal-200 hover:border-teal-300 text-sm"
               >
                 View Metrics
@@ -353,15 +355,14 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4 flex-1 min-w-0">
-      {isSelectMode && (
-  <input
-    type="checkbox"
-    checked={selectedVideos.has(video.id)}
-    onChange={() => handleSelectVideo(video.id)}
-    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 flex-shrink-0"
-  />
-)}
-
+          {isSelectMode && (
+            <input
+              type="checkbox"
+              checked={selectedVideos.has(video.id)}
+              onChange={() => handleSelectVideo(video.id)}
+              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 flex-shrink-0"
+            />
+          )}
 
           {/* Thumbnail */}
           <div className="w-16 h-10 flex-shrink-0">
@@ -425,7 +426,9 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
         <div className="flex items-center space-x-2 flex-shrink-0">
           {video.processing_status === "completed" && (
             <button
-              onClick={() => handleViewMetrics(video.id.toString())}
+              onClick={() =>
+                handleViewMetrics(video.analytics_id || video.id.toString())
+              }
               className="bg-teal-50 text-teal-700 px-3 py-1.5 rounded-md hover:bg-teal-100 transition-colors text-sm font-medium"
             >
               Metrics
@@ -462,14 +465,14 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
       }`}
     >
       <div className="flex items-center space-x-3">
-      {isSelectMode && (
-  <input
-    type="checkbox"
-    checked={selectedVideos.has(video.id)}
-    onChange={() => handleSelectVideo(video.id)}
-    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 flex-shrink-0"
-  />
-)}
+        {isSelectMode && (
+          <input
+            type="checkbox"
+            checked={selectedVideos.has(video.id)}
+            onChange={() => handleSelectVideo(video.id)}
+            className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 flex-shrink-0"
+          />
+        )}
 
         <div
           className={`w-10 h-10 bg-gradient-to-br ${getGradientColor(
@@ -494,7 +497,9 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
         <div className="flex items-center space-x-1">
           {video.processing_status === "completed" && (
             <button
-              onClick={() => handleViewMetrics(video.id.toString())}
+              onClick={() =>
+                handleViewMetrics(video.analytics_id || video.id.toString())
+              }
               className="p-2 text-teal-600 hover:text-teal-700 transition-colors hover:bg-teal-50 rounded-md"
               title="View metrics"
             >
@@ -535,7 +540,7 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
-<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 rounded-3xl">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 rounded-3xl">
           <div className="flex flex-col space-y-4 py-4 sm:py-6">
             {/* Title Section */}
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">

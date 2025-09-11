@@ -33,13 +33,13 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ profile, onEdit, onDele
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <div className="min-h-screen rounded-2xl p-4 sm:p-6 lg:p-8 x  bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100 space-y-4 sm:space-y-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 space-y-4 sm:space-y-0">
         <div className="flex-1 min-w-0">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate" style={{ color: 'var(--purple-primary)' }}>
+          <div className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
             Profile Details
-          </h2>
+          </div>
           <p className="text-sm sm:text-base text-gray-600 mt-1">
             View and manage the details of{' '}
             <span className="truncate inline-block max-w-full sm:max-w-xs lg:max-w-none" style={{ color: 'var(--purple-secondary)', fontWeight: '500' }}>
