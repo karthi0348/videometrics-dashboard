@@ -4,14 +4,19 @@ import { PieChart, CircularGauge } from "./ChartComponents";
 
 // Define API service interface
 interface ApiService {
-  getCharts: (analyticsId: string) => Promise<GeneratedChart[] | string>;
-  refreshChart: (analyticsId: string, chartId: string) => Promise<GeneratedChart | string>;
+  getAnalyticsCharts: (
+    analyticsId: string
+  ) => Promise<GeneratedChart[] | string>;
+  refreshChart: (
+    analyticsId: string,
+    chartId: string
+  ) => Promise<GeneratedChart | string>;
 }
 
 interface ChartDisplayProps {
   charts?: GeneratedChart[];
   analyticsId?: string;
-  apiService?: ApiService | null;
+  apiService?: ApiService | null; // Updated to use getAnalyticsCharts method
   mockMode?: boolean;
 }
 
@@ -27,7 +32,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
   const [refreshingCharts, setRefreshingCharts] = useState<Set<string>>(
     new Set()
   );
-
   const loadChartsFromAPI = useCallback(async () => {
     if (!analyticsId || !apiService) {
       setError("Analytics ID or API service not available");
@@ -40,7 +44,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     try {
       console.log("Fetching charts for analytics ID:", analyticsId);
 
-      const response = await apiService.getCharts(analyticsId);
+      // Use the new getAnalyticsCharts method instead of getCharts
+      const response = await apiService.getAnalyticsCharts(analyticsId);
 
       let chartData: GeneratedChart[];
       if (typeof response === "string") {
@@ -72,7 +77,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
       setLoading(false);
     }
   }, [analyticsId, apiService]);
-
   // Load charts from API if analyticsId is provided and no initial charts
   useEffect(() => {
     if (analyticsId && !initialCharts && !mockMode && apiService) {
@@ -143,11 +147,11 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     return (
       chart.plot_type === "pie" &&
       chart.series &&
-      Array.isArray(chart.series.valueOf) &&
+      Array.isArray(chart.series.value) &&
       Array.isArray(chart.series.category) &&
-      chart.series.valueOf.length > 0 &&
+      chart.series.value.length > 0 &&
       chart.series.category.length > 0 &&
-      chart.series.valueOf.length === chart.series.category.length
+      chart.series.value.length === chart.series.category.length
     );
   };
 
@@ -155,7 +159,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     return (
       <div className="flex items-center justify-center p-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading charts...</p>
         </div>
       </div>
@@ -218,7 +222,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
         {analyticsId && !mockMode && apiService && (
           <button
             onClick={loadChartsFromAPI}
-            className="mt-4 inline-flex items-center px-4 py-2 bg-teal-500 text-white rounded-md text-sm font-medium hover:bg-teal-600 transition-colors"
+            className="mt-4 inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded-md text-sm font-medium hover:bg-teal-600 transition-colors"
           >
             Load Charts
           </button>
@@ -260,13 +264,13 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {charts.map((chart) => (
           // MAIN CHART CONTAINER - This is what gets captured for PDF
-          <div 
-            key={chart.id} 
+          <div
+            key={chart.id}
             className="chart-container bg-white rounded-lg border border-gray-200 shadow-sm p-6 relative"
             data-chart-id={chart.id}
             data-chart-type={chart.plot_type}
             data-chart-title={chart.title}
-            style={{ minHeight: '300px' }} // Ensure consistent sizing
+            style={{ minHeight: "300px" }} // Ensure consistent sizing
           >
             {/* Individual chart refresh button */}
             {analyticsId && !mockMode && apiService && (
@@ -300,27 +304,30 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                 {chart.title}
               </h3>
               <div className="flex justify-center mt-2">
-                <span 
+                <span
                   className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    chart.status === 'excellent' 
-                      ? 'bg-green-100 text-green-800 border border-green-200' 
-                      : chart.status === 'good' 
-                      ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' 
-                      : 'bg-red-100 text-red-800 border border-red-200'
+                    chart.status === "excellent"
+                      ? "bg-green-100 text-green-800 border border-green-200"
+                      : chart.status === "good"
+                      ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                      : "bg-red-100 text-red-800 border border-red-200"
                   }`}
                 >
-                  {chart.status?.toUpperCase() || 'UNKNOWN'}
+                  {chart.status?.toUpperCase() || "UNKNOWN"}
                 </span>
               </div>
             </div>
 
             {/* Chart Visualization Area */}
-            <div className="chart-visualization mb-6 flex justify-center items-center" style={{ minHeight: '150px' }}>
+            <div
+              className="chart-visualization mb-6 flex justify-center items-center"
+              style={{ minHeight: "150px" }}
+            >
               {chart.plot_type === "gauge" && chart.value !== undefined ? (
                 <CircularGauge
                   value={chart.value}
                   maxValue={chart.styling?.max_value || 100}
-                  title=""  // Title is handled above
+                  title="" // Title is handled above
                   unit={chart.styling?.unit}
                   status={chart.status}
                   size={140}
@@ -328,10 +335,10 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
               ) : isValidPieChartData(chart) ? (
                 <PieChart
                   data={{
-                    value: chart.series!.valueOf as number[],
+                    value: chart.series!.value as number[], // Fixed: was 'valueOf'
                     category: chart.series!.category as string[],
                   }}
-                  title=""  // Title is handled above
+                  title=""
                   status={chart.status}
                 />
               ) : chart.series && chart.x_axis ? (
@@ -347,42 +354,44 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                         ([seriesName, values]) => (
                           <div key={seriesName}>
                             <div className="text-sm font-medium text-gray-700 mb-2">
-                              {seriesName.charAt(0).toUpperCase() + seriesName.slice(1)}
+                              {seriesName.charAt(0).toUpperCase() +
+                                seriesName.slice(1)}
                             </div>
                             <div
                               className="flex items-end space-x-1"
                               style={{ height: "80px" }}
                             >
-                              {Array.isArray(values) && (values as number[]).map((value, index) => (
-                                <div
-                                  key={index}
-                                  className="flex flex-col items-center flex-1"
-                                  style={{ maxWidth: '40px' }}
-                                >
+                              {Array.isArray(values) &&
+                                (values as number[]).map((value, index) => (
                                   <div
-                                    className="bg-teal-500 w-full rounded-t"
-                                    style={{
-                                      height: `${
-                                        (value /
-                                          Math.max(...(values as number[]))) *
-                                        60
-                                      }px`,
-                                      minHeight: "4px",
-                                    }}
-                                  ></div>
-                                  <span 
-                                    className="text-xs text-gray-600 mt-1 text-center"
-                                    style={{ 
-                                      transform: 'rotate(-45deg)', 
-                                      transformOrigin: 'center bottom',
-                                      marginTop: '8px',
-                                      fontSize: '10px'
-                                    }}
+                                    key={index}
+                                    className="flex flex-col items-center flex-1"
+                                    style={{ maxWidth: "40px" }}
                                   >
-                                    {chart.x_axis?.[index]}
-                                  </span>
-                                </div>
-                              ))}
+                                    <div
+                                      className="bg-purple-500 w-full rounded-t"
+                                      style={{
+                                        height: `${
+                                          (value /
+                                            Math.max(...(values as number[]))) *
+                                          60
+                                        }px`,
+                                        minHeight: "4px",
+                                      }}
+                                    ></div>
+                                    <span
+                                      className="text-xs text-gray-600 mt-1 text-center"
+                                      style={{
+                                        transform: "rotate(-45deg)",
+                                        transformOrigin: "center bottom",
+                                        marginTop: "8px",
+                                        fontSize: "10px",
+                                      }}
+                                    >
+                                      {chart.x_axis?.[index]}
+                                    </span>
+                                  </div>
+                                ))}
                             </div>
                           </div>
                         )
@@ -393,11 +402,23 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
               ) : (
                 <div className="w-full bg-gray-50 rounded-lg p-8 text-center">
                   <div className="text-gray-400 mb-2">
-                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    <svg
+                      className="w-12 h-12 mx-auto"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                      />
                     </svg>
                   </div>
-                  <p className="text-gray-500 text-sm">Chart data not available</p>
+                  <p className="text-gray-500 text-sm">
+                    Chart data not available
+                  </p>
                 </div>
               )}
             </div>
@@ -405,26 +426,34 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
             {/* Data Summary for PDF capture */}
             {(chart.value !== undefined || chart.series) && (
               <div className="data-summary bg-gray-50 rounded-lg p-3 mb-4 text-xs">
-                <div className="font-medium text-gray-700 mb-2">Data Summary:</div>
+                <div className="font-medium text-gray-700 mb-2">
+                  Data Summary:
+                </div>
                 <div className="space-y-1">
                   {chart.value !== undefined && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Value:</span>
-                      <span className="font-medium">{chart.value} {chart.styling?.unit || ''}</span>
+                      <span className="font-medium">
+                        {chart.value} {chart.styling?.unit || ""}
+                      </span>
                     </div>
                   )}
-                  {chart.series?.category && chart.series?.value && Array.isArray(chart.series.category) && (
-                    <>
-                      {chart.series.category.map((category, idx) => (
-                        <div key={idx} className="flex justify-between">
-                          <span className="text-gray-600">{category}:</span>
-                          <span className="font-medium">
-                            {Array.isArray(chart.series.value) ? chart.series.value[idx] : chart.series.value}
-                          </span>
-                        </div>
-                      ))}
-                    </>
-                  )}
+                  {chart.series?.category &&
+                    chart.series?.value &&
+                    Array.isArray(chart.series.category) && (
+                      <>
+                        {chart.series.category.map((category, idx) => (
+                          <div key={idx} className="flex justify-between">
+                            <span className="text-gray-600">{category}:</span>
+                            <span className="font-medium">
+                              {Array.isArray(chart.series.value)
+                                ? chart.series.value[idx]
+                                : chart.series.value}
+                            </span>
+                          </div>
+                        ))}
+                      </>
+                    )}
                 </div>
               </div>
             )}
@@ -438,7 +467,10 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                 </h4>
                 <ul className="space-y-2">
                   {chart.insights.map((insight: string, index: number) => (
-                    <li key={index} className="text-gray-600 text-sm flex items-start">
+                    <li
+                      key={index}
+                      className="text-gray-600 text-sm flex items-start"
+                    >
                       <span className="text-teal-500 mr-2 mt-1">•</span>
                       <span>{insight}</span>
                     </li>

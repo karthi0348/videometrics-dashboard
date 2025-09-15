@@ -20,7 +20,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
 
 // Import Lucide Icons
 import {
@@ -31,6 +30,7 @@ import {
   Camera,
   RotateCcw,
   PenSquare,
+  Settings,
 } from "lucide-react";
 
 const SettingsPage = () => {
@@ -124,7 +124,6 @@ const SettingsPage = () => {
     try {
       const payload = {
         email: passwordData.email,
-        full_name: fullName, // Required field
         current_password: passwordData.current_password,
         new_password: passwordData.new_password,
       };
@@ -182,9 +181,6 @@ const SettingsPage = () => {
       .slice(0, 2);
   };
 
-  // Add the custom glassmorphism class to the root element.
-  // Make sure you have the background image set up in your global CSS.
-  // The glass effect is from the combination of `bg-white/20`, `border-white/30`, and `backdrop-blur-md`
   const glassMorphismClass = "bg-white/20 border-white/30 backdrop-blur-md";
 
   if (isLoading) {
@@ -199,78 +195,82 @@ const SettingsPage = () => {
   }
 
   return (
-    // You'll need to define a background gradient or image in your CSS for the glass effect to be visible.
-    // For example, in your global.css, you could have:
-    // body { background: linear-gradient(to right, #6a11cb, #2575fc); }
-    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100 p-4 sm:p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100 p-2 sm:p-4 lg:p-8">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-8">
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-purple drop-shadow-lg">
-            ⚙️ Profile Settings 
+        <div className="text-center px-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-purple drop-shadow-lg">
+            <div className="inline-block w-6 h-6 sm:w-8 sm:h-8 mr-2" />
+            Profile Settings 
           </h1>
-          <p className="text-sm text-grey/80 mt-2">
+          <p className="text-xs sm:text-sm text-grey/80 mt-2">
             Manage your account and profile information.
           </p>
         </div>
 
         {/* Main Content Card */}
-        <Card className={`w-full ${glassMorphismClass} text-purple`}>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <User className="w-6 h-6 text-purple-800" />
-              <CardTitle className="text-xl">Your Profile</CardTitle>
-            </div>
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
-              <Button
-                onClick={handleChangePassword}
-                variant="outline"
-                className="bg-blue-600 text-white hover:bg-white/10 border-white/30"
-              >
-                <Key className="w-4 h-4 mr-2" />
-                Change Password
-              </Button>
-              <Button
-                onClick={handleResetPassword}
-                variant="outline"
-                className="bg-green-600 text-white hover:bg-white/10 border-white/30"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Reset Password
-              </Button>
-              <Button
-                onClick={handleEditProfile}
-                variant="outline"
-                className="bg-purple-600 text-white hover:bg-white/10 border-white/30"
-              >
-                <PenSquare className="w-4 h-4 mr-2" />
-                Edit Profile
-              </Button>
+        <Card className={`w-full ${glassMorphismClass} text-purple mx-2 sm:mx-0`}>
+          <CardHeader className="p-4 sm:p-6">
+            <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center space-x-3">
+                <User className="w-5 h-5 sm:w-6 sm:h-6 text-purple-800" />
+                <CardTitle className="text-lg sm:text-xl">Your Profile</CardTitle>
+              </div>
+              
+              {/* Mobile-First Action Buttons */}
+              <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                <Button
+                  onClick={handleEditProfile}
+                  variant="outline"
+                  size="sm"
+                  className="bg-purple-600 text-white hover:bg-purple-700 border-white/30 text-xs sm:text-sm"
+                >
+                  <PenSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span className="sm:inline">Edit</span>
+                </Button>
+                <Button
+                  onClick={handleChangePassword}
+                  variant="outline"
+                  size="sm"
+                  className="bg-blue-600 text-white hover:bg-blue-700 border-white/30 text-xs sm:text-sm"
+                >
+                  <Key className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span className="sm:inline">Change</span>
+                </Button>
+                <Button
+                  onClick={handleResetPassword}
+                  variant="outline"
+                  size="sm"
+                  className="bg-green-600 text-white hover:bg-green-700 border-white/30 text-xs sm:text-sm"
+                >
+                  <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  <span className="sm:inline">Reset</span>
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
           <Separator className="bg-white/30" />
 
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
               {/* Left Side - Profile Image and Basic Info */}
-              <div className="lg:w-1/3 text-center">
+              <div className="w-full lg:w-1/3 text-center">
                 <div
                   className="relative inline-block"
                   onClick={handleProfileImageClick}
                 >
-                  <Avatar className="w-32 h-32 mx-auto cursor-pointer border-4 border-white transition-transform hover:scale-105">
+                  <Avatar className="w-24 h-24 sm:w-32 sm:h-32 mx-auto cursor-pointer border-4 border-white transition-transform hover:scale-105">
                     <AvatarImage src={profileImage} alt="Profile Picture" />
-                    <AvatarFallback className="bg-purple-500 text-white text-4xl">
+                    <AvatarFallback className="bg-purple-500 text-white text-2xl sm:text-4xl">
                       {getInitials(fullName || "US")}
                     </AvatarFallback>
                   </Avatar>
                   <Button
                     size="icon"
-                    className="absolute bottom-2 right-2 rounded-full bg-teal-500 hover:bg-teal-600 transition-colors"
+                    className="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 rounded-full bg-teal-500 hover:bg-teal-600 transition-colors w-8 h-8 sm:w-10 sm:h-10"
                   >
-                    <Camera className="h-4 w-4" />
+                    <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                   <input
                     ref={fileInputRef}
@@ -281,40 +281,40 @@ const SettingsPage = () => {
                   />
                 </div>
 
-                <h3 className="text-2xl font-bold mt-4 break-words text-white">
+                <h3 className="text-xl sm:text-2xl font-bold mt-3 sm:mt-4 break-words text-white px-2">
                   {fullName}
                 </h3>
-                <p className="font-medium text-teal-300 mt-1 break-words">
+                <p className="font-medium text-teal-300 mt-1 break-words text-sm sm:text-base">
                   @{username}
                 </p>
-                <p className="text-sm text-white/70 mt-2">
+                <p className="text-xs sm:text-sm text-white/70 mt-2">
                   Member since July 19, 2025
                 </p>
               </div>
 
               {/* Right Side - Account Information */}
-              <div className="lg:w-2/3 space-y-6">
-                <div className="text-2xl font-bold text-white-900">
-  Account Information
-</div>
+              <div className="w-full lg:w-2/3 space-y-4 sm:space-y-6">
+                <div className="text-xl sm:text-2xl font-bold text-purple">
+                  Account Information
+                </div>
 
-                <div className="grid gap-4">
+                <div className="grid gap-3 sm:gap-4">
                   <div>
-                    <Label htmlFor="fullName">Full Name</Label>
+                    <Label htmlFor="fullName" className="text-sm sm:text-base">Full Name</Label>
                     <Input
                       id="fullName"
                       value={fullName}
                       readOnly
-                      className={`mt-2 ${glassMorphismClass}`}
+                      className={`mt-2 text-sm sm:text-base ${glassMorphismClass}`}
                     />
                   </div>
 
                   <div>
-                    <div className="flex items-center space-x-2">
-                      <Label htmlFor="username">Username</Label>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-1 sm:space-y-0">
+                      <Label htmlFor="username" className="text-sm sm:text-base">Username</Label>
                       <Badge
                         variant="secondary"
-                        className="bg-teal-500 text-white"
+                        className="bg-teal-500 text-white text-xs w-fit"
                       >
                         Public
                       </Badge>
@@ -323,16 +323,16 @@ const SettingsPage = () => {
                       id="username"
                       value={`@${username}`}
                       readOnly
-                      className={`mt-2 ${glassMorphismClass}`}
+                      className={`mt-2 text-sm sm:text-base ${glassMorphismClass}`}
                     />
                   </div>
 
                   <div>
-                    <div className="flex items-center space-x-2">
-                      <Label htmlFor="email">Email Address</Label>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 space-y-1 sm:space-y-0">
+                      <Label htmlFor="email" className="text-sm sm:text-base">Email Address</Label>
                       <Badge
                         variant="outline"
-                        className="bg-zinc-800 text-white border-zinc-700"
+                        className="bg-zinc-800 text-white border-zinc-700 text-xs w-fit"
                       >
                         Read-only
                       </Badge>
@@ -341,7 +341,7 @@ const SettingsPage = () => {
                       id="email"
                       value={email}
                       readOnly
-                      className={`mt-2 ${glassMorphismClass}`}
+                      className={`mt-2 text-sm sm:text-base ${glassMorphismClass}`}
                     />
                   </div>
                 </div>

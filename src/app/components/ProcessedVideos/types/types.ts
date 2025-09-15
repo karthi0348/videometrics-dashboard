@@ -62,11 +62,6 @@ export interface VideoMetricsModalProps {
 
 export interface VideoAnalytics {
   generated_summary: any;
-  generated_summary: any;
-  generated_summary: any;
-  generated_summary: any;
-  generated_summary: any;
-  generated_summary: any;
   uuid: any;
   processing_duration_seconds(processing_duration_seconds: any): unknown;
   parsed_metrics(parsed_metrics: any): unknown;
@@ -75,7 +70,6 @@ export interface VideoAnalytics {
   processing_started_at: string | number | Date;
   processing_completed_at: string | number | Date;
   video_metadata: any;
-  generated_summary: any;
   id: number;
   video_id: number;
   profile_name?: string;
@@ -87,6 +81,15 @@ export interface VideoAnalytics {
 }
 
 export interface GeneratedChart {
+  id: string;
+  plot_type: string;
+  series: boolean;
+  title: any;
+  status: string;
+  value: undefined;
+  styling: any;
+  x_axis: any;
+  insights: boolean;
   chart_id: string;
   type: string;
   data: any;

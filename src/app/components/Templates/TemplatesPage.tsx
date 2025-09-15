@@ -318,7 +318,7 @@ const TemplatesPage: React.FC = () => {
                     onClick={() => setShowModal(true)}
                     className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-2 h-2 mr-2" />
                     New Template
                   </Button>
                 </div>

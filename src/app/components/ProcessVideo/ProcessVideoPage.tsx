@@ -626,9 +626,9 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
     }
   };
 
-  const handleAllVideos = () => {
-    console.log("Navigate to All Videos");
-  };
+  // const handleAllVideos = () => {
+  //   console.log("Navigate to All Videos");
+  // };
 
   const handleViewAnalytics = (uuid: string) => {
     console.log(`Navigate to analytics for UUID: ${uuid}`);
@@ -723,14 +723,14 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                 <RefreshCw className="w-4 h-4 mr-2" />
                 {loading ? "Refreshing..." : "Refresh"}
               </Button>
-              <Button
+              {/* <Button
                 onClick={handleAllVideos}
                 variant="outline"
                 className="backdrop-blur-sm bg-white/60 border-white/40 hover:bg-white/80 transition-all duration-200"
               >
                 <Video className="w-4 h-4 mr-2" />
                 All Videos
-              </Button>
+              </Button> */}
             </div>
           </div>
         </div>

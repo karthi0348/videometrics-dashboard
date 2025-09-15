@@ -7,6 +7,7 @@ import {
   Video,
   Eye,
   Trash2,
+  BarChart3,
 } from "lucide-react";
 import { ProcessedVideo } from "./types/types";
 
@@ -93,7 +94,7 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "text-green-600 bg-green-50 border-green-200";
+        return "text-white-600 bg-green-400 border-green-200";
       case "failed":
         return "text-red-600 bg-red-50 border-red-200";
       case "processing":
@@ -187,21 +188,14 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
         </div>
       </div>
 
-      {/* Status Badge */}
-      <div className="absolute top-2 right-2">
-        <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-full p-1.5 shadow-sm">
-          {getStatusIcon(video.processing_status)}
-        </div>
-      </div>
-
       {/* Duration Badge */}
-      {video.processing_duration && (
+      {/* {video.processing_duration && (
         <div className="absolute bottom-2 right-2">
           <div className="bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded-md font-medium">
             {video.processing_duration}
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 
@@ -221,123 +215,146 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
         {renderVideoThumbnail(video, isHovered)}
 
         {/* Content Section */}
-        <div className="p-4">
-          <div className="flex items-start justify-between mb-2">
-            <div className="flex items-center space-x-2 flex-1 min-w-0">
-              {isSelectMode && (
-                <input
-                  type="checkbox"
-                  checked={selectedVideos.has(video.id)}
-                  onChange={() => handleSelectVideo(video.id)}
-                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 flex-shrink-0"
-                />
-              )}
+        <div className="group relative bg-white rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden">
+          {/* Header with improved layout */}
+          <div className="p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start space-x-3 flex-1 min-w-0">
+                {isSelectMode && (
+                  <div className="flex-shrink-0 mt-1">
+                    <input
+                      type="checkbox"
+                      checked={selectedVideos.has(video.id)}
+                      onChange={() => handleSelectVideo(video.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0"
+                    />
+                  </div>
+                )}
 
-              <h3
-                className="font-semibold text-gray-900 text-sm truncate"
-                title={video.video_title}
+                <div className="flex-1 min-w-0">
+                  <h3
+                    className="font-semibold text-gray-900 text-base leading-6 line-clamp-2 mb-2 whitespace-nowrap"
+                    title={video.video_title}
+                  >
+                    {video.video_title}
+                  </h3>
+
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Clock className="w-3 h-3 mr-1" />
+                    <span className="text-sm whitespace-nowrap">
+                      {formatDate(video.created_at)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modern status badge */}
+            </div>
+            <div className="flex-shrink-0">
+              <span
+                className={`inline-flex items-center px-1 py-1 text-xs font-medium rounded-full  ${getStatusColor(
+                  video.processing_status
+                )}`}
               >
-                {video.video_title}
-              </h3>
+                {video.processing_status}
+              </span>
             </div>
-          </div>
+            {/* Metadata grid */}
+            <div className="grid grid-cols-1 gap-3 mb-6">
+              {video.profile_name &&
+                video.profile_name !== "Unknown Profile" && (
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm font-medium text-gray-600">
+                      Profile
+                    </span>
+                    <span className="text-sm text-gray-900 font-medium">
+                      {video.profile_name}
+                    </span>
+                  </div>
+                )}
 
-          <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-            <div className="flex items-center">
-              <Clock className="w-4 h-4 mr-1" />
-              <span>{formatDate(video.created_at)}</span>
+              {video.sub_profile_name &&
+                video.sub_profile_name !== "Unknown Sub-Profile" && (
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm font-medium text-gray-600">
+                      Sub-Profile
+                    </span>
+                    <span className="text-sm text-gray-900 font-medium">
+                      {video.sub_profile_name}
+                    </span>
+                  </div>
+                )}
+
+              {video.processing_status === "completed" &&
+                video.confidence_score &&
+                video.confidence_score > 0 && (
+                  <div className="flex items-center justify-between py-2 px-3 bg-emerald-50 rounded-lg">
+                    <span className="text-sm font-medium text-emerald-700">
+                      Confidence
+                    </span>
+                    <span className="text-sm text-emerald-900 font-bold">
+                      {video.confidence_score}%
+                    </span>
+                  </div>
+                )}
+
+              {video.processing_status === "failed" && video.error_message && (
+                <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-400">
+                  <div className="text-sm">
+                    <span className="font-medium text-red-800">Error: </span>
+                    <span className="text-red-700">{video.error_message}</span>
+                  </div>
+                </div>
+              )}
+              {/* 
+      {video.processing_duration && (
+        <div className="flex items-center justify-between py-2 px-3 bg-blue-50 rounded-lg">
+          <span className="text-sm font-medium text-blue-700">Duration</span>
+          <span className="text-sm text-blue-900 font-medium">{video.processing_duration}</span>
+        </div>
+      )} */}
             </div>
-            <span
-              className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                video.processing_status
-              )}`}
-            >
-              {video.processing_status}
-            </span>
-          </div>
 
-          {/* Additional Info */}
-          <div className="space-y-1 text-xs text-gray-600 mb-3">
-            {video.profile_name && video.profile_name !== "Unknown Profile" && (
-              <div>
-                <span className="font-medium">Profile:</span>{" "}
-                <span className="text-gray-800">{video.profile_name}</span>
-              </div>
-            )}
+            {/* Footer with updated timestamp */}
+            <div className="flex items-center justify-between text-xs text-gray-500 pb-4 border-b border-gray-100 mb-4">
+              <span>Last updated</span>
+              <span className="font-medium">
+                {formatDate(video.updated_at)}
+              </span>
+            </div>
 
-            {video.sub_profile_name &&
-              video.sub_profile_name !== "Unknown Sub-Profile" && (
-                <div>
-                  <span className="font-medium">Sub-Profile:</span>{" "}
-                  <span className="text-gray-800">
-                    {video.sub_profile_name}
-                  </span>
+            {/* Modern action buttons */}
+            <div className="flex space-x-3">
+              {video.processing_status === "completed" ? (
+ <button
+  onClick={() =>
+    handleViewMetrics(video.analytics_id || video.id.toString())
+  }
+  className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium py-2.5 px-4 rounded-lg border border-indigo-400 hover:border-purple-500 transition-all duration-200 transform hover:scale-[1.02] shadow-sm hover:shadow-md"
+>
+  View Metrics
+</button>
+              ) : (
+                <div className="flex-1 bg-gray-100 text-gray-500 font-medium py-2.5 px-4 rounded-xl text-center">
+                  {video.processing_status === "processing" ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full mr-2"></div>
+                      Processing...
+                    </div>
+                  ) : (
+                    "Failed"
+                  )}
                 </div>
               )}
 
-            {video.processing_status === "completed" &&
-              video.confidence_score &&
-              video.confidence_score > 0 && (
-                <div>
-                  <span className="font-medium">Confidence:</span>{" "}
-                  <span className="text-gray-800">
-                    {video.confidence_score}%
-                  </span>
-                </div>
-              )}
-
-            {video.processing_status === "failed" && video.error_message && (
-              <div className="text-red-600">
-                <span className="font-medium">Error:</span>{" "}
-                <span className="mt-1">{video.error_message}</span>
-              </div>
-            )}
-
-            {video.processing_duration && (
-              <div>
-                <span className="font-medium">Duration:</span>{" "}
-                <span className="text-gray-800">
-                  {video.processing_duration}
-                </span>
-              </div>
-            )}
-
-            <div className="pt-2 border-t border-gray-100">
-              <div>
-                <span className="font-medium">Processed:</span>{" "}
-                <span className="text-gray-800">
-                  {formatDate(video.updated_at)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex space-x-2">
-            {video.processing_status === "completed" ? (
               <button
-                onClick={() =>
-                  handleViewMetrics(video.analytics_id || video.id.toString())
-                }
-                className="flex-1 bg-teal-50 hover:bg-teal-100 text-teal-700 font-medium py-2 px-3 rounded-lg transition-colors duration-200 border border-teal-200 hover:border-teal-300 text-sm"
+                onClick={() => handleDeleteVideo(video.analytics_id)}
+                className="px-3 py-2.5 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl transition-all duration-200 hover:scale-105"
+                title="Delete video"
               >
-                View Metrics
+                <Trash2 className="w-4 h-4" />
               </button>
-            ) : (
-              <div className="flex-1 bg-gray-50 text-gray-500 font-medium py-2 px-3 rounded-lg text-sm text-center border border-gray-200">
-                {video.processing_status === "processing"
-                  ? "Processing..."
-                  : "Failed"}
-              </div>
-            )}
-
-            <button
-              onClick={() => handleDeleteVideo(video.analytics_id)}
-              className="px-3 py-2 border border-red-300 text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
-              title="Delete video"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            </div>
           </div>
         </div>
       </div>
@@ -353,105 +370,120 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
           : "border-gray-200"
       }`}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4 flex-1 min-w-0">
-          {isSelectMode && (
-            <input
-              type="checkbox"
-              checked={selectedVideos.has(video.id)}
-              onChange={() => handleSelectVideo(video.id)}
-              className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 flex-shrink-0"
-            />
-          )}
-
-          {/* Thumbnail */}
-          <div className="w-16 h-10 flex-shrink-0">
-            {video.thumbnail_url ? (
-              <img
-                src={video.thumbnail_url}
-                alt={video.video_title}
-                className="w-full h-full object-cover rounded-md"
-              />
-            ) : (
-              <div
-                className={`w-full h-full bg-gradient-to-br ${getGradientColor(
-                  video.id
-                )} rounded-md flex items-center justify-center`}
-              >
-                <Video className="w-4 h-4 text-white opacity-60" />
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-3">
-              <h3 className="font-medium text-gray-900 truncate">
-                {video.video_title}
-              </h3>
-              <span
-                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                  video.processing_status
-                )}`}
-              >
-                {video.processing_status}
-              </span>
-            </div>
-
-            <div className="mt-1 text-sm text-gray-600 flex items-center space-x-4">
-              <span>Processed: {formatDate(video.updated_at)}</span>
-              {video.processing_status === "completed" &&
-                video.confidence_score &&
-                video.confidence_score > 0 && (
-                  <span>Confidence: {video.confidence_score}%</span>
-                )}
-              {video.processing_duration && (
-                <span>Duration: {video.processing_duration}</span>
-              )}
-            </div>
-
-            {video.profile_name && video.profile_name !== "Unknown Profile" && (
-              <div className="text-xs text-gray-600 mt-1">
-                Profile: {video.profile_name}
-              </div>
-            )}
-
-            {video.processing_status === "failed" && video.error_message && (
-              <div className="text-red-600 text-xs mt-1">
-                Error: {video.error_message}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-2 flex-shrink-0">
-          {video.processing_status === "completed" && (
-            <button
-              onClick={() =>
-                handleViewMetrics(video.analytics_id || video.id.toString())
-              }
-              className="bg-teal-50 text-teal-700 px-3 py-1.5 rounded-md hover:bg-teal-100 transition-colors text-sm font-medium"
-            >
-              Metrics
-            </button>
-          )}
-
-          <button
-            onClick={() => handlePlayVideo(video.video_url)}
-            className="p-2 text-purple-600 hover:text-purple-700 transition-colors hover:bg-purple-50 rounded-md"
-            title="Play video"
-          >
-            <Play className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={() => handleDeleteVideo(video.analytics_id)}
-            className="p-2 text-red-600 hover:text-red-700 transition-colors hover:bg-red-50 rounded-md"
-            title="Delete video"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
+ <div className="group flex items-center justify-between p-4 bg-white hover:bg-gray-50/80 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200">
+  <div className="flex items-center space-x-4 flex-1 min-w-0">
+    {isSelectMode && (
+      <div className="flex-shrink-0">
+        <input
+          type="checkbox"
+          checked={selectedVideos.has(video.id)}
+          onChange={() => handleSelectVideo(video.id)}
+          className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 transition-colors"
+        />
       </div>
+    )}
+
+    {/* Enhanced Thumbnail */}
+    <div className="relative w-20 h-12 flex-shrink-0 group">
+      {video.thumbnail_url ? (
+        <img
+          src={video.thumbnail_url}
+          alt={video.video_title}
+          className="w-full h-full object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow"
+        />
+      ) : (
+        <div className={`w-full h-full bg-gradient-to-br ${getGradientColor(video.id)} rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}>
+          <Video className="w-5 h-5 text-white/70" />
+        </div>
+      )}
+      
+      {/* Play overlay on hover */}
+      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+        <Play className="w-4 h-4 text-white fill-white" />
+      </div>
+    </div>
+
+    <div className="flex-1 min-w-0">
+      {/* Title and Status */}
+      <div className="flex items-center space-x-3 mb-2">
+        <h3 className="font-semibold text-gray-900 truncate text-base leading-5">
+          {video.video_title}
+        </h3>
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(video.processing_status)}`}>
+          {video.processing_status === "processing" && (
+            <div className="w-2 h-2 bg-current rounded-full animate-pulse mr-1.5"></div>
+          )}
+          {video.processing_status}
+        </span>
+      </div>
+
+      {/* Metadata row */}
+      <div className="flex items-center text-sm text-gray-600 space-x-6">
+        <div className="flex items-center space-x-1">
+          <Clock className="w-3.5 h-3.5" />
+          <span className="whitespace-nowrap">{formatDate(video.updated_at)}</span>
+        </div>
+        
+        {video.processing_status === "completed" && video.confidence_score && video.confidence_score > 0 && (
+          <div className="flex items-center space-x-1">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+            <span className="font-medium text-emerald-700">{video.confidence_score}%</span>
+          </div>
+        )}
+        
+        {/* {video.processing_duration && (
+          <span className="text-gray-500">{video.processing_duration}</span>
+        )} */}
+      </div>
+
+      {/* Profile info */}
+      {video.profile_name && video.profile_name !== "Unknown Profile" && (
+        <div className="flex items-center mt-1.5">
+          <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
+            {video.profile_name}
+          </span>
+        </div>
+      )}
+
+      {/* Error state */}
+      {video.processing_status === "failed" && video.error_message && (
+        <div className="flex items-center mt-2 p-2 bg-red-50 rounded-md border border-red-100">
+          <AlertCircle className="w-3.5 h-3.5 text-red-500 mr-2 flex-shrink-0" />
+          <span className="text-red-700 text-xs">{video.error_message}</span>
+        </div>
+      )}
+    </div>
+  </div>
+
+  {/* Modern Action Buttons */}
+  <div className="flex items-center space-x-2 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+    {video.processing_status === "completed" && (
+      <button
+        onClick={() => handleViewMetrics(video.analytics_id || video.id.toString())}
+        className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-medium rounded-lg transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+      >
+        <BarChart3 className="w-3.5 h-3.5 mr-1" />
+        Metrics
+      </button>
+    )}
+
+    <button
+      onClick={() => handlePlayVideo(video.video_url)}
+      className="p-2.5 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-all duration-200 hover:scale-105"
+      title="Play video"
+    >
+      <Play className="w-4 h-4" />
+    </button>
+
+    <button
+      onClick={() => handleDeleteVideo(video.analytics_id)}
+      className="p-2.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 hover:scale-105"
+      title="Delete video"
+    >
+      <Trash2 className="w-4 h-4" />
+    </button>
+  </div>
+</div>
     </div>
   );
 
@@ -483,14 +515,13 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 text-sm truncate">
+          <h3 className="font-medium text-gray-900 text-sm">
             {video.video_title}
           </h3>
           <div className="flex items-center space-x-2 mt-1">
             <span className="text-xs text-gray-500">
               {formatDate(video.created_at)}
             </span>
-            {getStatusIcon(video.processing_status)}
           </div>
         </div>
 
@@ -520,7 +551,7 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-500 to-indigo-100 flex items-center justify-center px-4">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sm:p-8 max-w-md w-full">
           <div className="flex items-center justify-center mb-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
@@ -537,13 +568,13 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 to-purple-600">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 rounded-3xl">
-          <div className="flex flex-col space-y-4 py-4 sm:py-6">
+      <div className="bg-white shadow-sm border-b border-gray-200 bg-gradient-to-br from-blue-300 to-purple-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 rounded-3xl ">
+          <div className="flex flex-col space-y-4 py-4 sm:py-6 ">
             {/* Title Section */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0 ">
               <div className="flex-1">
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
                   Processed Videos

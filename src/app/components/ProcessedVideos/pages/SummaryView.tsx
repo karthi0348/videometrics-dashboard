@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface GeneratedSummary {
   format: string;
@@ -13,19 +13,24 @@ interface GeneratedSummary {
 
 interface SummaryViewProps {
   summary?: GeneratedSummary;
+  insights?: any; // Add insights prop
   analyticsId?: string | null;
   apiService?: any;
   mockMode?: boolean;
 }
 
-const SummaryView: React.FC<SummaryViewProps> = ({ 
-  summary: propSummary, 
-  analyticsId, 
-  apiService, 
-  mockMode = false 
+const SummaryView: React.FC<SummaryViewProps> = ({
+  summary: propSummary,
+  insights: propInsights, // Add insights prop
+  analyticsId,
+  apiService,
+  mockMode = false,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [summary, setSummary] = useState<GeneratedSummary | null>(propSummary || null);
+  const [summary, setSummary] = useState<GeneratedSummary | null>(
+    propSummary || null
+  );
+  const [insights, setInsights] = useState<any>(propInsights || null); // Add insights state
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
@@ -33,7 +38,11 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     if (!propSummary && analyticsId && !mockMode) {
       loadSummary();
     }
-  }, [analyticsId, propSummary, mockMode]);
+    // Set insights if provided via props
+    if (propInsights) {
+      setInsights(propInsights);
+    }
+  }, [analyticsId, propSummary, propInsights, mockMode]);
 
   const loadSummary = async () => {
     if (!analyticsId || !apiService) {
@@ -46,9 +55,10 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
     try {
       console.log("Fetching summary for analytics ID:", analyticsId);
-      
-      const response = await apiService.getSummary(analyticsId);
-      
+
+      // Use the new getAnalyticsSummary method instead of getSummary
+      const response = await apiService.getAnalyticsSummary(analyticsId);
+
       let data;
       if (typeof response === "string") {
         try {
@@ -82,15 +92,15 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
   const formatContent = (content: string) => {
     // Split content by double newlines to create paragraphs
-    const paragraphs = content.split('\n\n').filter(p => p.trim());
-    
+    const paragraphs = content.split("\n\n").filter((p) => p.trim());
+
     return paragraphs.map((paragraph, index) => {
       // Handle headers (text that starts with **)
-      if (paragraph.startsWith('**') && paragraph.includes('**\n')) {
-        const [header, ...rest] = paragraph.split('\n');
-        const headerText = header.replace(/\*\*/g, '');
-        const content = rest.join('\n');
-        
+      if (paragraph.startsWith("**") && paragraph.includes("**\n")) {
+        const [header, ...rest] = paragraph.split("\n");
+        const headerText = header.replace(/\*\*/g, "");
+        const content = rest.join("\n");
+
         return (
           <div key={index} className="mb-6">
             <h4 className="text-lg font-semibold text-gray-900 mb-3 border-b border-gray-200 pb-2">
@@ -102,7 +112,7 @@ const SummaryView: React.FC<SummaryViewProps> = ({
           </div>
         );
       }
-      
+
       return (
         <div key={index} className="mb-4 text-gray-700 leading-relaxed">
           {formatParagraphContent(paragraph)}
@@ -113,39 +123,43 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
   const formatParagraphContent = (content: string) => {
     // Handle bold text and bullet points
-    const lines = content.split('\n');
-    
+    const lines = content.split("\n");
+
     return lines.map((line, index) => {
       if (line.trim().match(/^\d+\./)) {
         // Numbered list item
-        const parts = line.split('**');
+        const parts = line.split("**");
         return (
           <div key={index} className="mb-2 ml-4">
-            {parts.map((part, partIndex) => 
+            {parts.map((part, partIndex) =>
               partIndex % 2 === 1 ? (
-                <strong key={partIndex} className="font-semibold text-gray-900">{part}</strong>
+                <strong key={partIndex} className="font-semibold text-gray-900">
+                  {part}
+                </strong>
               ) : (
                 <span key={partIndex}>{part}</span>
               )
             )}
           </div>
         );
-      } else if (line.trim().startsWith('*   ')) {
+      } else if (line.trim().startsWith("*   ")) {
         // Bullet point
         return (
           <div key={index} className="mb-2 ml-6 flex">
             <span className="text-gray-400 mr-2">•</span>
-            <span>{line.replace('*   ', '')}</span>
+            <span>{line.replace("*   ", "")}</span>
           </div>
         );
       } else {
         // Regular text with potential bold formatting
-        const parts = line.split('**');
+        const parts = line.split("**");
         return (
           <div key={index} className={line.trim() ? "mb-2" : "mb-1"}>
-            {parts.map((part, partIndex) => 
+            {parts.map((part, partIndex) =>
               partIndex % 2 === 1 ? (
-                <strong key={partIndex} className="font-semibold text-gray-900">{part}</strong>
+                <strong key={partIndex} className="font-semibold text-gray-900">
+                  {part}
+                </strong>
               ) : (
                 <span key={partIndex}>{part}</span>
               )
@@ -194,7 +208,9 @@ const SummaryView: React.FC<SummaryViewProps> = ({
               />
             </svg>
             <div>
-              <h3 className="text-red-800 font-medium">Error Loading Summary</h3>
+              <h3 className="text-red-800 font-medium">
+                Error Loading Summary
+              </h3>
               <p className="text-red-700 text-sm mt-1">{error}</p>
               <button
                 onClick={handleRefresh}
@@ -228,7 +244,9 @@ const SummaryView: React.FC<SummaryViewProps> = ({
               />
             </svg>
             <div>
-              <h3 className="text-yellow-800 font-medium">No Summary Available</h3>
+              <h3 className="text-yellow-800 font-medium">
+                No Summary Available
+              </h3>
               <p className="text-yellow-700 text-sm mt-1">
                 No summary data is available for this analysis.
               </p>
@@ -244,31 +262,84 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       {/* Summary Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold text-gray-900">Analysis Summary</h3>
+          <h3 className="text-xl font-semibold text-gray-900">
+            Analysis Summary
+          </h3>
           <div className="flex items-center space-x-4 text-sm text-gray-500">
             <span>Type: {summary.summary_type}</span>
             <span>Words: {summary.word_count}</span>
-            <span>Generated: {new Date(summary.generated_at).toLocaleDateString()}</span>
+            <span>
+              Generated: {new Date(summary.generated_at).toLocaleDateString()}
+            </span>
           </div>
         </div>
-        
+
         {/* Highlighted Metrics */}
-        {summary.metrics_highlighted && summary.metrics_highlighted.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h4 className="text-sm font-medium text-blue-900 mb-2">Key Metrics Highlighted</h4>
-            <div className="flex flex-wrap gap-2">
-              {summary.metrics_highlighted.map((metric, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+        {summary.metrics_highlighted &&
+          summary.metrics_highlighted.length > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h4 className="text-sm font-medium text-blue-900 mb-2">
+                Key Metrics Highlighted
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {summary.metrics_highlighted.map((metric, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  >
+                    {metric
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+      </div>
+
+      {/* Add this section after the Summary Header and before Summary Content */}
+      {/* Insights Section */}
+      {insights && (
+        <div className="mb-6">
+          <div className="bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-200 rounded-lg p-6">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg
+                className="w-5 h-5 mr-2 text-teal-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                />
+              </svg>
+              Analytics Insights
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(insights).map(([key, value]) => (
+                <div
+                  key={key}
+                  className="bg-white rounded-lg p-4 border border-gray-200"
                 >
-                  {metric.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </span>
+                  <div className="text-sm font-medium text-gray-600 mb-1">
+                    {key
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  </div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {typeof value === "object"
+                      ? JSON.stringify(value)
+                      : String(value)}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Summary Content */}
       <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -280,14 +351,18 @@ const SummaryView: React.FC<SummaryViewProps> = ({
       {/* Summary Sections Navigation */}
       {summary.sections && summary.sections.length > 0 && (
         <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-900 mb-3">Report Sections</h4>
+          <h4 className="text-sm font-medium text-gray-900 mb-3">
+            Report Sections
+          </h4>
           <div className="flex flex-wrap gap-2">
             {summary.sections.map((section, index) => (
               <span
                 key={index}
                 className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
               >
-                {section.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {section
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (l) => l.toUpperCase())}
               </span>
             ))}
           </div>

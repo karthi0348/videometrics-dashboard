@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Box,
   Container,
@@ -41,8 +41,8 @@ import {
   ListItemText,
   ListItemIcon,
   Switch,
-  FormControlLabel
-} from '@mui/material';
+  FormControlLabel,
+} from "@mui/material";
 import {
   Search as SearchIcon,
   FilterList as FilterIcon,
@@ -61,12 +61,12 @@ import {
   KeyboardArrowUp as ArrowUpIcon,
   SelectAll as SelectAllIcon,
   Close as CloseIcon,
-  DateRange as DateRangeIcon
-} from '@mui/icons-material';
-import { ViewMode } from '../../types';
-import VideoUploadModal from '../Modal/Video/VideoUploadModal'; 
-import VideoTable from './VideoTable';
-import { API_ENDPOINTS } from '../../config/api';
+  DateRange as DateRangeIcon,
+} from "@mui/icons-material";
+import { ViewMode } from "../../types";
+import VideoUploadModal from "../Modal/Video/VideoUploadModal";
+import VideoTable from "./VideoTable";
+import { API_ENDPOINTS } from "../../config/api";
 
 interface Video {
   id: string;
@@ -89,8 +89,8 @@ interface VideoUploadError {
 
 interface FilterOptions {
   search: string;
-  sortBy: 'name' | 'date' | 'size';
-  sortOrder: 'asc' | 'desc';
+  sortBy: "name" | "date" | "size";
+  sortOrder: "asc" | "desc";
   dateFrom: string;
   dateTo: string;
 }
@@ -119,10 +119,10 @@ interface HeaderProps {
   isBulkDeleting?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ 
-  videoCount, 
-  viewMode, 
-  setViewMode, 
+const Header: React.FC<HeaderProps> = ({
+  videoCount,
+  viewMode,
+  setViewMode,
   onAddVideo,
   selectedVideos = [],
   onFilterChange,
@@ -134,19 +134,23 @@ const Header: React.FC<HeaderProps> = ({
   onSelectModeToggle,
   onSelectAll,
   onBulkDelete,
-  isBulkDeleting = false
+  isBulkDeleting = false,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [showFilters, setShowFilters] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'date' | 'size'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "date" | "size">("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success" as "success" | "error",
+  });
 
   useEffect(() => {
     const filters: FilterOptions = {
@@ -154,15 +158,18 @@ const Header: React.FC<HeaderProps> = ({
       sortBy,
       sortOrder,
       dateFrom,
-      dateTo
+      dateTo,
     };
     onFilterChange?.(filters);
   }, [searchQuery, sortBy, sortOrder, dateFrom, dateTo, onFilterChange]);
 
-  const handleViewModeChange = (_: React.MouseEvent<HTMLElement>, newMode: ViewMode | null) => {
+  const handleViewModeChange = (
+    _: React.MouseEvent<HTMLElement>,
+    newMode: ViewMode | null
+  ) => {
     if (newMode !== null) {
       setViewMode(newMode);
-      if ('vibrate' in navigator) {
+      if ("vibrate" in navigator) {
         navigator.vibrate(10);
       }
     }
@@ -171,28 +178,40 @@ const Header: React.FC<HeaderProps> = ({
   const handleAddVideo = () => {
     setShowUploadModal(true);
     const placeholderVideo: Video = {
-      id: '',
-      name: '',
-      created_at: '',
-      file_size: 0
+      id: "",
+      name: "",
+      created_at: "",
+      file_size: 0,
     };
     onAddVideo?.(placeholderVideo);
   };
 
   const handleUploadSuccess = (response: VideoUploadResponse) => {
     onVideoUploadSuccess?.(response);
-    setSnackbar({ open: true, message: 'Video uploaded successfully!', severity: 'success' });
+    setSnackbar({
+      open: true,
+      message: "Video uploaded successfully!",
+      severity: "success",
+    });
   };
 
   const handleUploadError = (error: VideoUploadError) => {
-    console.error('Video upload failed:', error);
+    console.error("Video upload failed:", error);
     onVideoUploadError?.(error);
-    setSnackbar({ open: true, message: 'Failed to upload video. Please try again.', severity: 'error' });
+    setSnackbar({
+      open: true,
+      message: "Failed to upload video. Please try again.",
+      severity: "error",
+    });
   };
 
   const handleBulkDelete = () => {
     if (selectedVideos.length === 0) {
-      setSnackbar({ open: true, message: 'Please select videos first.', severity: 'error' });
+      setSnackbar({
+        open: true,
+        message: "Please select videos first.",
+        severity: "error",
+      });
       return;
     }
 
@@ -202,86 +221,97 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleResetFilters = () => {
-    setSearchQuery('');
-    setSortBy('date');
-    setSortOrder('desc');
-    setDateFrom('');
-    setDateTo('');
+    setSearchQuery("");
+    setSortBy("date");
+    setSortOrder("desc");
+    setDateFrom("");
+    setDateTo("");
   };
 
   const handleTitleClick = () => {
     if (onTitleClick) {
       onTitleClick();
     }
-    if ('vibrate' in navigator) {
+    if ("vibrate" in navigator) {
       navigator.vibrate(15);
     }
   };
 
   const viewModeOptions = [
-    { key: 'grid' as ViewMode, label: 'Grid', icon: <GridViewIcon /> },
-    { key: 'list' as ViewMode, label: 'List', icon: <ListIcon /> },
-    { key: 'compact' as ViewMode, label: 'Compact', icon: <CompactIcon /> }
+    { key: "grid" as ViewMode, label: "Grid", icon: <GridViewIcon /> },
+    { key: "list" as ViewMode, label: "List", icon: <ListIcon /> },
+    { key: "compact" as ViewMode, label: "Compact", icon: <CompactIcon /> },
   ];
 
   return (
     <>
-      <Paper 
-        elevation={2} 
-        sx={{ 
+      <Paper
+        elevation={2}
+        sx={{
           mb: 3,
           borderRadius: 3,
-          overflow: 'hidden',
-background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
+          overflow: "hidden",
+          background: "linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)",
+        }}
       >
         {/* Main Header Content */}
         <Box sx={{ p: 3 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            spacing={2}
+          >
             {/* Title Section */}
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={2}
+                sx={{ mb: 1 }}
+              >
                 <Box
                   onClick={handleTitleClick}
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    cursor: onTitleClick ? 'pointer' : 'default',
-                    '&:hover': onTitleClick ? { opacity: 0.8 } : {},
-                    transition: 'opacity 0.2s'
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: onTitleClick ? "pointer" : "default",
+                    "&:hover": onTitleClick ? { opacity: 0.8 } : {},
+                    transition: "opacity 0.2s",
                   }}
                 >
-                  <VideoIcon sx={{ mr: 1, fontSize: 32 }} />
-                  <Typography 
-                    variant={isMobile ? "h5" : "h4"} 
+                  <Typography
+                    variant={isMobile ? "h5" : "h4"}
                     fontWeight="bold"
-                    sx={{ 
-                      background: 'linear-gradient(45deg, #9c27b0 30%, #7b1fa2 90%)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent'
+                    sx={{
+                      background:
+                        "linear-gradient(45deg, #9c27b0 30%, #7b1fa2 90%)",
+                      backgroundClip: "text",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
                     }}
                   >
                     Videos
                   </Typography>
                 </Box>
-                
+
                 <Stack direction="row" spacing={1}>
-                  <Chip 
-                    label={videoCount} 
+                  <Chip
+                    label={videoCount}
                     size="small"
-                    sx={{ 
-                      bgcolor: 'rgba(255,255,255,0.2)',
-                      color: 'white',
-                      fontWeight: 'bold'
+                    sx={{
+                      bgcolor: "rgba(255,255,255,0.2)",
+                      color: "white",
+                      fontWeight: "bold",
                     }}
                   />
                   {selectedVideos.length > 0 && (
-                    <Chip 
+                    <Chip
                       label={`${selectedVideos.length} selected`}
                       size="small"
-                      sx={{ 
+                      sx={{
                         bgcolor: theme.palette.primary.main,
-                        color: 'white'
+                        color: "white",
                       }}
                     />
                   )}
@@ -299,35 +329,39 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 size="small"
-                sx={{ 
+                sx={{
                   maxWidth: 400,
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: 'rgba(255,255,255,0.1)',
+                  "& .MuiOutlinedInput-root": {
+                    bgcolor: "rgba(255,255,255,0.1)",
                     borderRadius: 3,
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
-                    '&.Mui-focused fieldset': { borderColor: 'white' }
+                    "& fieldset": { borderColor: "rgba(255,255,255,0.3)" },
+                    "&:hover fieldset": {
+                      borderColor: "rgba(255,255,255,0.5)",
+                    },
+                    "&.Mui-focused fieldset": { borderColor: "white" },
                   },
-                  '& .MuiInputBase-input': { color: 'white' },
-                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.7)' }
+                  "& .MuiInputBase-input": { color: "white" },
+                  "& .MuiInputBase-input::placeholder": {
+                    color: "rgba(255,255,255,0.7)",
+                  },
                 }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{ color: 'rgba(255,255,255,0.7)' }} />
+                      <SearchIcon sx={{ color: "rgba(255,255,255,0.7)" }} />
                     </InputAdornment>
                   ),
                   endAdornment: searchQuery && (
                     <InputAdornment position="end">
-                      <IconButton 
-                        size="small" 
-                        onClick={() => setSearchQuery('')}
-                        sx={{ color: 'rgba(255,255,255,0.7)' }}
+                      <IconButton
+                        size="small"
+                        onClick={() => setSearchQuery("")}
+                        sx={{ color: "rgba(255,255,255,0.7)" }}
                       >
                         <ClearIcon />
                       </IconButton>
                     </InputAdornment>
-                  )
+                  ),
                 }}
               />
             </Box>
@@ -342,14 +376,14 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
                   onChange={handleViewModeChange}
                   size="small"
                   sx={{
-                    '& .MuiToggleButton-root': {
-                      color: 'rgba(255,255,255,0.7)',
-                      borderColor: 'rgba(255,255,255,0.3)',
-                      '&.Mui-selected': {
-                        bgcolor: 'rgba(255,255,255,0.2)',
-                        color: 'white'
-                      }
-                    }
+                    "& .MuiToggleButton-root": {
+                      color: "rgba(255,255,255,0.7)",
+                      borderColor: "rgba(255,255,255,0.3)",
+                      "&.Mui-selected": {
+                        bgcolor: "rgba(255,255,255,0.2)",
+                        color: "white",
+                      },
+                    },
                   }}
                 >
                   {viewModeOptions.map((mode) => (
@@ -366,30 +400,50 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
                   startIcon={<FilterIcon />}
                   onClick={() => setShowFilters(!showFilters)}
                   sx={{
-                    color: 'white',
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    '&:hover': { borderColor: 'rgba(255,255,255,0.5)' }
+                    color: "white",
+                    borderColor: "rgba(255,255,255,100)",
+                    "&:hover": { borderColor: "rgba(255,255,255,0.5)" },
                   }}
                 >
                   Filters
-                  {showFilters ? <ArrowUpIcon sx={{ ml: 1 }} /> : <ArrowDownIcon sx={{ ml: 1 }} />}
+                  {showFilters ? (
+                    <ArrowUpIcon sx={{ ml: 1 }} />
+                  ) : (
+                    <ArrowDownIcon sx={{ ml: 1 }} />
+                  )}
                 </Button>
 
                 <Button
                   variant={isSelectMode ? "contained" : "outlined"}
-                  startIcon={isSelectMode ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
+                  startIcon={
+                    isSelectMode ? (
+                      <CheckBoxIcon />
+                    ) : (
+                      <CheckBoxOutlineBlankIcon />
+                    )
+                  }
                   onClick={onSelectModeToggle}
                   sx={{
-                    color: isSelectMode ? theme.palette.primary.contrastText : 'white',
-                    borderColor: isSelectMode ? 'transparent' : 'rgba(255,255,255,0.3)',
-                    bgcolor: isSelectMode ? theme.palette.primary.main : 'transparent',
-                    '&:hover': { 
-                      borderColor: isSelectMode ? 'transparent' : 'rgba(255,255,255,0.5)',
-                      bgcolor: isSelectMode ? theme.palette.primary.dark : 'rgba(255,255,255,0.1)'
-                    }
+                    color: isSelectMode
+                      ? theme.palette.primary.contrastText
+                      : "white",
+                    borderColor: isSelectMode
+                      ? "transparent"
+                      : "rgba(255,255,255,100)",
+                    bgcolor: isSelectMode
+                      ? theme.palette.primary.main
+                      : "transparent",
+                    "&:hover": {
+                      borderColor: isSelectMode
+                        ? "transparent"
+                        : "rgba(255,255,255,0.5)",
+                      bgcolor: isSelectMode
+                        ? theme.palette.primary.dark
+                        : "rgba(255,255,255,0.1)",
+                    },
                   }}
                 >
-                  {isSelectMode ? 'Exit Select' : 'Select'}
+                  {isSelectMode ? "Exit Select" : "Select"}
                 </Button>
 
                 <Button
@@ -397,8 +451,8 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
                   startIcon={<AddIcon />}
                   onClick={handleAddVideo}
                   sx={{
-                    bgcolor: theme.palette.secondary.main,
-                    '&:hover': { bgcolor: theme.palette.secondary.dark }
+                    bgcolor: theme.palette.primary.main,
+                    "&:hover": { bgcolor: theme.palette.secondary.dark },
                   }}
                 >
                   Add Video
@@ -418,15 +472,15 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
                 onChange={handleViewModeChange}
                 size="small"
                 sx={{
-                  '& .MuiToggleButton-root': {
-                    color: 'rgba(255,255,255,0.7)',
-                    borderColor: 'rgba(255,255,255,0.3)',
+                  "& .MuiToggleButton-root": {
+                    color: "rgba(255,255,255,0.7)",
+                    borderColor: "rgba(255,255,255,0.3)",
                     minWidth: 40,
-                    '&.Mui-selected': {
-                      bgcolor: 'rgba(255,255,255,0.2)',
-                      color: 'white'
-                    }
-                  }
+                    "&.Mui-selected": {
+                      bgcolor: "rgba(255,255,255,0.2)",
+                      color: "white",
+                    },
+                  },
                 }}
               >
                 {viewModeOptions.map((mode) => (
@@ -439,20 +493,30 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
               <Stack direction="row" spacing={1}>
                 <IconButton
                   onClick={() => setShowFilters(!showFilters)}
-                  sx={{ color: 'rgba(255,255,255,0.7)' }}
+                  sx={{ color: "rgba(255,255,255,0.7)" }}
                 >
                   <FilterIcon />
                 </IconButton>
-                
+
                 <IconButton
                   onClick={onSelectModeToggle}
-                  sx={{ 
-                    color: isSelectMode ? theme.palette.primary.main : 'rgba(255,255,255,0.7)',
-                    bgcolor: isSelectMode ? 'white' : 'transparent',
-                    '&:hover': { bgcolor: isSelectMode ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.1)' }
+                  sx={{
+                    color: isSelectMode
+                      ? theme.palette.primary.main
+                      : "rgba(255,255,255,0.7)",
+                    bgcolor: isSelectMode ? "white" : "transparent",
+                    "&:hover": {
+                      bgcolor: isSelectMode
+                        ? "rgba(255,255,255,0.9)"
+                        : "rgba(255,255,255,0.1)",
+                    },
                   }}
                 >
-                  {isSelectMode ? <CheckBoxIcon /> : <CheckBoxOutlineBlankIcon />}
+                  {isSelectMode ? (
+                    <CheckBoxIcon />
+                  ) : (
+                    <CheckBoxOutlineBlankIcon />
+                  )}
                 </IconButton>
               </Stack>
             </Stack>
@@ -461,20 +525,25 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
 
         {/* Selection Bar */}
         {selectedVideos.length > 0 && (
-          <Paper 
+          <Paper
             elevation={0}
-            sx={{ 
+            sx={{
               bgcolor: theme.palette.primary.main,
-              color: 'white',
+              color: "white",
               p: 2,
-              borderRadius: 0
+              borderRadius: 0,
             }}
           >
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+            >
               <Stack direction="row" alignItems="center" spacing={2}>
                 <CheckBoxIcon />
                 <Typography variant="body2" fontWeight="medium">
-                  <strong>{selectedVideos.length}</strong> video{selectedVideos.length > 1 ? 's' : ''} selected
+                  <strong>{selectedVideos.length}</strong> video
+                  {selectedVideos.length > 1 ? "s" : ""} selected
                 </Typography>
               </Stack>
 
@@ -489,19 +558,19 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
               >
                 {isBulkDeleting ? (
                   <>
-                    <LinearProgress 
-                      size={16} 
-                      sx={{ 
-                        width: 16, 
-                        height: 2, 
+                    <LinearProgress
+                      size={16}
+                      sx={{
+                        width: 16,
+                        height: 2,
                         mr: 1,
-                        '& .MuiLinearProgress-bar': { bgcolor: 'white' }
-                      }} 
+                        "& .MuiLinearProgress-bar": { bgcolor: "white" },
+                      }}
                     />
                     Deleting...
                   </>
                 ) : (
-                  'Delete'
+                  "Delete"
                 )}
               </Button>
             </Stack>
@@ -510,13 +579,13 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
 
         {/* Filters Panel */}
         <Collapse in={showFilters}>
-          <Paper 
+          <Paper
             elevation={0}
-            sx={{ 
-              bgcolor: 'rgba(255,255,255,0.95)',
-              backdropFilter: 'blur(10px)',
+            sx={{
+              bgcolor: "rgba(255,255,255,0.95)",
+              backdropFilter: "blur(10px)",
               p: 3,
-              borderRadius: 0
+              borderRadius: 0,
             }}
           >
             <Grid container spacing={3}>
@@ -526,7 +595,9 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
                   <Select
                     value={sortBy}
                     label="Sort by"
-                    onChange={(e) => setSortBy(e.target.value as 'name' | 'date' | 'size')}
+                    onChange={(e) =>
+                      setSortBy(e.target.value as "name" | "date" | "size")
+                    }
                   >
                     <MenuItem value="date">Upload Date</MenuItem>
                     <MenuItem value="name">Name</MenuItem>
@@ -568,7 +639,7 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
                       <InputAdornment position="start">
                         <DateRangeIcon />
                       </InputAdornment>
-                    )
+                    ),
                   }}
                 />
               </Grid>
@@ -587,13 +658,18 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
                       <InputAdornment position="start">
                         <DateRangeIcon />
                       </InputAdornment>
-                    )
+                    ),
                   }}
                 />
               </Grid>
             </Grid>
 
-            <Stack direction="row" spacing={2} justifyContent="space-between" sx={{ mt: 2 }}>
+            <Stack
+              direction="row"
+              spacing={2}
+              justifyContent="space-between"
+              sx={{ mt: 2 }}
+            >
               <Button
                 variant="outlined"
                 onClick={handleResetFilters}
@@ -601,7 +677,7 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
               >
                 Reset Filters
               </Button>
-              
+
               {onSelectAll && !isSelectMode && (
                 <Button
                   variant="contained"
@@ -621,10 +697,10 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
         <Fab
           color="secondary"
           sx={{
-            position: 'fixed',
+            position: "fixed",
             bottom: 24,
             right: 24,
-            zIndex: 1000
+            zIndex: 1000,
           }}
           onClick={handleAddVideo}
         >
@@ -646,7 +722,7 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
         autoHideDuration={6000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert 
+        <Alert
           severity={snackbar.severity}
           onClose={() => setSnackbar({ ...snackbar, open: false })}
           variant="filled"
@@ -661,15 +737,15 @@ background: 'linear-gradient(135deg, #93c5fd 0%, #a855f7 100%)',        }}
 // --- VideosPage Component ---
 interface VideoFilters {
   search: string;
-  sortBy: 'video_name' | 'created_at' | 'file_size';
-  sortOrder: 'asc' | 'desc';
+  sortBy: "video_name" | "created_at" | "file_size";
+  sortOrder: "asc" | "desc";
   dateFrom: string;
   dateTo: string;
 }
 
 const VideosPage: React.FC = () => {
   const theme = useTheme();
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [videoCount, setVideoCount] = useState(0);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
@@ -678,33 +754,36 @@ const VideosPage: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const [filters, setFilters] = useState<VideoFilters>({
-    search: '',
-    sortBy: 'created_at',
-    sortOrder: 'desc',
-    dateFrom: '',
-    dateTo: ''
+    search: "",
+    sortBy: "created_at",
+    sortOrder: "desc",
+    dateFrom: "",
+    dateTo: "",
   });
 
-  const handleFilterChange = useCallback((newFilters: Partial<VideoFilters>) => {
-    setFilters(prev => ({
-      ...prev,
-      ...newFilters
-    }));
-  }, []);
+  const handleFilterChange = useCallback(
+    (newFilters: Partial<VideoFilters>) => {
+      setFilters((prev) => ({
+        ...prev,
+        ...newFilters,
+      }));
+    },
+    []
+  );
 
   const handleVideoCount = useCallback((count: number) => {
     setVideoCount(count);
   }, []);
 
   const handleSelectModeToggle = useCallback(() => {
-    setIsSelectMode(prev => !prev);
+    setIsSelectMode((prev) => !prev);
     if (isSelectMode) {
       setSelectedVideos([]);
     }
   }, [isSelectMode]);
 
   const handleVideoSelect = useCallback((videoId: string) => {
-    setSelectedVideos(prev => {
+    setSelectedVideos((prev) => {
       if (!prev.includes(videoId)) {
         return [...prev, videoId];
       }
@@ -713,19 +792,22 @@ const VideosPage: React.FC = () => {
   }, []);
 
   const handleVideoDeselect = useCallback((videoId: string) => {
-    setSelectedVideos(prev => prev.filter(id => id !== videoId));
+    setSelectedVideos((prev) => prev.filter((id) => id !== videoId));
   }, []);
 
   const handleSelectAll = useCallback(() => {
     setIsSelectMode(true);
   }, []);
 
-  const handleVideoUploadSuccess = useCallback((response: VideoUploadResponse) => {
-    setRefreshTrigger(prev => prev + 1);
-  }, []);
+  const handleVideoUploadSuccess = useCallback(
+    (response: VideoUploadResponse) => {
+      setRefreshTrigger((prev) => prev + 1);
+    },
+    []
+  );
 
   const handleVideoUploadError = useCallback((error: VideoUploadError) => {
-    console.error('Video upload failed:', error);
+    console.error("Video upload failed:", error);
   }, []);
 
   const confirmBulkDelete = useCallback(() => {
@@ -739,47 +821,49 @@ const VideosPage: React.FC = () => {
 
     setDeleteDialogOpen(false);
     setIsBulkDeleting(true);
-    
+
     try {
-      const accessToken = localStorage.getItem('accessToken');
-      
-      const endpoint = API_ENDPOINTS.BULK_DELETE_VIDEOS || '/video-urls/bulk-delete';
-      
+      const accessToken = localStorage.getItem("accessToken");
+
+      const endpoint =
+        API_ENDPOINTS.BULK_DELETE_VIDEOS || "/video-urls/bulk-delete";
+
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          video_ids: videoIds 
+          video_ids: videoIds,
         }),
       });
 
       if (response.ok) {
-        const result = await response.json() as BulkDeleteResponse;
-        
+        const result = (await response.json()) as BulkDeleteResponse;
+
         setSelectedVideos([]);
         setIsSelectMode(false);
-        setRefreshTrigger(prev => prev + 1);
-        
+        setRefreshTrigger((prev) => prev + 1);
       } else {
-        const errorData = await response.json() as { message: string };
-        throw new Error(errorData.message || 'Failed to delete videos');
+        const errorData = (await response.json()) as { message: string };
+        throw new Error(errorData.message || "Failed to delete videos");
       }
     } catch (error) {
-      console.error('Error during bulk delete:', error);
+      console.error("Error during bulk delete:", error);
     } finally {
       setIsBulkDeleting(false);
     }
   }, []);
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh',
-      bgcolor: 'grey.50',
-      backgroundImage: 'radial-gradient(circle at 20% 80%, #e3f2fd 0%, transparent 50%), radial-gradient(circle at 80% 20%, #f3e5f5 0%, transparent 50%)'
-    }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+    background: 'linear-gradient(to bottom right, #60A5FA, #8B5CF6, #E0E7FF)',
+     
+      }}
+    >
       <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
         <Header
           videoCount={videoCount}
@@ -817,12 +901,12 @@ const VideosPage: React.FC = () => {
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         PaperProps={{
-          sx: { borderRadius: 3 }
+          sx: { borderRadius: 3 },
         }}
       >
         <DialogTitle sx={{ pb: 1 }}>
           <Stack direction="row" alignItems="center" spacing={1}>
-            <Avatar sx={{ bgcolor: 'error.main', width: 40, height: 40 }}>
+            <Avatar sx={{ bgcolor: "error.main", width: 40, height: 40 }}>
               <DeleteIcon />
             </Avatar>
             <Typography variant="h6" fontWeight="bold">
@@ -830,30 +914,34 @@ const VideosPage: React.FC = () => {
             </Typography>
           </Stack>
         </DialogTitle>
-        
+
         <DialogContent>
           <Typography variant="body1" color="text.secondary">
-            Are you sure you want to delete <strong>{selectedVideos.length}</strong> video{selectedVideos.length > 1 ? 's' : ''}?
+            Are you sure you want to delete{" "}
+            <strong>{selectedVideos.length}</strong> video
+            {selectedVideos.length > 1 ? "s" : ""}?
           </Typography>
-          <Typography variant="body2" color="error.main" sx={{ mt: 1, fontWeight: 500 }}>
+          <Typography
+            variant="body2"
+            color="error.main"
+            sx={{ mt: 1, fontWeight: 500 }}
+          >
             This action cannot be undone.
           </Typography>
         </DialogContent>
-        
+
         <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button 
-            onClick={() => setDeleteDialogOpen(false)}
-            variant="outlined"
-          >
+          <Button onClick={() => setDeleteDialogOpen(false)} variant="outlined">
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={() => handleBulkDelete(selectedVideos)}
             variant="contained"
             color="error"
             startIcon={<DeleteIcon />}
           >
-            Delete {selectedVideos.length} Video{selectedVideos.length > 1 ? 's' : ''}
+            Delete {selectedVideos.length} Video
+            {selectedVideos.length > 1 ? "s" : ""}
           </Button>
         </DialogActions>
       </Dialog>

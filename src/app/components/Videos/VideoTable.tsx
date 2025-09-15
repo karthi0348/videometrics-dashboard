@@ -127,7 +127,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
 
   const getVideoThumbnail = () => {
     const colors = [
-  'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+'linear-gradient(135deg, #7e22ce 0%, #c084fc 100%)'
 
     ];
     const idx = parseInt(video.id, 36) % colors.length;

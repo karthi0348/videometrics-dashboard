@@ -63,7 +63,7 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
         </div>
 
         {/* Coming Soon Section */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-200/50 p-6 sm:p-8 lg:p-10 mb-8 lg:mb-12 hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-1">
+        <div className="bg-white/40 backdrop-blur-sm rounded-3xl shadow-2xl border border-purple-200/50 p-6 sm:p-8 lg:p-10 mb-8 lg:mb-12 hover:shadow-3xl transition-all duration-500 transform hover:-translate-y-1">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 lg:mb-8">
             <div className="mb-4 sm:mb-0">
               <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-800 mb-2">
@@ -97,7 +97,7 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
         </div>
 
         {/* FAQ Section */}
-        <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-200/50 p-6 sm:p-8 lg:p-10 mb-8 lg:mb-12">
+        <div className="bg-white/40 backdrop-blur-sm  rounded-3xl shadow-2xl border border-purple-200/50 p-6 sm:p-8 lg:p-10 mb-8 lg:mb-12">
           <div className="flex flex-col sm:flex-row items-start sm:items-center mb-8 lg:mb-10">
             <div className="w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mr-0 sm:mr-6 mb-4 sm:mb-0 shadow-xl">
               <svg className="w-6 h-6 lg:w-7 lg:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

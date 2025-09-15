@@ -175,15 +175,15 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
       {/* Form */}
       <div className="space-y-8">
         {/* Basic Information Card */}
-        <div className="border border-gray-200 rounded-xl bg-white shadow-sm">
+        <div className=" rounded-xl bg-white/40 backdrop-blur-sm border border-purple-200/50">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <User className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
-                <p className="text-sm text-gray-500">Profile details and contact information</p>
+                <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
+                <p className="text-sm text-black-500">Profile details and contact information</p>
               </div>
             </div>
           </div>
@@ -269,15 +269,15 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
         </div>
 
         {/* Business Information Card */}
-        <div className="border border-gray-200 rounded-xl bg-white shadow-sm">
+        <div className=" rounded-xl bg-white/40 backdrop-blur-sm border border-purple-200/50">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Building className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Business Information</h3>
-                <p className="text-sm text-gray-500">Location and industry details</p>
+                <h2 className="text-lg font-semibold text-gray-900">Business Information</h2>
+                <p className="text-sm text-black-500">Location and industry details</p>
               </div>
             </div>
           </div>
@@ -329,15 +329,15 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
         </div>
 
         {/* Tags Card */}
-        <div className="border border-gray-200 rounded-xl bg-white shadow-sm">
-          <div className="p-6 border-b border-gray-200">
+        <div className=" rounded-xl bg-white/40 backdrop-blur-sm border border-purple-200/50">
+          <div className="p-6 border-b border-black-800">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-amber-100 rounded-lg">
                 <Hash className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Tags</h3>
-                <p className="text-sm text-gray-500">Optional categorization tags</p>
+                <h2 className="text-lg font-semibold text-gray-900">Tags</h2>
+                <p className="text-sm text-black-500">Optional categorization tags</p>
               </div>
             </div>
           </div>

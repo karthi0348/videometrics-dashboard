@@ -3,6 +3,7 @@ import { VideoAnalytics } from "../types/types";
 
 interface RawDataViewProps {
   data: VideoAnalytics;
+  insights?: any; // Add insights prop
 }
 
 // Define types for the data filtering
@@ -10,7 +11,7 @@ type JsonValue = string | number | boolean | null | JsonObject | JsonArray;
 type JsonObject = { [key: string]: JsonValue };
 type JsonArray = JsonValue[];
 
-const RawDataView: React.FC<RawDataViewProps> = ({ data }) => {
+const RawDataView: React.FC<RawDataViewProps> = ({ data, insights }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandAll, setExpandAll] = useState(false);
 
@@ -29,11 +30,11 @@ const RawDataView: React.FC<RawDataViewProps> = ({ data }) => {
         return String(value).toLowerCase().includes(search);
       }
       if (Array.isArray(value)) {
-        return value.some(item => searchInValue(item));
+        return value.some((item) => searchInValue(item));
       }
       if (typeof value === "object" && value !== null) {
-        return Object.entries(value).some(([k, v]) => 
-          k.toLowerCase().includes(search) || searchInValue(v)
+        return Object.entries(value).some(
+          ([k, v]) => k.toLowerCase().includes(search) || searchInValue(v)
         );
       }
       return false;
@@ -48,19 +49,24 @@ const RawDataView: React.FC<RawDataViewProps> = ({ data }) => {
     return filtered;
   };
 
-  const filteredData = filterData(data as JsonObject, searchTerm);
+  const filteredData = filterData(data as unknown as JsonObject, searchTerm);
+  const filteredInsights = insights
+    ? filterData(insights as JsonObject, searchTerm)
+    : null;
 
   return (
     <div className="p-6">
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold text-gray-900">Raw Analytics Data</h3>
+          <h3 className="text-xl font-semibold text-gray-900">
+            Raw Analytics Data
+          </h3>
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setExpandAll(!expandAll)}
               className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
-              {expandAll ? 'Collapse All' : 'Expand All'}
+              {expandAll ? "Collapse All" : "Expand All"}
             </button>
           </div>
         </div>
@@ -92,48 +98,117 @@ const RawDataView: React.FC<RawDataViewProps> = ({ data }) => {
               onClick={() => setSearchTerm("")}
               className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
         </div>
 
         {/* Data Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        {/* Data Stats */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          {" "}
+          {/* Changed from 3 to 4 columns */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="text-blue-600 text-xs font-medium uppercase tracking-wide">Total Fields</div>
+            <div className="text-blue-600 text-xs font-medium uppercase tracking-wide">
+              Total Fields
+            </div>
             <div className="text-blue-900 text-lg font-semibold mt-1">
               {Object.keys(data).length}
             </div>
           </div>
           <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-            <div className="text-green-600 text-xs font-medium uppercase tracking-wide">Processing Status</div>
+            <div className="text-green-600 text-xs font-medium uppercase tracking-wide">
+              Processing Status
+            </div>
             <div className="text-green-900 text-lg font-semibold mt-1 capitalize">
-              {data.status || 'Unknown'}
+              {data.status || "Unknown"}
             </div>
           </div>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-            <div className="text-purple-600 text-xs font-medium uppercase tracking-wide">Confidence</div>
+            <div className="text-purple-600 text-xs font-medium uppercase tracking-wide">
+              Confidence
+            </div>
             <div className="text-purple-900 text-lg font-semibold mt-1">
               {data.confidence_score}%
             </div>
           </div>
+          {/* Add insights stats */}
+          <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
+            <div className="text-teal-600 text-xs font-medium uppercase tracking-wide">
+              Insights
+            </div>
+            <div className="text-teal-900 text-lg font-semibold mt-1">
+              {insights ? Object.keys(insights).length : "N/A"}
+            </div>
+          </div>
         </div>
       </div>
-
+      {/* Add this section before the JSON Tree Display */}
+      {/* Insights Data Section */}
+      {insights && (
+        <div className="bg-white border border-gray-200 rounded-lg mb-6">
+          <div className="bg-teal-50 border-b border-gray-200 px-4 py-3 rounded-t-lg">
+            <h4 className="text-sm font-medium text-gray-900 flex items-center">
+              <svg
+                className="w-4 h-4 mr-2 text-teal-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                />
+              </svg>
+              Analytics Insights Data
+            </h4>
+          </div>
+          <div className="p-4 max-h-64 overflow-y-auto">
+            <JsonTreeView data={insights} />
+          </div>
+        </div>
+      )}
       {/* JSON Tree Display */}
       <div className="bg-white border border-gray-200 rounded-lg">
         <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 rounded-t-lg">
-          <h4 className="text-sm font-medium text-gray-900">Complete Analytics Object</h4>
+          <h4 className="text-sm font-medium text-gray-900">
+            Complete Analytics Object
+          </h4>
         </div>
         <div className="p-4 max-h-96 overflow-y-auto">
-          {Object.keys(filteredData).length === 0 ? (
+          {Object.keys(filteredData).length === 0 &&
+          (!insights || Object.keys(filteredInsights || {}).length === 0) ? (
             <div className="text-center py-8">
-              <svg className="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29.82-5.657 2.172M12 3v9.341" />
+              <svg
+                className="w-12 h-12 text-gray-300 mx-auto mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29.82-5.657 2.172M12 3v9.341"
+                />
               </svg>
-              <p className="text-gray-500 text-sm">No data matches your search criteria</p>
+              <p className="text-gray-500 text-sm">
+                No data matches your search criteria
+              </p>
               <button
                 onClick={() => setSearchTerm("")}
                 className="mt-2 text-teal-600 hover:text-teal-700 text-sm font-medium"
@@ -150,17 +225,23 @@ const RawDataView: React.FC<RawDataViewProps> = ({ data }) => {
       {/* Data Export Options */}
       <div className="mt-6 flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="text-sm text-gray-600">
-          <span className="font-medium">Export Options:</span> Download raw data in different formats
+          <span className="font-medium">Export Options:</span> Download raw data
+          in different formats
         </div>
         <div className="flex space-x-2">
           <button
             onClick={() => {
-              const jsonStr = JSON.stringify(data, null, 2);
-              const blob = new Blob([jsonStr], { type: 'application/json' });
+              const combinedData = {
+                analytics: data,
+                insights: insights || null,
+                exported_at: new Date().toISOString(),
+              };
+              const jsonStr = JSON.stringify(combinedData, null, 2);
+              const blob = new Blob([jsonStr], { type: "application/json" });
               const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
+              const a = document.createElement("a");
               a.href = url;
-              a.download = `analytics-${data.id}-raw-data.json`;
+              a.download = `analytics-${data.id}-complete-data.json`; // Updated filename
               document.body.appendChild(a);
               a.click();
               document.body.removeChild(a);
@@ -168,16 +249,18 @@ const RawDataView: React.FC<RawDataViewProps> = ({ data }) => {
             }}
             className="px-3 py-1 bg-white border border-gray-300 rounded text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            JSON
+            JSON {insights ? "+ Insights" : ""}
           </button>
           <button
             onClick={() => {
               const csvContent = Object.entries(data.parsed_metrics || {})
                 .map(([key, value]) => `${key},${value}`)
-                .join('\n');
-              const blob = new Blob([`Key,Value\n${csvContent}`], { type: 'text/csv' });
+                .join("\n");
+              const blob = new Blob([`Key,Value\n${csvContent}`], {
+                type: "text/csv",
+              });
               const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
+              const a = document.createElement("a");
               a.href = url;
               a.download = `analytics-${data.id}-metrics.csv`;
               document.body.appendChild(a);
@@ -203,7 +286,12 @@ interface JsonTreeViewProps {
 
 const JsonTreeView: React.FC<JsonTreeViewProps> = ({ data, level = 0 }) => {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(
-    new Set(['video_metadata', 'parsed_metrics', 'generated_summary', 'generated_charts'])
+    new Set([
+      "video_metadata",
+      "parsed_metrics",
+      "generated_summary",
+      "generated_charts",
+    ])
   );
 
   const toggleExpanded = (key: string) => {
@@ -228,10 +316,13 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ data, level = 0 }) => {
 
   const getValueDisplay = (value: JsonValue): string => {
     if (value === null) return "null";
-    if (typeof value === "string") return `"${value.length > 50 ? value.substring(0, 50) + '...' : value}"`;
-    if (typeof value === "number" || typeof value === "boolean") return String(value);
+    if (typeof value === "string")
+      return `"${value.length > 50 ? value.substring(0, 50) + "..." : value}"`;
+    if (typeof value === "number" || typeof value === "boolean")
+      return String(value);
     if (Array.isArray(value)) return `Array(${value.length})`;
-    if (typeof value === "object" && value !== null) return `Object(${Object.keys(value).length})`;
+    if (typeof value === "object" && value !== null)
+      return `Object(${Object.keys(value).length})`;
     return String(value);
   };
 
@@ -244,34 +335,48 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ data, level = 0 }) => {
   const renderValue = (key: string, value: JsonValue, path: string) => {
     const isExpanded = expandedKeys.has(path);
     const indent = level * 20;
-    const isComplexType = (typeof value === "object" && value !== null) || Array.isArray(value);
+    const isComplexType =
+      (typeof value === "object" && value !== null) || Array.isArray(value);
 
     return (
       <div key={path} className="mb-1">
-        <div 
+        <div
           className={`flex items-center py-2 rounded transition-colors ${
-            isComplexType ? 'cursor-pointer hover:bg-gray-50' : 'hover:bg-gray-25'
+            isComplexType
+              ? "cursor-pointer hover:bg-gray-50"
+              : "hover:bg-gray-25"
           }`}
           style={{ paddingLeft: `${indent + 8}px` }}
           onClick={isComplexType ? () => toggleExpanded(path) : undefined}
         >
           {isComplexType && (
             <svg
-              className={`w-3 h-3 mr-2 transition-transform text-gray-400 ${isExpanded ? 'rotate-90' : ''}`}
+              className={`w-3 h-3 mr-2 transition-transform text-gray-400 ${
+                isExpanded ? "rotate-90" : ""
+              }`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 5l7 7-7 7"
+              />
             </svg>
           )}
           {!isComplexType && <div className="w-5 mr-2"></div>}
-          
+
           <div className="flex items-center min-w-0 flex-1">
             <span className="text-gray-700 text-sm font-medium mr-3 min-w-0">
               {key}
             </span>
-            <span className={`text-xs px-2 py-1 rounded font-mono mr-3 ${getTypeColor(value)}`}>
+            <span
+              className={`text-xs px-2 py-1 rounded font-mono mr-3 ${getTypeColor(
+                value
+              )}`}
+            >
               {getTypeName(value)}
             </span>
             <span className="text-gray-600 text-sm font-mono truncate">
@@ -281,24 +386,27 @@ const JsonTreeView: React.FC<JsonTreeViewProps> = ({ data, level = 0 }) => {
         </div>
 
         {isComplexType && isExpanded && (
-          <div className="border-l-2 border-gray-100 ml-4" style={{ marginLeft: `${indent + 16}px` }}>
-            {Array.isArray(value) ? (
-              value.map((item, index) => (
-                <JsonTreeView
-                  key={`${path}-${index}`}
-                  data={{ [`[${index}]`]: item }}
-                  level={level + 1}
-                />
-              ))
-            ) : typeof value === "object" && value !== null ? (
-              Object.entries(value).map(([subKey, subValue]) => (
-                <JsonTreeView
-                  key={`${path}-${subKey}`}
-                  data={{ [subKey]: subValue }}
-                  level={level + 1}
-                />
-              ))
-            ) : null}
+          <div
+            className="border-l-2 border-gray-100 ml-4"
+            style={{ marginLeft: `${indent + 16}px` }}
+          >
+            {Array.isArray(value)
+              ? value.map((item, index) => (
+                  <JsonTreeView
+                    key={`${path}-${index}`}
+                    data={{ [`[${index}]`]: item }}
+                    level={level + 1}
+                  />
+                ))
+              : typeof value === "object" && value !== null
+              ? Object.entries(value).map(([subKey, subValue]) => (
+                  <JsonTreeView
+                    key={`${path}-${subKey}`}
+                    data={{ [subKey]: subValue }}
+                    level={level + 1}
+                  />
+                ))
+              : null}
           </div>
         )}
       </div>

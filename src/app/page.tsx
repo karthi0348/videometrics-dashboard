@@ -25,16 +25,24 @@ const Home: React.FC = () => {
   const [selectedAnalyticsId, setSelectedAnalyticsId] = useState<string | null>(
     null
   );
+  const [selectedVideoTitle, setSelectedVideoTitle] = useState<string>(""); // Add this state
 
-  const handleNavigation = (pageKey: string, analyticsId?: string) => {
-    console.log("Navigation called:", pageKey, analyticsId); // Add this
+  const handleNavigation = (
+    pageKey: string,
+    analyticsId?: string,
+    videoTitle?: string
+  ) => {
+    console.log("Navigation called:", pageKey, analyticsId, videoTitle);
     setActivePage(pageKey);
 
     if (pageKey === "videoMetrics" && analyticsId) {
-      console.log("Setting analyticsId:", analyticsId); // Add this
+      console.log("Setting analyticsId:", analyticsId);
+      console.log("Setting videoTitle:", videoTitle);
       setSelectedAnalyticsId(analyticsId);
+      setSelectedVideoTitle(videoTitle || ""); // Store the video title
     } else {
       setSelectedAnalyticsId(null);
+      setSelectedVideoTitle(""); // Clear video title when navigating away
     }
 
     setSidebarOpen(false);
@@ -101,6 +109,7 @@ const Home: React.FC = () => {
         return (
           <VideoMetricsPage
             analyticsId={selectedAnalyticsId}
+            videoTitle={selectedVideoTitle} 
             onNavigate={handleNavigation}
             apiService={null}
             mockMode={false}

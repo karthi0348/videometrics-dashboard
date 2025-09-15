@@ -8,6 +8,7 @@ import RawDataView from "./RawDataView";
 
 interface VideoMetricsPageProps {
   analyticsId: string | null;
+  videoTitle?: string;
   mockMode?: boolean;
   onNavigate?: (page: string, analyticsId?: string) => void;
 }
@@ -54,8 +55,19 @@ interface JsPDFInstance {
   setFontSize: (size: number) => void;
   setFont: (fontName: string, fontStyle?: string) => void;
   setLineWidth: (width: number) => void;
-  rect: (x: number, y: number, width: number, height: number, style?: string) => void;
-  text: (text: string | string[], x: number, y: number, options?: { align?: string }) => void;
+  rect: (
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    style?: string
+  ) => void;
+  text: (
+    text: string | string[],
+    x: number,
+    y: number,
+    options?: { align?: string }
+  ) => void;
   line: (x1: number, y1: number, x2: number, y2: number) => void;
   circle: (x: number, y: number, radius: number, style?: string) => void;
   splitTextToSize: (text: string, maxWidth: number) => string[];
@@ -70,7 +82,10 @@ interface JsPDFConstructor {
 }
 
 interface Html2CanvasFunction {
-  (element: HTMLElement, options?: Html2CanvasOptions): Promise<HTMLCanvasElement>;
+  (
+    element: HTMLElement,
+    options?: Html2CanvasOptions
+  ): Promise<HTMLCanvasElement>;
 }
 
 declare global {
@@ -182,30 +197,28 @@ const mockAnalytics: VideoAnalytics = {
 
 const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
   analyticsId,
+  videoTitle,
   mockMode = false,
   onNavigate,
 }) => {
   const [loading, setLoading] = useState(false);
-  const [analytics, setAnalytics] = useState<VideoAnalytics | null>(null);
+  const [analytics, setAnalytics] = useState(null);
   const [activeView, setActiveView] = useState<"charts" | "summary" | "raw">(
     "charts"
   );
   const [error, setError] = useState<string>("");
   const [exportingPdf, setExportingPdf] = useState(false);
   const pageContentRef = useRef<HTMLDivElement>(null);
+  const [chartsOnly, setChartsOnly] = useState<GeneratedChart[]>([]);
+  const [summaryOnly, setSummaryOnly] = useState(null);
+  const [insights, setInsights] = useState(null);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [apiService] = useState(() => new ProcessVideoApiService());
-
-  useEffect(() => {
-    if (analyticsId) {
-      loadAnalytics();
-    }
-  }, [analyticsId]);
 
   const loadAnalytics = useCallback(async () => {
     if (mockMode) {
       setLoading(true);
-      // Simulate loading delay for mock mode
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setLoading(false);
       setAnalytics(mockAnalytics);
       return;
@@ -221,22 +234,23 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
     setAnalytics(null);
 
     try {
+      console.log("Loading analytics for ID:", analyticsId); // Debug log
       const response = await apiService.getAnalytics(analyticsId);
+      console.log("Analytics response:", response); // Debug log
 
-      let data: VideoAnalytics;
+      let data;
       if (typeof response === "string") {
         try {
-          data = JSON.parse(response) as VideoAnalytics;
+          data = JSON.parse(response);
         } catch {
           console.error("Failed to parse JSON response:", response);
           throw new Error("Invalid JSON response from server");
         }
-      } else if (typeof response === "object" && response !== null) {
-        data = response as VideoAnalytics;
       } else {
-        throw new Error("Unexpected response format");
+        data = response;
       }
 
+      console.log("Setting analytics data:", data); // Debug log
       setAnalytics(data);
     } catch (err) {
       let errorMessage = "Failed to load analytics data";
@@ -247,12 +261,82 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
         errorMessage = err;
       }
 
+      console.error("Error loading analytics:", err); // Debug log
       setError(errorMessage);
-      console.error("Error loading analytics:", err);
     } finally {
       setLoading(false);
     }
   }, [analyticsId, apiService, mockMode]);
+  const loadChartsOnly = useCallback(async () => {
+    if (!analyticsId || mockMode) return;
+
+    setLoading(true);
+    try {
+      const response = await apiService.getAnalyticsCharts(analyticsId);
+      const data =
+        typeof response === "string" ? JSON.parse(response) : response;
+      setChartsOnly(data);
+    } catch (err) {
+      setError("Failed to load charts data");
+    } finally {
+      setLoading(false);
+    }
+  }, [analyticsId, mockMode]);
+
+  const loadSummaryOnly = useCallback(async () => {
+    if (!analyticsId || mockMode) return;
+
+    setLoading(true);
+    try {
+      const response = await apiService.getAnalyticsSummary(analyticsId);
+      console.log("Summary response:", response); // Debug log
+
+      const data =
+        typeof response === "string" ? JSON.parse(response) : response;
+      setSummaryOnly(data);
+    } catch (err) {
+      setError("Failed to load summary data");
+    } finally {
+      setLoading(false);
+    }
+  }, [analyticsId, mockMode]);
+
+  const loadInsights = useCallback(async () => {
+    if (!analyticsId || mockMode) return;
+
+    try {
+      const response = await apiService.getAnalyticsInsights(analyticsId);
+      setInsights(response);
+    } catch (err) {
+      console.warn("Failed to load insights:", err);
+    }
+  }, [analyticsId, mockMode]);
+
+  useEffect(() => {
+    if (!analyticsId) return;
+
+    switch (activeView) {
+      case "charts":
+        loadChartsOnly();
+        break;
+      case "summary":
+        loadSummaryOnly();
+        break;
+      case "raw":
+        loadAnalytics();
+        break;
+    }
+
+    // Always load insights for additional context
+    loadInsights();
+  }, [
+    analyticsId,
+    activeView,
+    loadChartsOnly,
+    loadSummaryOnly,
+    loadAnalytics,
+    loadInsights,
+  ]);
 
   const loadPdfLibraries = (): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -817,7 +901,7 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
 
         const summaryText = analytics.generated_summary.content;
         const lines = pdf.splitTextToSize(summaryText, contentWidth);
-        
+
         for (const line of lines) {
           checkPageBreak(8);
           pdf.text(line, margin, currentY);
@@ -873,50 +957,55 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
 
   const handleBackToProcessed = () => {
     if (onNavigate) {
-      onNavigate('processed');
+      onNavigate("processed");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div ref={pageContentRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100 ">
+      <div
+        ref={pageContentRef}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"
+      >
         {/* Page Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+        <div className="rounded-2xl bg-white/40 backdrop-blur-sm border border-purple-200/50 mb-6">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={handleBackToProcessed}
-                  className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
-                  Back to Videos
-                </button>
                 <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                    Customer Flow Analysis
+                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                    {videoTitle || (analytics?.video_metadata?.video_title) || (analytics?.parsed_metrics ? "Customer Flow Analysis" : "Loading...")}
                   </h1>
                   {analyticsId && (
                     <p className="text-sm text-gray-500 mt-1">
                       Analytics ID: {analyticsId}
                     </p>
                   )}
-                </div>
               </div>
-              
+
               <div className="flex items-center space-x-2">
+                <div>
+                  {" "}
+                  <button
+                    onClick={handleBackToProcessed}
+                    className="flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <svg
+                      className="w-4 h-4 "
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                    Back
+                  </button>
+                </div>
+
                 <button
                   onClick={handleExportToPdf}
                   disabled={exportingPdf || loading || !analytics}
@@ -959,7 +1048,7 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
                     </>
                   )}
                 </button>
-                
+
                 <button
                   onClick={handleRefresh}
                   disabled={loading}
@@ -986,7 +1075,7 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="rounded-2xl bg-white/40 backdrop-blur-sm border border-purple-100/50">
           {loading ? (
             <div className="flex items-center justify-center p-12">
               <div className="text-center">
@@ -1097,9 +1186,22 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
               <div className="pb-6">
                 {activeView === "charts" && (
                   <ChartDisplay
-                    charts={analytics.generated_charts}
+                    charts={
+                      chartsOnly.length > 0
+                        ? chartsOnly
+                        : analytics?.generated_charts || []
+                    }
                     analyticsId={mockMode ? null : analyticsId}
                     apiService={mockMode ? null : apiService}
+                    mockMode={mockMode}
+                  />
+                )}
+                {activeView === "summary" && (
+                  <SummaryView
+                    summary={summaryOnly || analytics?.generated_summary}
+                    insights={insights}
+                    analyticsId={analyticsId}
+                    apiService={apiService}
                     mockMode={mockMode}
                   />
                 )}
@@ -1117,7 +1219,34 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
                     </div>
                   </div>
                 )}
-                {activeView === "raw" && <RawDataView data={analytics} />}
+                {activeView === "raw" && (
+                  <div>
+                    {/* Debug info - remove after fixing */}
+
+                    {analytics ? (
+                      <RawDataView data={analytics} insights={insights} />
+                    ) : loading ? (
+                      <div className="flex items-center justify-center p-12">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto mb-4"></div>
+                          <p className="text-gray-600">Loading raw data...</p>
+                        </div>
+                      </div>
+                    ) : error ? (
+                      <div className="px-6">
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                          <p className="text-red-700">Error: {error}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="px-6">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                          <p className="text-gray-700">No data available</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ) : activeView === "charts" && analyticsId && !loading && !error ? (
