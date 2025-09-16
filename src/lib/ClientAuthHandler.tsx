@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 export default function ClientAuthHandler() {
   useEffect(() => {
     const receiveMessage = (event: MessageEvent) => {
-      if (event.origin !== 'http://172.174.114.7:3000/') return;
+      if (event.origin !== 'http://172.174.114.7') return;
 
       if (event.data?.type === 'AUTH_MESSAGE') {
         const { token, accessToken, user } = event.data;
