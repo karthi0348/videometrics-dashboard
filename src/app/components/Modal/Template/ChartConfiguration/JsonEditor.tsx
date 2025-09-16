@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import ErrorHandler, { ErrorResponse } from "@/helpers/ErrorHandler";
 
 interface JsonEditorProps {
   jsonContent: string;
@@ -388,7 +387,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
               : "focus:ring-red-500"
           }`}
           style={{ 
-            height: '12rem', // Fixed height instead of responsive classes for better scroll control
+            height: '12rem', 
             lineHeight: '1.5',
             minHeight: '12rem'
           }}
