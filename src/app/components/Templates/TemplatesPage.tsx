@@ -11,7 +11,13 @@ import EditTemplateModal from "../Modal/Template/EditTemplateModal";
 import TemplateSettingsModal from "../Modal/Template/TemplateSettingsModal";
 import { Template } from "@/app/components/Templates/types/templates";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -51,7 +57,7 @@ import {
   ChevronRight,
   AlertTriangle,
   Filter,
-  TrendingUp
+  TrendingUp,
 } from "lucide-react";
 
 const TemplatesPage: React.FC = () => {
@@ -62,7 +68,9 @@ const TemplatesPage: React.FC = () => {
   const [selectedEditTemplateId, setSelectedEditTemplateId] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<any>("");
   const [filterVisibility, setFilterVisibility] = useState<any>("");
@@ -151,10 +159,10 @@ const TemplatesPage: React.FC = () => {
 
   const getColorClasses = (color: string) => {
     const colorMap: {
-      [key: string]: { 
-        bg: string; 
-        text: string; 
-        badge: string; 
+      [key: string]: {
+        bg: string;
+        text: string;
+        badge: string;
         hover: string;
         gradient: string;
         border: string;
@@ -163,42 +171,47 @@ const TemplatesPage: React.FC = () => {
       purple: {
         bg: "bg-gradient-to-br from-purple-100/50 to-purple-200/30",
         text: "text-purple-600",
-        badge: "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border-purple-300",
+        badge:
+          "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border-purple-300",
         hover: "hover:from-purple-200/50 hover:to-purple-300/30",
         gradient: "from-purple-500 to-purple-600",
-        border: "border-purple-200/50"
+        border: "border-purple-200/50",
       },
       blue: {
         bg: "bg-gradient-to-br from-blue-100/50 to-blue-200/30",
         text: "text-blue-600",
-        badge: "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300",
+        badge:
+          "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300",
         hover: "hover:from-blue-200/50 hover:to-blue-300/30",
         gradient: "from-blue-500 to-blue-600",
-        border: "border-blue-200/50"
+        border: "border-blue-200/50",
       },
       green: {
         bg: "bg-gradient-to-br from-green-100/50 to-green-200/30",
         text: "text-green-600",
-        badge: "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300",
+        badge:
+          "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300",
         hover: "hover:from-green-200/50 hover:to-green-300/30",
         gradient: "from-green-500 to-green-600",
-        border: "border-green-200/50"
+        border: "border-green-200/50",
       },
       orange: {
         bg: "bg-gradient-to-br from-orange-100/50 to-orange-200/30",
         text: "text-orange-600",
-        badge: "bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300",
+        badge:
+          "bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300",
         hover: "hover:from-orange-200/50 hover:to-orange-300/30",
         gradient: "from-orange-500 to-orange-600",
-        border: "border-orange-200/50"
+        border: "border-orange-200/50",
       },
       red: {
         bg: "bg-gradient-to-br from-red-100/50 to-red-200/30",
         text: "text-red-600",
-        badge: "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300",
+        badge:
+          "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300",
         hover: "hover:from-red-200/50 hover:to-red-300/30",
         gradient: "from-red-500 to-red-600",
-        border: "border-red-200/50"
+        border: "border-red-200/50",
       },
     };
     return colorMap[color] || colorMap.purple;
@@ -232,10 +245,20 @@ const TemplatesPage: React.FC = () => {
           setTotalCount(result.length);
         } else if (result.data && Array.isArray(result.data)) {
           setTemplates(result.data);
-          setTotalCount(result.total || result.totalCount || result.count || result.data.length);
+          setTotalCount(
+            result.total ||
+              result.totalCount ||
+              result.count ||
+              result.data.length
+          );
         } else if (result.templates && Array.isArray(result.templates)) {
           setTemplates(result.templates);
-          setTotalCount(result.total || result.totalCount || result.count || result.templates.length);
+          setTotalCount(
+            result.total ||
+              result.totalCount ||
+              result.count ||
+              result.templates.length
+          );
         } else {
           setTemplates([]);
           setTotalCount(0);
@@ -294,85 +317,127 @@ const TemplatesPage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-indigo-600/10"></div>
         <div className="relative p-6 space-y-6">
           <Card className="bg-white/80 backdrop-blur-sm border-purple-200/50 shadow-lg">
-            <CardContent className="p-8">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <CardContent className="p-4 sm:p-6 lg:p-8">
+              <div className="flex flex-col gap-4 sm:gap-6">
+                {/* Title and Description */}
                 <div className="space-y-2">
-                  <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                     Analytics Templates
                   </h1>
-                  <p className="text-xl text-slate-600">
+                  <p className="text-base sm:text-lg lg:text-xl text-slate-600">
                     Create and manage analysis templates for your video content
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+
+                {/* Buttons - Full width on mobile, inline on larger screens */}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
                   <Button
                     variant="outline"
                     onClick={handleRefresh}
                     disabled={isRefreshing}
-                    className="bg-white/50 border-purple-200/50 hover:bg-purple-50/50"
+                    className="w-full sm:w-auto bg-white/50 border-purple-200/50 hover:bg-purple-50/50"
                   >
-                    <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+                    <RefreshCw
+                      className={`w-4 h-4 mr-2 ${
+                        isRefreshing ? "animate-spin" : ""
+                      }`}
+                    />
                     {isRefreshing ? "Refreshing..." : "Refresh"}
                   </Button>
                   <Button
                     onClick={() => setShowModal(true)}
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg"
+                    className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 shadow-lg"
                   >
-                    <Plus className="w-2 h-2 mr-2" />
+                    <Plus className="w-4 h-4 mr-2" />
                     New Template
                   </Button>
                 </div>
-              </div>
 
-              {/* Search and Filters */}
-              <div className="mt-8 flex flex-col lg:flex-row gap-4">
-                <div className="relative flex-1">
-                  <div className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                  <Input
-                    type="text"
-                    placeholder="Search templates..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white/50 border-purple-200/50 focus:border-purple-500 focus:ring-purple-500"
-                  />
-                </div>
-                <Select value={filterStatus || "all"} onValueChange={(value) => setFilterStatus(value === "all" ? "" : value)}>
-                  <SelectTrigger className="w-full lg:w-[180px] bg-white/50 border-purple-200/50">
-                    <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="beta">Beta</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={filterVisibility || "all"} onValueChange={(value) => setFilterVisibility(value === "all" ? "" : value)}>
-                  <SelectTrigger className="w-full lg:w-[180px] bg-white/50 border-purple-200/50">
-                    <Eye className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="All Visibility" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Visibility</SelectItem>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="private">Private</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                {/* Search and Filters */}
+                <div className="flex flex-col gap-3 sm:gap-4">
+                  <div className="relative">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search templates..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 sm:pl-10 bg-white/50 border-purple-200/50 focus:border-purple-500 focus:ring-purple-500"
+                    />
+                  </div>
 
-              {/* Stats */}
-              <div className="mt-6 flex flex-wrap gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"></div>
-                  <span className="text-slate-600">Total: <span className="font-semibold text-slate-800">{totalCount}</span></span>
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <Select
+                      value={filterStatus || "all"}
+                      onValueChange={(value) =>
+                        setFilterStatus(value === "all" ? "" : value)
+                      }
+                    >
+                      <SelectTrigger className="w-full sm:w-[180px] bg-white/50 border-purple-200/50">
+                        <Filter className="w-4 h-4 mr-2" />
+                        <SelectValue placeholder="All Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="beta">Beta</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={filterVisibility || "all"}
+                      onValueChange={(value) =>
+                        setFilterVisibility(value === "all" ? "" : value)
+                      }
+                    >
+                      <SelectTrigger className="w-full sm:w-[180px] bg-white/50 border-purple-200/50">
+                        <Eye className="w-4 h-4 mr-2" />
+                        <SelectValue placeholder="All Visibility" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Visibility</SelectItem>
+                        <SelectItem value="public">Public</SelectItem>
+                        <SelectItem value="private">Private</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"></div>
-                  <span className="text-slate-600">Active: <span className="font-semibold text-green-700">{templates.filter((t: any) => t.status === "active").length}</span></span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full"></div>
-                  <span className="text-slate-600">Beta: <span className="font-semibold text-yellow-700">{templates.filter((t: any) => t.status === "beta").length}</span></span>
+
+                {/* Stats */}
+                <div className="flex flex-wrap gap-4 sm:gap-6 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"></div>
+                    <span className="text-slate-600">
+                      Total:{" "}
+                      <span className="font-semibold text-slate-800">
+                        {totalCount}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"></div>
+                    <span className="text-slate-600">
+                      Active:{" "}
+                      <span className="font-semibold text-green-700">
+                        {
+                          templates.filter((t: any) => t.status === "active")
+                            .length
+                        }
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full"></div>
+                    <span className="text-slate-600">
+                      Beta:{" "}
+                      <span className="font-semibold text-yellow-700">
+                        {
+                          templates.filter((t: any) => t.status === "beta")
+                            .length
+                        }
+                      </span>
+                    </span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -419,39 +484,53 @@ const TemplatesPage: React.FC = () => {
                   <CardHeader className="pb-4">
                     <div className="flex justify-between items-start">
                       <div className="flex items-start gap-4">
-                        <div className={`w-12 h-12 ${colorClasses.bg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                        <div
+                          className={`w-12 h-12 ${colorClasses.bg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}
+                        >
                           <div className={`${colorClasses.text}`}>
                             {getIcon(template.icon)}
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-start gap-2 mb-2">
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleOpenSettings(template)}
-                              className="p-1 h-auto hover:bg-purple-100"
+                              className="p-1 h-auto hover:bg-purple-100 flex-shrink-0 mt-0.5"
                             >
-                              <Settings className="w-4 h-4 text-slate-400 hover:text-purple-600" />
+                              <Settings className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 hover:text-purple-600" />
                             </Button>
-                            <CardTitle className="text-lg font-semibold text-slate-800 group-hover:text-purple-700 transition-colors truncate">
+                            <CardTitle className="text-sm sm:text-xl font-semibold text-slate-800 group-hover:text-purple-700 transition-colors break-words leading-tight min-w-0 flex-1">
                               {template.template_name}
                             </CardTitle>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge 
-                              className={`${template.is_public ? colorClasses.badge : "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border-slate-300"} text-xs`}
+                          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                            <Badge
+                              className={`${
+                                template.is_public
+                                  ? colorClasses.badge
+                                  : "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border-slate-300"
+                              } text-xs flex-shrink-0`}
                             >
                               {template.is_public ? (
-                                <><Eye className="w-3 h-3 mr-1" />Public</>
+                                <>
+                                  <Eye className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
+                                  Public
+                                </>
                               ) : (
-                                <><EyeOff className="w-3 h-3 mr-1" />Private</>
+                                <>
+                                  <EyeOff className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
+                                  Private
+                                </>
                               )}
                             </Badge>
-                            <Badge 
-                              className={`text-xs ${template.status === "active" 
-                                ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-300" 
-                                : "bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-300"}`}
+                            <Badge
+                              className={`text-xs flex-shrink-0 ${
+                                template.status === "active"
+                                  ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border-green-300"
+                                  : "bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 border-yellow-300"
+                              }`}
                             >
                               {template.status === "active" ? "Active" : "Beta"}
                             </Badge>
@@ -460,16 +539,22 @@ const TemplatesPage: React.FC = () => {
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem onClick={() => handleOpenEdit(template.id)}>
+                          <DropdownMenuItem
+                            onClick={() => handleOpenEdit(template.id)}
+                          >
                             <Edit className="w-4 h-4 mr-2" />
                             Edit Template
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => deleteTemplate(template.id)}
                             className="text-red-600 focus:text-red-600"
                           >
@@ -488,13 +573,22 @@ const TemplatesPage: React.FC = () => {
 
                     {template.tags && template.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {template.tags.slice(0, 3).map((tag: any, index: any) => (
-                          <Badge key={index} variant="outline" className="text-xs bg-slate-50 text-slate-600 border-slate-200">
-                            {tag}
-                          </Badge>
-                        ))}
+                        {template.tags
+                          .slice(0, 3)
+                          .map((tag: any, index: any) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs bg-slate-50 text-slate-600 border-slate-200"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
                         {template.tags.length > 3 && (
-                          <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600 border-slate-200">
+                          <Badge
+                            variant="outline"
+                            className="text-xs bg-slate-50 text-slate-600 border-slate-200"
+                          >
                             +{template.tags.length - 3}
                           </Badge>
                         )}
@@ -507,14 +601,20 @@ const TemplatesPage: React.FC = () => {
                           <TrendingUp className="w-3 h-3 text-slate-500" />
                           <span className="text-xs text-slate-500">Uses</span>
                         </div>
-                        <span className="text-sm font-semibold text-slate-700">{template.usage_count || 0}</span>
+                        <span className="text-sm font-semibold text-slate-700">
+                          {template.usage_count || 0}
+                        </span>
                       </div>
                       <div className="text-center">
                         <div className="flex items-center justify-center gap-1 mb-1">
                           <Users className="w-3 h-3 text-slate-500" />
-                          <span className="text-xs text-slate-500">Assigned</span>
+                          <span className="text-xs text-slate-500">
+                            Assigned
+                          </span>
                         </div>
-                        <span className="text-sm font-semibold text-slate-700">{template.assignedProfiles || 0}</span>
+                        <span className="text-sm font-semibold text-slate-700">
+                          {template.assignedProfiles || 0}
+                        </span>
                       </div>
                     </div>
 
@@ -529,50 +629,62 @@ const TemplatesPage: React.FC = () => {
                           {assesmentInfo.length > 0 ? (
                             <div className="space-y-2">
                               {assesmentInfo.map((item: any, idx: any) => (
-                                <div key={idx} className="flex items-center justify-between py-2 px-3 bg-white/50 rounded-lg border border-purple-100/50">
-                                  <span className="text-sm text-slate-700">Sub-Profile: {item.sub_profile_id}</span>
-                                  <Badge variant="outline" className="text-xs">Priority: {item.priority}</Badge>
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between py-2 px-3 bg-white/50 rounded-lg border border-purple-100/50"
+                                >
+                                  <span className="text-sm text-slate-700">
+                                    Sub-Profile: {item.sub_profile_id}
+                                  </span>
+                                  <Badge variant="outline" className="text-xs">
+                                    Priority: {item.priority}
+                                  </Badge>
                                 </div>
                               ))}
                             </div>
                           ) : (
                             <div className="text-center py-4">
                               <Users className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                              <p className="text-sm text-slate-500">No assignments found</p>
+                              <p className="text-sm text-slate-500">
+                                No assignments found
+                              </p>
                             </div>
                           )}
                         </CardContent>
                       </Card>
                     )}
 
-                    <div className="flex gap-2 pt-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200/50 hover:from-purple-100 hover:to-blue-100 text-purple-700"
+                    <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200/50 hover:from-purple-100 hover:to-blue-100 text-purple-700 text-xs sm:text-sm rounded-lg"
                       >
                         Use Template
                       </Button>
-                      <Button
-                        onClick={() => handleOpenAssignment(template)}
-                        size="sm"
-                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0"
-                      >
-                        <Users className="w-4 h-4 mr-1" />
-                        Assign
-                      </Button>
-                      <Button
-                        onClick={() => toggleAssignments(template.id)}
-                        variant="outline"
-                        size="sm"
-                        className="bg-gradient-to-r from-slate-50 to-purple-50 border-purple-200/50 hover:from-slate-100 hover:to-purple-100"
-                      >
-                        {tempId === template.id && showAssignments ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleOpenAssignment(template)}
+                          size="sm"
+                          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 text-xs sm:text-sm px-3 sm:px-4 rounded-lg flex-shrink-0"
+                        >
+                          <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                          Assign
+                        </Button>
+                        <Button
+                          onClick={() => toggleAssignments(template.id)}
+                          variant="outline"
+                          size="sm"
+                          className="bg-gradient-to-r from-slate-50 to-purple-50 border-purple-200/50 hover:from-slate-100 hover:to-purple-100 px-2 sm:px-3 rounded-lg flex-shrink-0"
+                        >
+                          {tempId === template.id && showAssignments ? (
+                            <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" />
+                          ) : (
+                            <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                          )}
+                          View
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -583,44 +695,58 @@ const TemplatesPage: React.FC = () => {
 
         {/* Pagination */}
         {totalCount > 0 && (
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={page === 1}
-                    className="bg-white/50 border-purple-200/50"
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-2" />
-                    Previous
-                  </Button>
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <span>Page {page} of {Math.ceil(totalCount / pageSize) || 1}</span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setPage((prev) => prev < Math.ceil(totalCount / pageSize) ? prev + 1 : prev)}
-                    disabled={page >= Math.ceil(totalCount / pageSize) || totalCount === 0}
-                    className="bg-white/50 border-purple-200/50"
-                  >
-                    Next
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
+          <CardContent className="p-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={page === 1}
+                  className="bg-white/50 border-purple-200/50"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  Previous
+                </Button>
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <span>
+                    Page {page} of {Math.ceil(totalCount / pageSize) || 1}
+                  </span>
                 </div>
-                <Select value={pageSize.toString()} onValueChange={(value) => { setPageSize(Number(value)); setPage(1); }}>
-                  <SelectTrigger className="w-[140px] bg-white/50 border-purple-200/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5 per page</SelectItem>
-                    <SelectItem value="6">6 per page</SelectItem>
-                    <SelectItem value="10">10 per page</SelectItem>
-                    <SelectItem value="20">20 per page</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setPage((prev) =>
+                      prev < Math.ceil(totalCount / pageSize) ? prev + 1 : prev
+                    )
+                  }
+                  disabled={
+                    page >= Math.ceil(totalCount / pageSize) || totalCount === 0
+                  }
+                  className="bg-white/50 border-purple-200/50"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
-            </CardContent>
+              <Select
+                value={pageSize.toString()}
+                onValueChange={(value) => {
+                  setPageSize(Number(value));
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[140px] bg-white/50 border-purple-200/50">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 per page</SelectItem>
+                  <SelectItem value="6">6 per page</SelectItem>
+                  <SelectItem value="10">10 per page</SelectItem>
+                  <SelectItem value="20">20 per page</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
         )}
       </div>
 

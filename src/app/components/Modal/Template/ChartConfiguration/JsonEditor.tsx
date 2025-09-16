@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ErrorHandler, { ErrorResponse } from "@/helpers/ErrorHandler";
 
 interface JsonEditorProps {
@@ -14,6 +14,23 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
 }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const lineNumbersRef = useRef<HTMLDivElement>(null);
+
+  // Sync line numbers scroll with textarea scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (textareaRef.current && lineNumbersRef.current) {
+        lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop;
+      }
+    };
+
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.addEventListener('scroll', handleScroll);
+      return () => textarea.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   const formatJson = () => {
     try {
@@ -117,8 +134,10 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
     }
   };
 
+  const lineCount = jsonContent.split("\n").length;
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4 lg:p-6">
+    <div className="w-full bg-white rounded-lg border border-gray-200 p-3 sm:p-4 lg:p-6">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-4 gap-3 sm:gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -142,15 +161,15 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
         </div>
 
         {/* Action buttons - responsive layout */}
-        <div className="flex flex-wrap gap-2 sm:gap-2">
+        <div className="flex flex-wrap gap-1 sm:gap-2">
           <button
             type="button"
             onClick={copyJson}
-            className="flex items-center gap-1 p-2 sm:px-3 sm:py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-xs sm:text-sm"
+            className="flex items-center gap-1 p-2 sm:px-3 sm:py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-xs sm:text-sm min-w-0"
             title="Copy JSON"
           >
             <svg
-              className="w-3 h-3 sm:w-4 sm:h-4"
+              className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -170,11 +189,11 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           <button
             type="button"
             onClick={downloadJson}
-            className="flex items-center gap-1 p-2 sm:px-3 sm:py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-xs sm:text-sm"
+            className="flex items-center gap-1 p-2 sm:px-3 sm:py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-xs sm:text-sm min-w-0"
             title="Download JSON"
           >
             <svg
-              className="w-3 h-3 sm:w-4 sm:h-4"
+              className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -192,11 +211,11 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           <button
             type="button"
             onClick={uploadJson}
-            className="flex items-center gap-1 p-2 sm:px-3 sm:py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-xs sm:text-sm"
+            className="flex items-center gap-1 p-2 sm:px-3 sm:py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-xs sm:text-sm min-w-0"
             title="Upload JSON"
           >
             <svg
-              className="w-3 h-3 sm:w-4 sm:h-4"
+              className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -214,11 +233,11 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           <button
             type="button"
             onClick={onReset}
-            className="flex items-center gap-1 p-2 sm:px-3 sm:py-2 bg-red-100 text-red-700 border border-red-300 rounded-md hover:bg-red-200 transition-colors text-xs sm:text-sm"
+            className="flex items-center gap-1 p-2 sm:px-3 sm:py-2 bg-red-100 text-red-700 border border-red-300 rounded-md hover:bg-red-200 transition-colors text-xs sm:text-sm min-w-0"
             title="Reset JSON"
           >
             <svg
-              className="w-3 h-3 sm:w-4 sm:h-4"
+              className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -246,7 +265,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
         <div>
           <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-2 sm:mb-0">
             <svg
-              className="w-3 h-3 sm:w-4 sm:h-4"
+              className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -262,7 +281,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           </h4>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1 sm:gap-2">
           <button
             type="button"
             onClick={formatJson}
@@ -285,7 +304,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
             {showPreview ? (
               <>
                 <svg
-                  className="w-3 h-3 sm:w-4 sm:h-4"
+                  className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -297,12 +316,12 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
                     d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M9.878 9.878l-1.415-1.414M14.121 14.121L15.536 15.536M14.121 14.121L12.707 12.707M14.121 14.121l-1.414-1.414"
                   />
                 </svg>
-                <span>Hide</span>
+                <span className="hidden sm:inline">Hide</span>
               </>
             ) : (
               <>
                 <svg
-                  className="w-3 h-3 sm:w-4 sm:h-4"
+                  className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -320,7 +339,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                   />
                 </svg>
-                <span>Preview</span>
+                <span className="hidden sm:inline">Preview</span>
               </>
             )}
           </button>
@@ -334,37 +353,56 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
         </div>
       </div>
 
-      {/* JSON Editor */}
-      <div className="relative">
-        <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-10 lg:w-12 bg-gray-100 border-r border-gray-300 flex flex-col text-xs text-gray-500 font-mono overflow-hidden rounded-l">
-          {jsonContent.split("\n").map((_, index) => (
-            <div
-              key={index}
-              className="px-1 sm:px-2 leading-5 sm:leading-6 text-right min-h-[20px] sm:min-h-[24px] text-xs"
-            >
-              {index + 1}
-            </div>
-          ))}
+      {/* JSON Editor - Fixed container with proper scroll sync */}
+      <div className="relative border border-gray-300 rounded-lg overflow-hidden bg-white">
+        {/* Line numbers - synced with textarea scroll */}
+        <div 
+          ref={lineNumbersRef}
+          className="absolute left-0 top-0 bottom-0 w-8 sm:w-10 lg:w-12 bg-gray-100 border-r border-gray-300 overflow-hidden z-10"
+        >
+          <div className="flex flex-col text-xs text-gray-500 font-mono">
+            {Array.from({ length: lineCount }, (_, index) => (
+              <div
+                key={index}
+                className="px-1 sm:px-2 text-right flex-shrink-0"
+                style={{ 
+                  lineHeight: '1.5', 
+                  minHeight: '1.5em',
+                  height: '1.5em'
+                }}
+              >
+                {index + 1}
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* Main textarea */}
         <textarea
+          ref={textareaRef}
           value={jsonContent}
           onChange={(e) => onJsonChange(e.target.value)}
-          className={`w-full h-48 sm:h-56 md:h-64 lg:h-72 pl-10 sm:pl-12 lg:pl-14 pr-3 sm:pr-4 py-2 sm:py-3 font-mono text-xs sm:text-sm border rounded-lg focus:ring-2 focus:ring-purple-500 outline-none bg-white resize-none ${
+          className={`w-full block pl-10 sm:pl-12 lg:pl-14 pr-3 sm:pr-4 py-2 sm:py-3 font-mono text-xs sm:text-sm focus:ring-2 focus:ring-purple-500 outline-none bg-white resize-none border-0 ${
             isValidJson()
-              ? "border-gray-300 focus:border-purple-500"
-              : "border-red-300 focus:border-red-500 focus:ring-red-500"
+              ? "focus:ring-purple-500"
+              : "focus:ring-red-500"
           }`}
+          style={{ 
+            height: '12rem', // Fixed height instead of responsive classes for better scroll control
+            lineHeight: '1.5',
+            minHeight: '12rem'
+          }}
           spellCheck={false}
         />
       </div>
 
       {/* Status and Character Count */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-2 sm:mt-3 gap-2 sm:gap-0">
-        <div className="order-2 sm:order-1">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mt-2 sm:mt-3 gap-2 sm:gap-0">
+        <div className="order-2 sm:order-1 flex-1 min-w-0">
           {!isValidJson() && (
-            <div className="text-red-600 flex items-start sm:items-center gap-1 text-xs sm:text-sm">
+            <div className="text-red-600 flex items-start gap-2 text-xs sm:text-sm">
               <svg
-                className="w-3 h-3 sm:w-4 sm:h-4 mt-0.5 sm:mt-0 flex-shrink-0"
+                className="w-3 h-3 sm:w-4 sm:h-4 mt-0.5 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -380,9 +418,9 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
             </div>
           )}
           {isValidJson() && (
-            <span className="text-green-600 flex items-center gap-1 text-xs sm:text-sm">
+            <span className="text-green-600 flex items-center gap-2 text-xs sm:text-sm">
               <svg
-                className="w-3 h-3 sm:w-4 sm:h-4"
+                className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -398,7 +436,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
             </span>
           )}
         </div>
-        <div className="text-gray-500 text-xs sm:text-sm order-1 sm:order-2">
+        <div className="text-gray-500 text-xs sm:text-sm order-1 sm:order-2 flex-shrink-0">
           {jsonContent.length.toLocaleString()} characters
         </div>
       </div>
@@ -409,7 +447,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = ({
           <h4 className="text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3">
             Preview:
           </h4>
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 font-mono text-xs sm:text-sm overflow-x-auto">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4 font-mono text-xs sm:text-sm overflow-auto max-h-64">
             {isValidJson() ? (
               <pre className="text-gray-800 whitespace-pre-wrap break-words">
                 {JSON.stringify(JSON.parse(jsonContent), null, 2)}
