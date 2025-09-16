@@ -58,7 +58,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     const handleMessage = (event: MessageEvent) => {
       console.log('Received message:', event.data, 'from origin:', event.origin);
       
-      if (event.origin !== 'http://172.174.114.7') {
+      if (event.origin !== 'http://172.174.114.7:3000/') {
         console.log('Message rejected - invalid origin:', event.origin);
         return;
       }
@@ -117,7 +117,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     if (window.opener && !window.opener.closed) {
       window.opener.postMessage(
         { type: 'LOGOUT' },
-        'http://172.174.114.7'
+        'http://172.174.114.7:3000/'
       );
     }
     
