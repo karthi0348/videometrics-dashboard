@@ -1,7 +1,6 @@
 import ErrorHandler, { ErrorResponse } from "@/helpers/ErrorHandler";
 import ProfileApiService from "@/helpers/service/profile/profile-api-service";
 import TemplateApiService, {
-  AssignSubProfilePayload,
 } from "@/helpers/service/templates/template-api-service";
 import { AxiosError } from "axios";
 import { useState, useEffect, useCallback } from "react";

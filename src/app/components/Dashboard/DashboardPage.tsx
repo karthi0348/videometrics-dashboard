@@ -1,30 +1,43 @@
 import React, { useState, useEffect } from "react";
 import { Video } from "../ProcessVideo/types/types";
 import DashboardApiService from "@/helpers/service/dashboard/DashboardApiService";
-import ProcessVideoApiService from "@/helpers/service/processvideo/ProcessVideoApiservice";
-import VideoMetricsModal from "../ProcessedVideos/pages/VideoMetricsPage";
-import VideoThumbnail from "./VideoThumbnail";0
-import VideoMetricsPage from "../ProcessedVideos/pages/VideoMetricsPage";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import UserApiService from "@/helpers/service/user/user-api-service";
+
+import { API_ENDPOINTS } from "../../config/api";
+import VideoThumbnail from "./VideoThumbnail";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Play, 
-  CheckCircle, 
-  ArrowRight, 
-  TrendingUp, 
+import {
+  Play,
+  CheckCircle,
+  ArrowRight,
+  TrendingUp,
   Video as VideoIcon,
   Calendar,
   AlertTriangle,
-  Loader2
+  Loader2,
 } from "lucide-react";
 
 interface DashboardPageProps {
   videos?: Video[];
-  onNavigate?: (page: string) => void;
+  onNavigate?: (page: string, analyticsId?: string) => void;
 }
 
 interface DashboardStats {
@@ -44,6 +57,22 @@ interface DashboardStats {
   }>;
 }
 
+interface User {
+  full_name: string;
+  email: string;
+}
+
+// Interface for VideoActivity to match VideoThumbnail component
+interface VideoActivity {
+  id: number;
+  analytics_id?: string;
+  created_at: string;
+  processing_completed_at?: string | null;
+  title?: string;
+  duration?: string;
+  thumbnail_color?: string;
+}
+
 const DashboardPage: React.FC<DashboardPageProps> = ({
   videos = [],
   onNavigate,
@@ -51,22 +80,125 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
     null
   );
+  const [recentVideos, setRecentVideos] = useState<VideoActivity[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [videosLoading, setVideosLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
-
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const dashboardApiService = new DashboardApiService();
-  const processVideoApiService = new ProcessVideoApiService();
+
+  const fetchCurrentUser = async () => {
+    try {
+      const userApiService = new UserApiService();
+      const userData = await userApiService.getCurrentUser();
+      setCurrentUser(userData);
+      console.log(userData)
+    } catch (err) {
+      console.error("Error fetching current user:", err);
+      // Fallback to default name on error
+      setCurrentUser({ full_name: "User", email: "" });
+    }
+  };
+
+  // Helper function to convert Video to VideoActivity
+  const convertVideoToActivity = (video: Video): VideoActivity => {
+    return {
+      id: video.id || 0,
+      analytics_id: video.analytics_id || video.id?.toString(),
+      created_at: video.created_at || new Date().toISOString(),
+      processing_completed_at: video.processing_completed_at || null,
+      title: video.video_name || video.name || `Video ${video.id}`,
+      duration: video.duration || "0:00",
+      thumbnail_color: video.thumbnail_color || "from-blue-400 to-purple-600",
+    };
+  };
+
+  // Fetch recent videos using the same API as VideoTable
+  const fetchRecentVideos = async () => {
+    try {
+      setVideosLoading(true);
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        console.error("No authentication token found");
+        return;
+      }
+
+      const params = new URLSearchParams({
+        page: "1",
+        page_size: "6", // Fetch only 6 recent videos for dashboard
+      });
+
+      const response = await fetch(
+        `${API_ENDPOINTS.LIST_VIDEOS || "/video-urls"}?${params}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch videos: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      let videoList: Video[] = [];
+
+      if (Array.isArray(data)) {
+        videoList = data;
+      } else if (data.results && Array.isArray(data.results)) {
+        videoList = data.results;
+      } else if (data.data && Array.isArray(data.data)) {
+        videoList = data.data;
+      }
+
+      // Filter out invalid videos and convert to VideoActivity format
+      const validVideos = videoList
+        .filter((video) => video && (video.id || video.id === 0))
+        .map(convertVideoToActivity);
+
+      // Sort by created_at descending to get most recent first
+      const sortedVideos = validVideos.sort((a, b) => {
+        const dateA = new Date(a.created_at).getTime();
+        const dateB = new Date(b.created_at).getTime();
+        return dateB - dateA;
+      });
+
+      setRecentVideos(sortedVideos.slice(0, 3)); // Show only top 3 for dashboard
+    } catch (err) {
+      console.error("Error fetching recent videos:", err);
+      setRecentVideos([]); // Set empty array on error
+    } finally {
+      setVideosLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboardStats = async () => {
+    const fetchDashboardData = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const data = await dashboardApiService.getDashboardStats();
-        setDashboardStats(data);
+        // Fetch dashboard stats
+        const statsPromise = dashboardApiService.getDashboardStats();
+
+        // Fetch recent videos
+        const videosPromise = fetchRecentVideos();
+        const userPromise = fetchCurrentUser();
+
+        // Wait for both to complete
+        const [statsData] = await Promise.all([
+          statsPromise,
+          videosPromise,
+          userPromise,
+        ]);
+
+        setDashboardStats(statsData);
       } catch (err) {
         console.error("Failed to fetch dashboard stats:", err);
         setError("Failed to load dashboard data");
@@ -86,16 +218,25 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       }
     };
 
-    fetchDashboardStats();
-  }, [videos.length]);
+    fetchDashboardData();
+  }, []);
 
   const handleViewMetrics = (analyticsId: string) => {
-  if (onNavigate) {
-    onNavigate('videoMetrics', analyticsId);
-  }
-};
+    if (onNavigate) {
+      onNavigate("videoMetrics", analyticsId);
+    }
+  };
 
- 
+  const handleVideoClick = (activity: VideoActivity) => {
+    console.log("Video clicked:", activity);
+    // You can add navigation logic here, e.g., to play video or show details
+    if (onNavigate) {
+      onNavigate(
+        "videoDetails",
+        activity.analytics_id || activity.id.toString()
+      );
+    }
+  };
 
   if (loading) {
     return (
@@ -105,10 +246,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             <Skeleton className="h-8 w-[200px]" />
             <Skeleton className="h-4 w-[400px]" />
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <Card key={i} className="bg-white/70 backdrop-blur-sm border-purple-200/50">
+              <Card
+                key={i}
+                className="bg-white/70 backdrop-blur-sm border-purple-200/50"
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-4">
                     <Skeleton className="h-12 w-12 rounded-lg" />
@@ -140,25 +284,41 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   // Helper function to format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
-        return <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 hover:from-green-200 hover:to-emerald-200 border-green-200">Completed</Badge>;
-      case 'processing':
-        return <Badge className="bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 hover:from-yellow-200 hover:to-orange-200 border-yellow-200">Processing</Badge>;
-      case 'failed':
-        return <Badge className="bg-gradient-to-r from-red-100 to-pink-100 text-red-800 hover:from-red-200 hover:to-pink-200 border-red-200">Failed</Badge>;
+      case "completed":
+        return (
+          <Badge className="bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 hover:from-green-200 hover:to-emerald-200 border-green-200">
+            Completed
+          </Badge>
+        );
+      case "processing":
+        return (
+          <Badge className="bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 hover:from-yellow-200 hover:to-orange-200 border-yellow-200">
+            Processing
+          </Badge>
+        );
+      case "failed":
+        return (
+          <Badge className="bg-gradient-to-r from-red-100 to-pink-100 text-red-800 hover:from-red-200 hover:to-pink-200 border-red-200">
+            Failed
+          </Badge>
+        );
       default:
-        return <Badge className="bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 border-purple-200">{status}</Badge>;
+        return (
+          <Badge className="bg-gradient-to-r from-purple-100 to-blue-100 text-purple-800 border-purple-200">
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -173,7 +333,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               Dashboard
             </h1>
             <p className="text-xl text-slate-700">
-              Welcome back, Gantann! Here's an overview of your video analytics.
+              Welcome back, {currentUser?.full_name || "User"}! Here's an
+              overview of your video analytics.
             </p>
             {error && (
               <Alert className="border-yellow-200/50 bg-gradient-to-r from-yellow-50 to-orange-50 backdrop-blur-sm">
@@ -192,7 +353,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-slate-600">Total Videos</p>
+                  <p className="text-sm font-medium text-slate-600">
+                    Total Videos
+                  </p>
                   <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                     {stats.total_analytics}
                   </p>
@@ -211,7 +374,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-slate-600">Processed</p>
+                  <p className="text-sm font-medium text-slate-600">
+                    Processed
+                  </p>
                   <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                     {stats.completed_analytics}
                   </p>
@@ -226,6 +391,26 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             </CardContent>
           </Card>
 
+          <Card className="border-l-4 border-l-yellow-500 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white/80 to-yellow-50/80 backdrop-blur-sm border-yellow-200/50">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-slate-600">
+                    Processing
+                  </p>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                    {stats.processing_analytics}
+                  </p>
+                </div>
+                <div className="h-12 w-12 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 text-yellow-600" />
+                </div>
+              </div>
+              <p className="text-xs text-slate-600 mt-2">
+                Currently being processed
+              </p>
+            </CardContent>
+          </Card>
 
           <Card className="border-l-4 border-l-red-500 hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white/80 to-red-50/80 backdrop-blur-sm border-red-200/50">
             <CardContent className="p-6">
@@ -240,16 +425,14 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   <AlertTriangle className="h-6 w-6 text-red-600" />
                 </div>
               </div>
-              <p className="text-xs text-slate-600 mt-2">
-                Failed to process
-              </p>
+              <p className="text-xs text-slate-600 mt-2">Failed to process</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Recent Videos Section with gradient background */}
         <Card className="bg-gradient-to-br from-white/70 to-purple-50/70 backdrop-blur-sm border-purple-200/50 shadow-lg">
-          <CardHeader >
+          <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-8 bg-gradient-to-b from-purple-500 to-blue-500 rounded-full" />
@@ -257,8 +440,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   Recent Videos
                 </CardTitle>
               </div>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => onNavigate?.("videos")}
                 className="group bg-gradient-to-r from-purple-100/50 to-blue-100/50 hover:from-purple-200/50 hover:to-blue-200/50 border border-purple-200/50"
               >
@@ -268,21 +451,35 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
           </CardHeader>
           <CardContent className="pt-6">
-            {stats.recent_activity.length > 0 ? (
+            {videosLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {stats.recent_activity.slice(0, 3).map((activity) => (
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="space-y-3">
+                    <Skeleton className="h-48 w-full rounded-lg" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : recentVideos.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recentVideos.map((video) => (
                   <VideoThumbnail
-                    key={activity.id}
-                    activity={activity}
-                    onClick={(video) => console.log("Video clicked:", video)}
+                    key={video.id}
+                    activity={video}
+                    onClick={handleVideoClick}
                   />
                 ))}
               </div>
             ) : (
               <div className="text-center py-12 bg-gradient-to-br from-purple-50/30 to-blue-50/30 rounded-xl border border-purple-100/50">
                 <VideoIcon className="mx-auto h-12 w-12 text-purple-400 mb-4" />
-                <h3 className="text-lg font-medium text-purple-700 mb-2">No recent videos</h3>
-                <p className="text-sm text-purple-600">Upload your first video to get started</p>
+                <h3 className="text-lg font-medium text-purple-700 mb-2">
+                  No recent videos
+                </h3>
+                <p className="text-sm text-purple-600">
+                  Upload your first video to get started
+                </p>
               </div>
             )}
           </CardContent>
@@ -298,8 +495,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   Recent Processed Videos
                 </CardTitle>
               </div>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => onNavigate?.("processed")}
                 className="group bg-gradient-to-r from-blue-100/50 to-purple-100/50 hover:from-blue-200/50 hover:to-purple-200/50 border border-blue-200/50"
               >
@@ -313,32 +510,41 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gradient-to-r from-purple-50/50 to-blue-50/50 hover:from-purple-100/50 hover:to-blue-100/50">
-                    <TableHead className="font-semibold text-slate-700">Video Name</TableHead>
-                    <TableHead className="font-semibold text-slate-700">Status</TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Video Name
+                    </TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Status
+                    </TableHead>
                     <TableHead className="font-semibold text-slate-700">
                       <div className="flex items-center space-x-2">
                         <Calendar className="h-4 w-4" />
                         <span>Processed At</span>
                       </div>
                     </TableHead>
-                    <TableHead className="font-semibold text-slate-700">Actions</TableHead>
+                    <TableHead className="font-semibold text-slate-700">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {stats.recent_activity.length > 0 ? (
                     stats.recent_activity.map((activity) => (
-                      <TableRow key={activity.id} className="hover:bg-gradient-to-r hover:from-purple-50/30 hover:to-blue-50/30 transition-all duration-200">
+                      <TableRow
+                        key={activity.id}
+                        className="hover:bg-gradient-to-r hover:from-purple-50/30 hover:to-blue-50/30 transition-all duration-200"
+                      >
                         <TableCell className="font-medium">
                           <div className="flex items-center space-x-3">
                             <div className="h-10 w-10 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center">
                               <Play className="h-4 w-4 text-purple-600" />
                             </div>
-                            <span className="text-slate-700">Video {activity.id}</span>
+                            <span className="text-slate-700">
+                              Video {activity.id}
+                            </span>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {getStatusBadge(activity.status)}
-                        </TableCell>
+                        <TableCell>{getStatusBadge(activity.status)}</TableCell>
                         <TableCell className="text-slate-600">
                           {activity.processing_completed_at
                             ? formatDate(activity.processing_completed_at)
@@ -349,7 +555,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                             <Button
                               onClick={() =>
                                 handleViewMetrics(
-                                  activity.analytics_id || activity.id.toString()
+                                  activity.analytics_id ||
+                                    activity.id.toString()
                                 )
                               }
                               size="sm"
@@ -360,7 +567,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                             </Button>
                           ) : (
                             <span className="text-sm text-slate-500">
-                              {activity.status === "processing" ? "Processing..." : "Failed"}
+                              {activity.status === "processing"
+                                ? "Processing..."
+                                : "Failed"}
                             </span>
                           )}
                         </TableCell>
@@ -371,8 +580,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                       <TableCell colSpan={4} className="text-center py-12">
                         <div className="flex flex-col items-center space-y-2 bg-gradient-to-br from-purple-50/30 to-blue-50/30 rounded-xl p-8 mx-4">
                           <CheckCircle className="h-12 w-12 text-purple-400" />
-                          <h3 className="font-medium text-purple-700">No processed videos</h3>
-                          <p className="text-sm text-purple-600">Processed videos will appear here</p>
+                          <h3 className="font-medium text-purple-700">
+                            No processed videos
+                          </h3>
+                          <p className="text-sm text-purple-600">
+                            Processed videos will appear here
+                          </p>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -382,8 +595,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
           </CardContent>
         </Card>
-
-  
       </div>
     </div>
   );

@@ -647,30 +647,10 @@ const VideoTable: React.FC<VideoTableProps> = ({
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: 400 }}>
             {searchQuery || dateFrom || dateTo
               ? "No videos match your current filters. Try adjusting your search criteria."
-              : "Upload your first video to get started with your collection."}
+              : "Upload/Add your first video to get started with your collection."}
           </Typography>
 
-          {!(searchQuery || dateFrom || dateTo) && (
-            <Button
-              variant="contained"
-              startIcon={<UploadIcon />}
-              size="large"
-              sx={{
-                textTransform: 'none',
-                borderRadius: 3,
-                py: 1.5,
-                px: 4,
-                fontSize: '1.1rem',
-                fontWeight: 600,
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
-                }
-              }}
-            >
-              Upload Your First Video
-            </Button>
-          )}
+     
         </Box>
       </Container>
     );

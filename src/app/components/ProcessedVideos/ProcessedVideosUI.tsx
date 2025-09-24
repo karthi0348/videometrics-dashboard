@@ -8,6 +8,7 @@ import {
   Eye,
   Trash2,
   BarChart3,
+  X,
 } from "lucide-react";
 import { ProcessedVideo } from "./types/types";
 
@@ -34,12 +35,23 @@ interface ProcessedVideosUIProps {
   totalCount: number;
   pageSize: number;
   refreshInterval: NodeJS.Timeout | null;
+  filteredVideos: ProcessedVideo[];
+  allVideos: ProcessedVideo[];
+  showFilter: boolean;
+  setShowFilter: (show: boolean) => void;
+  filters: FilterState;
+  setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
+  getUniqueProfiles: () => string[];
+  getUniqueStatuses: () => string[];
+  getActiveFilterCount: () => number;
+  handleStatusFilter: (status: string) => void;
+  handleProfileFilter: (profile: string) => void;
+  clearAllFilters: () => void;
 
   // Handler props
   handleRefresh: () => void;
   handlePageChange: (page: number) => void;
   handleViewMetrics: (analyticsId: string) => void;
-  handlePlayVideo: (videoUrl?: string) => void;
   handleDeleteVideo: (analyticsId: string) => void;
   handleBulkDelete: () => void;
   handleSelectVideo: (id: number) => void;
@@ -69,11 +81,22 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
   handleRefresh,
   handlePageChange,
   handleViewMetrics,
-  handlePlayVideo,
   handleDeleteVideo,
   handleBulkDelete,
   handleSelectVideo,
   handleSelectAll,
+  filteredVideos,
+  allVideos,
+  showFilter,
+  setShowFilter,
+  filters,
+  setFilters,
+  getUniqueProfiles,
+  getUniqueStatuses,
+  getActiveFilterCount,
+  handleStatusFilter,
+  handleProfileFilter,
+  clearAllFilters,
 }) => {
   const [hoveredVideo, setHoveredVideo] = useState<number | null>(null);
   const [isSelectMode, setIsSelectMode] = useState(false);
@@ -124,7 +147,6 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
       className="relative aspect-video cursor-pointer group"
       onMouseEnter={() => setHoveredVideo(video.id)}
       onMouseLeave={() => setHoveredVideo(null)}
-      onClick={() => handlePlayVideo(video.video_url)}
     >
       {video.thumbnail_url ? (
         <img
@@ -326,14 +348,14 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
             {/* Modern action buttons */}
             <div className="flex space-x-3">
               {video.processing_status === "completed" ? (
- <button
-  onClick={() =>
-    handleViewMetrics(video.analytics_id || video.id.toString())
-  }
-  className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium py-2.5 px-4 rounded-lg border border-indigo-400 hover:border-purple-500 transition-all duration-200 transform hover:scale-[1.02] shadow-sm hover:shadow-md"
->
-  View Metrics
-</button>
+                <button
+                  onClick={() =>
+                    handleViewMetrics(video.analytics_id || video.id.toString())
+                  }
+                  className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium py-2.5 px-4 rounded-lg border border-indigo-400 hover:border-purple-500 transition-all duration-200 transform hover:scale-[1.02] shadow-sm hover:shadow-md"
+                >
+                  View Metrics
+                </button>
               ) : (
                 <div className="flex-1 bg-gray-100 text-gray-500 font-medium py-2.5 px-4 rounded-xl text-center">
                   {video.processing_status === "processing" ? (
@@ -348,7 +370,7 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
               )}
 
               <button
-                onClick={() => handleDeleteVideo(video.analytics_id)}
+                onClick={() => handleDeleteVideo(video.analytics_id || video.id.toString())}
                 className="px-3 py-2.5 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl transition-all duration-200 hover:scale-105"
                 title="Delete video"
               >
@@ -370,120 +392,130 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
           : "border-gray-200"
       }`}
     >
- <div className="group flex items-center justify-between p-4 bg-white hover:bg-gray-50/80 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200">
-  <div className="flex items-center space-x-4 flex-1 min-w-0">
-    {isSelectMode && (
-      <div className="flex-shrink-0">
-        <input
-          type="checkbox"
-          checked={selectedVideos.has(video.id)}
-          onChange={() => handleSelectVideo(video.id)}
-          className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 transition-colors"
-        />
-      </div>
-    )}
-
-    {/* Enhanced Thumbnail */}
-    <div className="relative w-20 h-12 flex-shrink-0 group">
-      {video.thumbnail_url ? (
-        <img
-          src={video.thumbnail_url}
-          alt={video.video_title}
-          className="w-full h-full object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow"
-        />
-      ) : (
-        <div className={`w-full h-full bg-gradient-to-br ${getGradientColor(video.id)} rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}>
-          <Video className="w-5 h-5 text-white/70" />
-        </div>
-      )}
-      
-      {/* Play overlay on hover */}
-      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-        <Play className="w-4 h-4 text-white fill-white" />
-      </div>
-    </div>
-
-    <div className="flex-1 min-w-0">
-      {/* Title and Status */}
-      <div className="flex items-center space-x-3 mb-2">
-        <h3 className="font-semibold text-gray-900 truncate text-base leading-5">
-          {video.video_title}
-        </h3>
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(video.processing_status)}`}>
-          {video.processing_status === "processing" && (
-            <div className="w-2 h-2 bg-current rounded-full animate-pulse mr-1.5"></div>
+      <div className="group flex items-center justify-between p-4 bg-white hover:bg-gray-50/80 rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200">
+        <div className="flex items-center space-x-4 flex-1 min-w-0">
+          {isSelectMode && (
+            <div className="flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={selectedVideos.has(video.id)}
+                onChange={() => handleSelectVideo(video.id)}
+                className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 transition-colors"
+              />
+            </div>
           )}
-          {video.processing_status}
-        </span>
-      </div>
 
-      {/* Metadata row */}
-      <div className="flex items-center text-sm text-gray-600 space-x-6">
-        <div className="flex items-center space-x-1">
-          <Clock className="w-3.5 h-3.5" />
-          <span className="whitespace-nowrap">{formatDate(video.updated_at)}</span>
-        </div>
-        
-        {video.processing_status === "completed" && video.confidence_score && video.confidence_score > 0 && (
-          <div className="flex items-center space-x-1">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-            <span className="font-medium text-emerald-700">{video.confidence_score}%</span>
+          {/* Enhanced Thumbnail */}
+          <div className="relative w-20 h-12 flex-shrink-0 group">
+            {video.thumbnail_url ? (
+              <img
+                src={video.thumbnail_url}
+                alt={video.video_title}
+                className="w-full h-full object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow"
+              />
+            ) : (
+              <div
+                className={`w-full h-full bg-gradient-to-br ${getGradientColor(
+                  video.id
+                )} rounded-lg flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow`}
+              >
+                <Video className="w-5 h-5 text-white/70" />
+              </div>
+            )}
+
+            {/* Play overlay on hover */}
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+              <Play className="w-4 h-4 text-white fill-white" />
+            </div>
           </div>
-        )}
-        
-        {/* {video.processing_duration && (
+
+          <div className="flex-1 min-w-0">
+            {/* Title and Status */}
+            <div className="flex items-center space-x-3 mb-2">
+              <h3 className="font-semibold text-gray-900 truncate text-base leading-5">
+                {video.video_title}
+              </h3>
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
+                  video.processing_status
+                )}`}
+              >
+                {video.processing_status === "processing" && (
+                  <div className="w-2 h-2 bg-current rounded-full animate-pulse mr-1.5"></div>
+                )}
+                {video.processing_status}
+              </span>
+            </div>
+
+            {/* Metadata row */}
+            <div className="flex items-center text-sm text-gray-600 space-x-6">
+              <div className="flex items-center space-x-1">
+                <Clock className="w-3.5 h-3.5" />
+                <span className="whitespace-nowrap">
+                  {formatDate(video.updated_at)}
+                </span>
+              </div>
+
+              {video.processing_status === "completed" &&
+                video.confidence_score &&
+                video.confidence_score > 0 && (
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                    <span className="font-medium text-emerald-700">
+                      {video.confidence_score}%
+                    </span>
+                  </div>
+                )}
+
+              {/* {video.processing_duration && (
           <span className="text-gray-500">{video.processing_duration}</span>
         )} */}
+            </div>
+
+            {/* Profile info */}
+            {video.profile_name && video.profile_name !== "Unknown Profile" && (
+              <div className="flex items-center mt-1.5">
+                <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
+                  {video.profile_name}
+                </span>
+              </div>
+            )}
+
+            {/* Error state */}
+            {video.processing_status === "failed" && video.error_message && (
+              <div className="flex items-center mt-2 p-2 bg-red-50 rounded-md border border-red-100">
+                <AlertCircle className="w-3.5 h-3.5 text-red-500 mr-2 flex-shrink-0" />
+                <span className="text-red-700 text-xs">
+                  {video.error_message}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Modern Action Buttons */}
+        <div className="flex items-center space-x-2 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
+          {video.processing_status === "completed" && (
+            <button
+              onClick={() =>
+                handleViewMetrics(video.analytics_id || video.id.toString())
+              }
+              className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-medium rounded-lg transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+            >
+              <BarChart3 className="w-3.5 h-3.5 mr-1" />
+              Metrics
+            </button>
+          )}
+
+          <button
+            onClick={() => handleDeleteVideo(video.analytics_id)}
+            className="p-2.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 hover:scale-105"
+            title="Delete video"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-
-      {/* Profile info */}
-      {video.profile_name && video.profile_name !== "Unknown Profile" && (
-        <div className="flex items-center mt-1.5">
-          <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
-            {video.profile_name}
-          </span>
-        </div>
-      )}
-
-      {/* Error state */}
-      {video.processing_status === "failed" && video.error_message && (
-        <div className="flex items-center mt-2 p-2 bg-red-50 rounded-md border border-red-100">
-          <AlertCircle className="w-3.5 h-3.5 text-red-500 mr-2 flex-shrink-0" />
-          <span className="text-red-700 text-xs">{video.error_message}</span>
-        </div>
-      )}
-    </div>
-  </div>
-
-  {/* Modern Action Buttons */}
-  <div className="flex items-center space-x-2 flex-shrink-0 opacity-80 group-hover:opacity-100 transition-opacity">
-    {video.processing_status === "completed" && (
-      <button
-        onClick={() => handleViewMetrics(video.analytics_id || video.id.toString())}
-        className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-medium rounded-lg transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
-      >
-        <BarChart3 className="w-3.5 h-3.5 mr-1" />
-        Metrics
-      </button>
-    )}
-
-    <button
-      onClick={() => handlePlayVideo(video.video_url)}
-      className="p-2.5 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-lg transition-all duration-200 hover:scale-105"
-      title="Play video"
-    >
-      <Play className="w-4 h-4" />
-    </button>
-
-    <button
-      onClick={() => handleDeleteVideo(video.analytics_id)}
-      className="p-2.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 hover:scale-105"
-      title="Delete video"
-    >
-      <Trash2 className="w-4 h-4" />
-    </button>
-  </div>
-</div>
     </div>
   );
 
@@ -579,7 +611,7 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
                   Processed Videos
                   <span className="ml-2 inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 bg-purple-500 text-white text-xs sm:text-sm font-medium rounded-full">
-                    {processedVideos.length}
+                    {filteredVideos.length}
                   </span>
                 </h1>
                 <p className="text-gray-600 mt-1 text-sm sm:text-base">
@@ -646,7 +678,14 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
                     </span>
                   </button>
 
-                  <button className="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
+                  <button
+                    onClick={() => setShowFilter(!showFilter)}
+                    className={`relative flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      showFilter || getActiveFilterCount() > 0
+                        ? "bg-purple-600 text-white hover:bg-purple-700"
+                        : "bg-purple-600 text-white hover:bg-purple-700"
+                    }`}
+                  >
                     <svg
                       className="w-4 h-4 mr-2"
                       fill="none"
@@ -661,6 +700,11 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
                       />
                     </svg>
                     Filter
+                    {getActiveFilterCount() > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {getActiveFilterCount()}
+                      </span>
+                    )}
                   </button>
                   <button
                     onClick={() => setIsSelectMode(!isSelectMode)}
@@ -910,9 +954,165 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
         </div>
       )}
 
+      {/* Filter Panel */}
+      {showFilter && (
+        <div className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Filter Videos
+              </h3>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={clearAllFilters}
+                  className="text-sm text-gray-500 hover:text-gray-700 font-medium"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={() => setShowFilter(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Search
+                </label>
+                <input
+                  type="text"
+                  placeholder="Search videos..."
+                  value={filters.searchQuery}
+                  onChange={(e) =>
+                    setFilters((prev: any) => ({
+                      ...prev,
+                      searchQuery: e.target.value,
+                    }))
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Status
+                </label>
+                <div className="space-y-2">
+                  {getUniqueStatuses().map((status) => (
+                    <label key={status} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.status.includes(status)}
+                        onChange={() => handleStatusFilter(status)}
+                        className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 mr-2"
+                      />
+                      <span className="text-sm text-gray-700 capitalize">
+                        {status}
+                      </span>
+                      <span
+                        className={`ml-auto px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
+                          status
+                        )}`}
+                      >
+                        {
+                          allVideos.filter(
+                            (v) => v.processing_status === status
+                          ).length
+                        }
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Profile Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Profile
+                </label>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {getUniqueProfiles().map((profile) => (
+                    <label key={profile} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.profiles.includes(profile)}
+                        onChange={() => handleProfileFilter(profile)}
+                        className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 mr-2"
+                      />
+                      <span
+                        className="text-sm text-gray-700 truncate"
+                        title={profile}
+                      >
+                        {profile}
+                      </span>
+                      <span className="ml-auto text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                        {
+                          allVideos.filter((v) => v.profile_name === profile)
+                            .length
+                        }
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Date Range */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Date Range
+                </label>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">
+                      From
+                    </label>
+                    <input
+                      type="date"
+                      value={filters.dateRange.from}
+                      onChange={(e) =>
+                        setFilters((prev: { dateRange: any }) => ({
+                          ...prev,
+                          dateRange: {
+                            ...prev.dateRange,
+                            from: e.target.value,
+                          },
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">
+                      To
+                    </label>
+                    <input
+                      type="date"
+                      value={filters.dateRange.to}
+                      onChange={(e) =>
+                        setFilters((prev: { dateRange: any }) => ({
+                          ...prev,
+                          dateRange: { ...prev.dateRange, to: e.target.value },
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {processedVideos.length === 0 ? (
+        {filteredVideos.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -924,16 +1124,14 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h2 className="text-lg font-medium text-white-900 mb-2">
               No processed videos found
-            </h3>
-            <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
+            </h2>
+            <p className="text-black-500 text-sm mb-6 max-w-md mx-auto">
               Videos that have completed processing will appear here
               {autoRefresh && " and update automatically"}
             </p>
-            <button className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors">
-              Process New Videos
-            </button>
+         
           </div>
         ) : (
           <>
@@ -1011,13 +1209,13 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
             <div
               className={`${
                 viewMode === "grid"
-                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6"
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6 lg:gap-8 xl:gap-10"
                   : viewMode === "list"
                   ? "space-y-4"
                   : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4"
               }`}
             >
-              {processedVideos.map((video) =>
+              {filteredVideos.map((video) =>
                 viewMode === "list"
                   ? renderListView(video)
                   : viewMode === "compact"

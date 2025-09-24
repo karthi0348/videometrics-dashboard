@@ -76,7 +76,7 @@ getTemplateById = async (templateId: number) => {
     }
   };
 
-  assignSUbProfile = async (tempId: any, payload: any) => {
+  assignSubProfile = async (tempId: any, payload: any) => {
     try {
       let data: any = await this.httpClientWrapper.post(
         "templates/" + tempId + "/assign-subprofiles",
@@ -98,5 +98,19 @@ getTemplateById = async (templateId: number) => {
       throw error;
     }
   };
+
+  // Clone template method
+  cloneTemplate = async (templateId: number, newName: string) => {
+  try {
+    // Send new_name as query parameter, not in request body
+    const data: any = await this.httpClientWrapper.post(
+      `templates/${templateId}/clone?new_name=${encodeURIComponent(newName)}`,
+      {} // Empty body or null, since parameter goes in URL
+    );
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
 }
 export default TemplateApiService;

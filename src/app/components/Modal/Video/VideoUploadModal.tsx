@@ -120,7 +120,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
         'http://172.174.114.7'
       );
     }
-    
+
     console.log('Logged out successfully');
   };
 

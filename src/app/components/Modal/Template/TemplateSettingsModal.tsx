@@ -200,11 +200,7 @@ const TemplateSettingsModal: React.FC<TemplateSettingsModalProps> = ({
           >
             Close
           </button>
-          <button 
-            className="w-full sm:w-auto px-4 py-2 text-sm sm:text-base bg-purple-400 text-white rounded-lg hover:bg-purple-700 transition-colors order-1 sm:order-2"
-          >
-            Use Template
-          </button>
+    
           <button 
             className="w-full sm:w-auto px-4 py-2 text-sm sm:text-base bg-blue-400 text-white rounded-lg hover:bg-blue-800 transition-colors order-2 sm:order-3"
             onClick={() => handleOpenAssignment(template)}

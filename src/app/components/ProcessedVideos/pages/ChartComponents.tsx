@@ -1,4 +1,5 @@
 import React from "react";
+
 import {
   PieChart as RechartsPieChart,
   Cell,
@@ -15,8 +16,10 @@ import {
   AreaChart,
   Area,
   Pie,
-  TooltipProps ,
+  TooltipProps,
 } from "recharts";
+
+
 
 // Enhanced Pie Chart Component
 export const PieChart: React.FC<{
@@ -24,30 +27,52 @@ export const PieChart: React.FC<{
   title: string;
   status: string;
 }> = ({ data, title, status }) => {
-  const colors = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
-  
+  const colors = [
+    "#10b981",
+    "#ef4444",
+    "#f59e0b",
+    "#3b82f6",
+    "#8b5cf6",
+    "#ec4899",
+    "#06b6d4",
+    "#84cc16",
+  ];
+
   // Transform data for Recharts
-  const chartData = data.category.map((category, index) => ({
+  const categories = data.label || data.category || [];
+  const values = data.values || data.value || [];
+  const chartData = categories.map((category, index) => ({
     name: category,
-    value: data.value[index],
-    percentage: ((data.value[index] / data.value.reduce((sum, val) => sum + val, 0)) * 100).toFixed(1)
+    value: values[index] || 0,
+    percentage: (
+      (values[index] / values.reduce((sum, val) => sum + val, 0)) *
+      100
+    ).toFixed(1),
   }));
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "excellent": return "#10b981";
-      case "good": return "#3b82f6";
-      case "attention_needed": return "#f59e0b";
-      default: return "#6b7280";
+      case "excellent":
+        return "#10b981";
+      case "good":
+        return "#3b82f6";
+      case "attention_needed":
+        return "#f59e0b";
+      default:
+        return "#6b7280";
     }
   };
 
   const getStatusBgColor = (status: string) => {
     switch (status) {
-      case "excellent": return "#ecfdf5";
-      case "good": return "#eff6ff";
-      case "attention_needed": return "#fffbeb";
-      default: return "#f9fafb";
+      case "excellent":
+        return "#ecfdf5";
+      case "good":
+        return "#eff6ff";
+      case "attention_needed":
+        return "#fffbeb";
+      default:
+        return "#f9fafb";
     }
   };
 
@@ -58,7 +83,8 @@ export const PieChart: React.FC<{
         <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
           <p className="font-medium text-gray-900">{data.name}</p>
           <p className="text-sm text-gray-600">
-            Value: <span className="font-medium">{data.value.toLocaleString()}</span>
+            Value:{" "}
+            <span className="font-medium">{data.value.toLocaleString()}</span>
           </p>
           <p className="text-sm text-gray-600">
             Percentage: <span className="font-medium">{data.percentage}%</span>
@@ -73,7 +99,7 @@ export const PieChart: React.FC<{
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
       <h3 className="font-medium text-gray-900 mb-4 text-center">{title}</h3>
       <div className="flex flex-col items-center">
-        <div style={{ width: '100%', height: '250px' }}>
+        <div style={{ width: "100%", height: "250px" }}>
           <ResponsiveContainer width="100%" height="100%">
             <RechartsPieChart>
               <Pie
@@ -87,19 +113,25 @@ export const PieChart: React.FC<{
                 labelLine={false}
               >
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={colors[index % colors.length]}
+                  />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
             </RechartsPieChart>
           </ResponsiveContainer>
         </div>
-        
+
         {/* Legend */}
         <div className="mt-4 w-full">
           <div className="grid grid-cols-1 gap-2">
             {chartData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between text-sm">
+              <div
+                key={index}
+                className="flex items-center justify-between text-sm"
+              >
                 <div className="flex items-center">
                   <div
                     className="w-3 h-3 rounded-full mr-2"
@@ -150,30 +182,34 @@ export const CircularGauge: React.FC<{
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "excellent": return "#10b981";
-      case "good": return "#3b82f6";
-      case "attention_needed": return "#f59e0b";
-      default: return "#6b7280";
+      case "excellent":
+        return "#10b981";
+      case "good":
+        return "#3b82f6";
+      case "attention_needed":
+        return "#f59e0b";
+      default:
+        return "#6b7280";
     }
   };
 
   const getStatusBgColor = (status: string) => {
     switch (status) {
-      case "excellent": return "#ecfdf5";
-      case "good": return "#eff6ff";
-      case "attention_needed": return "#fffbeb";
-      default: return "#f9fafb";
+      case "excellent":
+        return "#ecfdf5";
+      case "good":
+        return "#eff6ff";
+      case "attention_needed":
+        return "#fffbeb";
+      default:
+        return "#f9fafb";
     }
   };
 
   return (
     <div className="flex flex-col items-center p-6">
       <div className="relative mb-4" style={{ width: size, height: size }}>
-        <svg
-          width={size}
-          height={size}
-          className="transform -rotate-90"
-        >
+        <svg width={size} height={size} className="transform -rotate-90">
           {/* Background circle */}
           <circle
             cx={size / 2}
@@ -196,7 +232,7 @@ export const CircularGauge: React.FC<{
             strokeLinecap="round"
             className="transition-all duration-1000 ease-out"
             style={{
-              filter: `drop-shadow(0 0 6px ${getStatusColor(status)}40)`
+              filter: `drop-shadow(0 0 6px ${getStatusColor(status)}40)`,
             }}
           />
         </svg>
@@ -205,15 +241,13 @@ export const CircularGauge: React.FC<{
           <div className="text-2xl font-bold text-gray-900">
             {value.toLocaleString()}
           </div>
-          {unit && (
-            <div className="text-sm text-gray-500 mt-1">{unit}</div>
-          )}
+          {unit && <div className="text-sm text-gray-500 mt-1">{unit}</div>}
           <div className="text-xs text-gray-400 mt-1">
             {percentage.toFixed(1)}%
           </div>
         </div>
       </div>
-      
+
       <div className="text-center">
         <div className="text-sm font-medium text-gray-900 mb-2">{title}</div>
         <div
@@ -240,30 +274,38 @@ export const BarChartComponent: React.FC<{
   // Transform data for Recharts
   const chartData = xAxis.map((label, index) => {
     const dataPoint: any = { name: label };
-    Object.keys(data).forEach(seriesName => {
+    Object.keys(data).forEach((seriesName) => {
       dataPoint[seriesName] = data[seriesName][index] || 0;
     });
     return dataPoint;
   });
 
-  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const colors = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
   const seriesKeys = Object.keys(data);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "excellent": return "#10b981";
-      case "good": return "#3b82f6";
-      case "attention_needed": return "#f59e0b";
-      default: return "#6b7280";
+      case "excellent":
+        return "#10b981";
+      case "good":
+        return "#3b82f6";
+      case "attention_needed":
+        return "#f59e0b";
+      default:
+        return "#6b7280";
     }
   };
 
   const getStatusBgColor = (status: string) => {
     switch (status) {
-      case "excellent": return "#ecfdf5";
-      case "good": return "#eff6ff";
-      case "attention_needed": return "#fffbeb";
-      default: return "#f9fafb";
+      case "excellent":
+        return "#ecfdf5";
+      case "good":
+        return "#eff6ff";
+      case "attention_needed":
+        return "#fffbeb";
+      default:
+        return "#f9fafb";
     }
   };
 
@@ -281,32 +323,35 @@ export const BarChartComponent: React.FC<{
           {status.replace(/_/g, " ").toUpperCase()}
         </div>
       </div>
-      
-      <div style={{ width: '100%', height: '300px' }}>
+
+      <div style={{ width: "100%", height: "300px" }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <BarChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
               height={60}
             />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip 
+            <Tooltip
               contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                backgroundColor: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
               }}
             />
             <Legend />
             {seriesKeys.map((key, index) => (
-              <Bar 
-                key={key} 
-                dataKey={key} 
+              <Bar
+                key={key}
+                dataKey={key}
                 fill={colors[index % colors.length]}
                 radius={[2, 2, 0, 0]}
               />
@@ -328,30 +373,38 @@ export const LineChartComponent: React.FC<{
   // Transform data for Recharts
   const chartData = xAxis.map((label, index) => {
     const dataPoint: any = { name: label };
-    Object.keys(data).forEach(seriesName => {
+    Object.keys(data).forEach((seriesName) => {
       dataPoint[seriesName] = data[seriesName][index] || 0;
     });
     return dataPoint;
   });
 
-  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const colors = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
   const seriesKeys = Object.keys(data);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "excellent": return "#10b981";
-      case "good": return "#3b82f6";
-      case "attention_needed": return "#f59e0b";
-      default: return "#6b7280";
+      case "excellent":
+        return "#10b981";
+      case "good":
+        return "#3b82f6";
+      case "attention_needed":
+        return "#f59e0b";
+      default:
+        return "#6b7280";
     }
   };
 
   const getStatusBgColor = (status: string) => {
     switch (status) {
-      case "excellent": return "#ecfdf5";
-      case "good": return "#eff6ff";
-      case "attention_needed": return "#fffbeb";
-      default: return "#f9fafb";
+      case "excellent":
+        return "#ecfdf5";
+      case "good":
+        return "#eff6ff";
+      case "attention_needed":
+        return "#fffbeb";
+      default:
+        return "#f9fafb";
     }
   };
 
@@ -369,33 +422,36 @@ export const LineChartComponent: React.FC<{
           {status.replace(/_/g, " ").toUpperCase()}
         </div>
       </div>
-      
-      <div style={{ width: '100%', height: '300px' }}>
+
+      <div style={{ width: "100%", height: "300px" }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <LineChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
               height={60}
             />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip 
+            <Tooltip
               contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                backgroundColor: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
               }}
             />
             <Legend />
             {seriesKeys.map((key, index) => (
-              <Line 
-                key={key} 
-                type="monotone" 
-                dataKey={key} 
+              <Line
+                key={key}
+                type="monotone"
+                dataKey={key}
                 stroke={colors[index % colors.length]}
                 strokeWidth={2}
                 dot={{ r: 4 }}
@@ -419,30 +475,38 @@ export const AreaChartComponent: React.FC<{
   // Transform data for Recharts
   const chartData = xAxis.map((label, index) => {
     const dataPoint: any = { name: label };
-    Object.keys(data).forEach(seriesName => {
+    Object.keys(data).forEach((seriesName) => {
       dataPoint[seriesName] = data[seriesName][index] || 0;
     });
     return dataPoint;
   });
 
-  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+  const colors = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"];
   const seriesKeys = Object.keys(data);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "excellent": return "#10b981";
-      case "good": return "#3b82f6";
-      case "attention_needed": return "#f59e0b";
-      default: return "#6b7280";
+      case "excellent":
+        return "#10b981";
+      case "good":
+        return "#3b82f6";
+      case "attention_needed":
+        return "#f59e0b";
+      default:
+        return "#6b7280";
     }
   };
 
   const getStatusBgColor = (status: string) => {
     switch (status) {
-      case "excellent": return "#ecfdf5";
-      case "good": return "#eff6ff";
-      case "attention_needed": return "#fffbeb";
-      default: return "#f9fafb";
+      case "excellent":
+        return "#ecfdf5";
+      case "good":
+        return "#eff6ff";
+      case "attention_needed":
+        return "#fffbeb";
+      default:
+        return "#f9fafb";
     }
   };
 
@@ -460,33 +524,36 @@ export const AreaChartComponent: React.FC<{
           {status.replace(/_/g, " ").toUpperCase()}
         </div>
       </div>
-      
-      <div style={{ width: '100%', height: '300px' }}>
+
+      <div style={{ width: "100%", height: "300px" }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <AreaChart
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
               height={60}
             />
             <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip 
+            <Tooltip
               contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                backgroundColor: "white",
+                border: "1px solid #e5e7eb",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
               }}
             />
             <Legend />
             {seriesKeys.map((key, index) => (
-              <Area 
-                key={key} 
-                type="monotone" 
-                dataKey={key} 
+              <Area
+                key={key}
+                type="monotone"
+                dataKey={key}
                 stackId="1"
                 stroke={colors[index % colors.length]}
                 fill={colors[index % colors.length]}
@@ -505,28 +572,26 @@ const ChartDemo = () => {
   // Sample data
   const pieData = {
     value: [300, 150, 100, 50],
-    category: ['Desktop', 'Mobile', 'Tablet', 'Other']
+    category: ["Desktop", "Mobile", "Tablet", "Other"],
   };
 
   const seriesData = {
     Views: [1000, 1200, 900, 1500, 1800],
-    Clicks: [100, 150, 80, 200, 250]
+    Clicks: [100, 150, 80, 200, 250],
   };
 
-  const xAxisLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May'];
+  const xAxisLabels = ["Jan", "Feb", "Mar", "Apr", "May"];
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Enhanced Chart Components</h1>
-      
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">
+        Enhanced Chart Components
+      </h1>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Pie Chart */}
-        <PieChart
-          data={pieData}
-          title="Traffic Sources"
-          status="excellent"
-        />
-        
+        <PieChart data={pieData} title="Traffic Sources" status="excellent" />
+
         {/* Circular Gauge */}
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
           <CircularGauge
@@ -538,7 +603,7 @@ const ChartDemo = () => {
             size={140}
           />
         </div>
-        
+
         {/* Bar Chart */}
         <BarChartComponent
           data={seriesData}
@@ -546,7 +611,7 @@ const ChartDemo = () => {
           title="Monthly Analytics"
           status="excellent"
         />
-        
+
         {/* Line Chart */}
         <LineChartComponent
           data={seriesData}
@@ -554,7 +619,7 @@ const ChartDemo = () => {
           title="Trend Analysis"
           status="good"
         />
-        
+
         {/* Area Chart */}
         <AreaChartComponent
           data={seriesData}

@@ -26,7 +26,10 @@ interface MenuItem {
 interface User {
   name: string;
   username: string;
+  email: string;
   avatar: string;
+  fullName: string;
+  profileImage: string;
 }
 
 interface SidebarProps {
@@ -77,9 +80,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [user, setUser] = useState<User>({
     name: "Loading...",
     username: "@loading",
+    email: "",
     avatar: "",
+    fullName: "Loading...",
+    profileImage: "",
   });
   const [userLoading, setUserLoading] = useState<boolean>(true);
+  const [userError, setUserError] = useState<string>("");
 
   const menuItems: MenuItem[] = [
     { name: "Dashboard", icon: DashboardIcon, key: "dashboard" },
@@ -97,20 +104,32 @@ const Sidebar: React.FC<SidebarProps> = ({
     const fetchUserData = async () => {
       try {
         setUserLoading(true);
+        setUserError("");
+        
         const userApiService = new UserApiService();
         const userData = await userApiService.getCurrentUser();
 
+        // Map the API response similar to SettingsPage
         setUser({
           name: userData.full_name || userData.name || "Unknown User",
           username: userData.username ? `@${userData.username}` : "@user",
-          avatar: userData.avatar || userData.profile_picture || "",
+          email: userData.email || "",
+          avatar: userData.avatar || userData.profile_picture || userData.profile_image || "",
+          fullName: userData.full_name || userData.name || "Unknown User",
+          profileImage: userData.profile_image || userData.profile_picture || userData.avatar || "",
         });
       } catch (error) {
         console.error("Failed to fetch user data:", error);
+        setUserError("Failed to load user data");
+        
+        // Set fallback user data
         setUser({
           name: "User",
           username: "@user",
+          email: "",
           avatar: "",
+          fullName: "User",
+          profileImage: "",
         });
       } finally {
         setUserLoading(false);
@@ -119,6 +138,17 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     fetchUserData();
   }, []);
+
+  // Function to get user initials like in SettingsPage
+  const getInitials = (name: string) => {
+    if (!name || name === "Loading...") return "US";
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   // Auto-close mobile menu when screen size changes
   useEffect(() => {
@@ -200,19 +230,31 @@ const Sidebar: React.FC<SidebarProps> = ({
         {
           type: "LOGOUT",
         },
-        "https://videometrics-ui.vercel.app/"
+        "http://172.174.114.7/"
       );
+
+      
 
       window.opener.focus();
       window.close();
     } else {
-      window.location.href = "https://videometrics-ui.vercel.app/";
+      window.location.href = "'http://172.174.114.7/";
     }
   }, []);
 
   const toggleMobileMenu = useCallback(() => {
     setMobileMenuOpen((prev) => !prev);
   }, []);
+
+  // Handle profile click - navigate to settings
+  const handleProfileClick = useCallback(() => {
+    setActiveItem("settings");
+    onNavigate?.("settings");
+    
+    if (isMobile) {
+      setMobileMenuOpen(false);
+    }
+  }, [isMobile, onNavigate]);
 
   return (
     <div className="relative">
@@ -420,29 +462,61 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {/* User Profile - Fixed at bottom */}
         <div className="border-t border-gray-100 p-4 flex-shrink-0 mt-auto">
-          <div className="flex items-center space-x-3">
+          {userError && (
+            <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-xs text-red-600">{userError}</p>
+            </div>
+          )}
+          
+          <div 
+            className="flex items-center space-x-3 cursor-pointer hover:bg-white/50 rounded-lg p-2 -m-2 transition-colors duration-200"
+            onClick={handleProfileClick}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleProfileClick();
+              }
+            }}
+            aria-label="Go to profile settings"
+            title="Click to view profile settings"
+          >
             <div className="relative flex-shrink-0">
               {userLoading ? (
                 <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center animate-pulse">
                   <span className="text-gray-500 text-xs">...</span>
                 </div>
-              ) : user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt={`${user.name} profile picture`}
-                  loading="lazy"
-                  className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
-                />
               ) : (
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                  {user.name
-                    .split(" ")
-                    .map((n) => n.charAt(0))
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </div>
+                <>
+                  {user.profileImage || user.avatar ? (
+                    <img
+                      src={user.profileImage || user.avatar}
+                      alt={`${user.fullName} profile picture`}
+                      loading="lazy"
+                      className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallbackDiv = target.nextElementSibling as HTMLDivElement;
+                        if (fallbackDiv) {
+                          fallbackDiv.style.display = 'flex';
+                        }
+                      }}
+                    />
+                  ) : null}
+                  
+                  <div 
+                    className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-xs font-semibold"
+                    style={{ 
+                      display: (!user.profileImage && !user.avatar) ? 'flex' : 'none' 
+                    }}
+                  >
+                    {getInitials(user.fullName)}
+                  </div>
+                </>
               )}
+              
               {!userLoading && (
                 <div
                   className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full"
@@ -454,37 +528,52 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex-1 min-w-0">
               <div
                 className="text-sm font-medium text-gray-900"
-                title={user.name}
+                title={user.fullName}
               >
-                {user.name}
+                {user.fullName}
               </div>
               <div
-                className="text-xs text-black-500"
+                className="text-xs text-gray-600"
                 title={user.username}
               >
                 {user.username}
               </div>
+              {user.email && (
+                <div
+                  className="text-xs text-gray-500"
+                  title={user.email}
+                >
+                  {user.email}
+                </div>
+              )}
             </div>
 
-            <button
-              className={`
-                flex items-center space-x-1 px-0 py-2 text-xs font-medium
-                text-red-600 hover:text-white hover:bg-red-500 hover:bg-opacity-80
-                rounded-2xl transition-all duration-200
-                disabled:opacity-50 disabled:cursor-not-allowed
-                group
-              `}
-              onClick={handleLogout}
-              title="Logout"
-              disabled={userLoading}
-              aria-label="Logout from account"
-            >
-              <LogoutIcon 
-                className="group-hover:scale-110 transition-transform duration-200"
-                sx={{ fontSize: 16 }}
-              />
-              {width >= 360 && <span>Logout</span>}
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleProfileClick();
+                }}
+                title="Profile Settings"
+                aria-label="Profile settings"
+              >
+                <SettingsIcon sx={{ fontSize: 16 }} />
+              </button>
+              
+              <button
+                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLogout();
+                }}
+                title="Logout"
+                disabled={userLoading}
+                aria-label="Logout from account"
+              >
+                <LogoutIcon sx={{ fontSize: 16 }} />
+              </button>
+            </div>
           </div>
         </div>
       </div>

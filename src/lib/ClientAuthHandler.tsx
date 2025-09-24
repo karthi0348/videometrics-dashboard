@@ -34,5 +34,5 @@ export default function ClientAuthHandler() {
     return () => window.removeEventListener('message', receiveMessage);
   }, []);
 
-  return null; // nothing rendered, only side effects
+  return null; 
 }

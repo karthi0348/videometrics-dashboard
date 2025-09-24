@@ -8,7 +8,7 @@ class HttpClientWrapper {
     this.axiosClient = new ApiConfig().getAxiosInstance();
   }
 
-  public post = async (path: string, payload: any) => {
+  public post = async (path: string, payload: any, p0: { params: { new_name: string; }; }) => {
     try {
       let response: any = await this.axiosClient.post(
         path,

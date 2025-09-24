@@ -1,199 +1,22 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import ProcessVideoApiService from "@/helpers/service/processvideo/ProcessVideoApiservice";
-
-import { VideoAnalytics, GeneratedChart } from "../types/types";
+// VideoMetricsPage.tsx
+import React, { useState, useEffect, useRef } from "react";
+import { VideoMetricsPageProps } from "../types/types";
+import {
+  useAnalyticsData,
+  useChartsData,
+  useSummaryData,
+  useInsightsData,
+} from "../hooks/useVideoMetrics";
+import {
+  PageHeader,
+  VideoInfoBanner,
+  NavigationTabs,
+  LoadingState,
+  ErrorState,
+} from "./VideoMetricsUI";
 import ChartDisplay from "./ChartDisplay";
 import SummaryView from "./SummaryView";
 import RawDataView from "./RawDataView";
-
-interface VideoMetricsPageProps {
-  analyticsId: string | null;
-  videoTitle?: string;
-  mockMode?: boolean;
-  onNavigate?: (page: string, analyticsId?: string) => void;
-}
-
-// Enhanced type declarations for PDF libraries
-interface JsPDFOptions {
-  orientation?: "portrait" | "landscape";
-  unit?: "mm" | "cm" | "in" | "px";
-  format?: string | [number, number];
-}
-
-interface Html2CanvasOptions {
-  scale?: number;
-  useCORS?: boolean;
-  allowTaint?: boolean;
-  backgroundColor?: string;
-  width?: number;
-  height?: number;
-  scrollX?: number;
-  scrollY?: number;
-  windowWidth?: number;
-  windowHeight?: number;
-  logging?: boolean;
-  foreignObjectRendering?: boolean;
-  removeContainer?: boolean;
-}
-
-interface JsPDFInstance {
-  addImage: (
-    imageData: string,
-    format: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    alias?: string,
-    compression?: string
-  ) => void;
-  addPage: () => void;
-  save: (filename: string) => void;
-  setFillColor: (r: number, g: number, b: number) => void;
-  setDrawColor: (r: number, g: number, b: number) => void;
-  setTextColor: (r: number, g: number, b: number) => void;
-  setFontSize: (size: number) => void;
-  setFont: (fontName: string, fontStyle?: string) => void;
-  setLineWidth: (width: number) => void;
-  rect: (
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    style?: string
-  ) => void;
-  text: (
-    text: string | string[],
-    x: number,
-    y: number,
-    options?: { align?: string }
-  ) => void;
-  line: (x1: number, y1: number, x2: number, y2: number) => void;
-  circle: (x: number, y: number, radius: number, style?: string) => void;
-  splitTextToSize: (text: string, maxWidth: number) => string[];
-  internal: {
-    getNumberOfPages: () => number;
-  };
-  setPage: (page: number) => void;
-}
-
-interface JsPDFConstructor {
-  new (options?: JsPDFOptions): JsPDFInstance;
-}
-
-interface Html2CanvasFunction {
-  (
-    element: HTMLElement,
-    options?: Html2CanvasOptions
-  ): Promise<HTMLCanvasElement>;
-}
-
-declare global {
-  interface Window {
-    jsPDF?: JsPDFConstructor;
-    html2canvas?: Html2CanvasFunction;
-    jspdf?: {
-      jsPDF: JsPDFConstructor;
-    };
-  }
-}
-
-// Mock data for fallback
-const mockAnalytics: VideoAnalytics = {
-  id: 27,
-  uuid: "6cca6d41-7695-43cc-ac7d-45a50a85b2ac",
-  user_id: 2,
-  profile_id: 3,
-  sub_profile_id: 5,
-  template_id: 11,
-  video_url:
-    "https://storage.googleapis.com/videometrics_dev/videos/new vdo_ca2520fbe9234c5ea7deb94a38465632.mp4",
-  compressed_video_url:
-    "gs://videometrics_dev/processed/new_vdo_compressed.mp4",
-  video_metadata: {
-    charts_generated: 1,
-    processing_steps: ["raw_analysis", "json_formatting", "charts", "summary"],
-    structured_fields: 4,
-    summary_generated: true,
-    raw_analysis_length: 3487,
-  },
-  parsed_metrics: {
-    total_customers: "23",
-    average_wait_time: "5",
-    customer_satisfaction_score: "4",
-    peak_activity_hours: "30",
-  },
-  generated_charts: [
-    {
-      id: "chart_1",
-      title: "Customer Satisfaction Breakdown",
-      series: {
-        value: [4, 1],
-        category: ["Satisfied", "Needs Improvement"],
-      },
-      status: "good",
-      x_axis: ["Satisfied", "Needs Improvement"],
-      styling: {
-        theme: "professional",
-        show_legend: true,
-        color_scheme: "category10",
-      },
-      insights: [
-        "The customer satisfaction score is 4 out of 5, indicating a good level of satisfaction (80%).",
-        "There is a 20% segment (1 unit out of 5) where satisfaction could be improved.",
-        "Further investigation into the 'Needs Improvement' segment is recommended to identify specific pain points and enhance overall customer experience.",
-      ],
-      plot_type: "pie",
-      data_source: "data_source",
-      y_axis_label: "Score Units",
-    },
-    {
-      id: "chart_2",
-      title: "Total Customers",
-      value: 23,
-      status: "excellent",
-      styling: {
-        theme: "professional",
-        show_legend: false,
-        color_scheme: "category10",
-        unit: "Customers",
-        max_value: 50,
-      },
-      insights: [
-        "A total of 23 customers were counted in the video.",
-        "This metric provides the total number of individuals served or processed.",
-      ],
-      plot_type: "gauge",
-      data_source: "data_source",
-    },
-  ],
-  generated_summary: {
-    format: "plain",
-    content:
-      "This report provides a comprehensive analysis of recent customer engagement and operational efficiency, likely reflecting farm stand activity or direct-to-consumer sales during a specified period. The data suggests a generally positive customer experience, though significant opportunities for growth and efficiency optimization are apparent, particularly concerning the utilization of identified peak activity periods.\n\n**Key Metrics**\nDuring the reporting period, a **total of 23 customers** were served. The **average wait time for customers was 5 minutes**, indicating reasonable service efficiency. Customer satisfaction remained strong, with an average score of 4 out of 5. The operation experienced 30 hours classified as 'peak activity hours'.\n\n**Recommendations**\nBased on the current data, the following recommendations are proposed to enhance farm operations and customer engagement:\n1. **Customer Outreach & Marketing:** Given the relatively low customer count of 23 over 30 identified peak hours, consider targeted marketing efforts to attract more visitors during these high-potential times.\n2. **Peak Hour Utilization Review:** Investigate the nature of the 30 'peak hours'. If these hours truly represent high potential traffic, strategies to convert this potential into actual customers are crucial.\n3. **Wait Time Optimization:** While an average wait time of 5 minutes is acceptable, continuous efforts to streamline the customer flow could further enhance the positive satisfaction score.\n4. **Leverage Satisfaction:** Maintain the high satisfaction score by continuing to provide quality products and friendly service.",
-    sections: [
-      "overview",
-      "key_metrics",
-      "recommendations",
-      "anomalies",
-      "peak_analysis",
-    ],
-    word_count: 485,
-    generated_at: "2025-08-30T17:19:49.636490+00:00",
-    summary_type: "detailed",
-    character_count: 3487,
-    metrics_highlighted: ["total_customers", "average_wait_time"],
-  },
-  confidence_score: 75,
-  insights: [],
-  status: "completed",
-  priority: "normal",
-  error_message: null,
-  processing_started_at: "2025-08-30T17:18:12.000000Z",
-  processing_completed_at: "2025-08-30T17:19:49.636490Z",
-  created_at: "2025-08-30T17:18:12.000000Z",
-  updated_at: "2025-08-30T17:19:49.636490Z",
-};
 
 const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
   analyticsId,
@@ -201,117 +24,38 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
   mockMode = false,
   onNavigate,
 }) => {
-  const [loading, setLoading] = useState(false);
-  const [analytics, setAnalytics] = useState(null);
   const [activeView, setActiveView] = useState<"charts" | "summary" | "raw">(
     "charts"
   );
-  const [error, setError] = useState<string>("");
-  const [exportingPdf, setExportingPdf] = useState(false);
-  const pageContentRef = useRef<HTMLDivElement>(null);
-  const [chartsOnly, setChartsOnly] = useState<GeneratedChart[]>([]);
-  const [summaryOnly, setSummaryOnly] = useState(null);
-  const [insights, setInsights] = useState(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [apiService] = useState(() => new ProcessVideoApiService());
+  const pageContentRef = useRef<HTMLDivElement>(null);
 
-  const loadAnalytics = useCallback(async () => {
-    if (mockMode) {
-      setLoading(true);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setLoading(false);
-      setAnalytics(mockAnalytics);
-      return;
-    }
+  // Data hooks for different views
+  const {
+    analytics,
+    loading: analyticsLoading,
+    error: analyticsError,
+    loadAnalytics,
+    apiService,
+  } = useAnalyticsData(analyticsId, mockMode);
 
-    if (!analyticsId) {
-      setError("No analytics ID provided");
-      return;
-    }
+  const {
+    chartsOnly,
+    loading: chartsLoading,
+    error: chartsError,
+    loadChartsOnly,
+  } = useChartsData(analyticsId, mockMode);
 
-    setLoading(true);
-    setError("");
-    setAnalytics(null);
+  const {
+    summaryOnly,
+    loading: summaryLoading,
+    error: summaryError,
+    loadSummaryOnly,
+  } = useSummaryData(analyticsId, mockMode);
 
-    try {
-      console.log("Loading analytics for ID:", analyticsId); // Debug log
-      const response = await apiService.getAnalytics(analyticsId);
-      console.log("Analytics response:", response); // Debug log
+  const { insights, loadInsights } = useInsightsData(analyticsId, mockMode);
 
-      let data;
-      if (typeof response === "string") {
-        try {
-          data = JSON.parse(response);
-        } catch {
-          console.error("Failed to parse JSON response:", response);
-          throw new Error("Invalid JSON response from server");
-        }
-      } else {
-        data = response;
-      }
-
-      console.log("Setting analytics data:", data); // Debug log
-      setAnalytics(data);
-    } catch (err) {
-      let errorMessage = "Failed to load analytics data";
-
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === "string") {
-        errorMessage = err;
-      }
-
-      console.error("Error loading analytics:", err); // Debug log
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [analyticsId, apiService, mockMode]);
-  const loadChartsOnly = useCallback(async () => {
-    if (!analyticsId || mockMode) return;
-
-    setLoading(true);
-    try {
-      const response = await apiService.getAnalyticsCharts(analyticsId);
-      const data =
-        typeof response === "string" ? JSON.parse(response) : response;
-      setChartsOnly(data);
-    } catch (err) {
-      setError("Failed to load charts data");
-    } finally {
-      setLoading(false);
-    }
-  }, [analyticsId, mockMode]);
-
-  const loadSummaryOnly = useCallback(async () => {
-    if (!analyticsId || mockMode) return;
-
-    setLoading(true);
-    try {
-      const response = await apiService.getAnalyticsSummary(analyticsId);
-      console.log("Summary response:", response); // Debug log
-
-      const data =
-        typeof response === "string" ? JSON.parse(response) : response;
-      setSummaryOnly(data);
-    } catch (err) {
-      setError("Failed to load summary data");
-    } finally {
-      setLoading(false);
-    }
-  }, [analyticsId, mockMode]);
-
-  const loadInsights = useCallback(async () => {
-    if (!analyticsId || mockMode) return;
-
-    try {
-      const response = await apiService.getAnalyticsInsights(analyticsId);
-      setInsights(response);
-    } catch (err) {
-      console.warn("Failed to load insights:", err);
-    }
-  }, [analyticsId, mockMode]);
-
+  // Load data based on active view
   useEffect(() => {
     if (!analyticsId) return;
 
@@ -327,7 +71,6 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
         break;
     }
 
-    // Always load insights for additional context
     loadInsights();
   }, [
     analyticsId,
@@ -337,622 +80,26 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
     loadAnalytics,
     loadInsights,
   ]);
-
-  const loadPdfLibraries = (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      let html2canvasLoaded = false;
-      let jsPDFLoaded = false;
-
-      const checkBothLoaded = () => {
-        if (html2canvasLoaded && jsPDFLoaded) {
-          const html2canvas = window.html2canvas;
-          const jsPDF = window.jsPDF || window.jspdf?.jsPDF;
-
-          if (html2canvas && jsPDF) {
-            resolve();
-          } else {
-            reject(new Error("Libraries loaded but not accessible"));
-          }
-        }
-      };
-
-      // Check if html2canvas is already loaded
-      if (window.html2canvas) {
-        html2canvasLoaded = true;
-      } else {
-        const html2canvasScript = document.createElement("script");
-        html2canvasScript.src =
-          "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-        html2canvasScript.crossOrigin = "anonymous";
-        html2canvasScript.onload = () => {
-          setTimeout(() => {
-            if (window.html2canvas) {
-              html2canvasLoaded = true;
-              checkBothLoaded();
-            } else {
-              reject(new Error("html2canvas script loaded but not available"));
-            }
-          }, 100);
-        };
-        html2canvasScript.onerror = () =>
-          reject(new Error("Failed to load html2canvas"));
-        document.head.appendChild(html2canvasScript);
-      }
-
-      // Check if jsPDF is already loaded
-      if (window.jsPDF || window.jspdf?.jsPDF) {
-        jsPDFLoaded = true;
-      } else {
-        const jsPDFScript = document.createElement("script");
-        jsPDFScript.src =
-          "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-        jsPDFScript.crossOrigin = "anonymous";
-        jsPDFScript.onload = () => {
-          setTimeout(() => {
-            const jsPDF = window.jsPDF || window.jspdf?.jsPDF;
-            if (jsPDF) {
-              jsPDFLoaded = true;
-              checkBothLoaded();
-            } else {
-              reject(new Error("jsPDF script loaded but not available"));
-            }
-          }, 500);
-        };
-        jsPDFScript.onerror = () => reject(new Error("Failed to load jsPDF"));
-        document.head.appendChild(jsPDFScript);
-      }
-
-      // If both are already loaded, check immediately
-      if (html2canvasLoaded && jsPDFLoaded) {
-        checkBothLoaded();
-      }
-
-      // Timeout after 15 seconds
-      setTimeout(() => {
-        reject(new Error("Library loading timed out"));
-      }, 15000);
-    });
-  };
-
-  // Enhanced PDF export function that captures charts as images
-  const handleExportToPdf = async () => {
-    if (!analytics) {
-      alert("No analytics data available to export.");
-      return;
+  useEffect(() => {
+    if (analyticsId) {
+      loadAnalytics(); // 👈 always fetch base analytics data
     }
+  }, [analyticsId, loadAnalytics]);
 
-    setExportingPdf(true);
-
-    try {
-      await loadPdfLibraries();
-      console.log("Libraries loaded successfully");
-
-      // Access libraries with proper typing
-      const html2canvas = window.html2canvas;
-      const jsPDF = window.jsPDF || window.jspdf?.jsPDF;
-
-      if (!html2canvas || typeof html2canvas !== "function") {
-        throw new Error("html2canvas not properly loaded");
-      }
-
-      if (!jsPDF) {
-        throw new Error("jsPDF not properly loaded");
-      }
-
-      // Determine jsPDF constructor
-      let PDFConstructor: JsPDFConstructor;
-      if (typeof jsPDF === "function") {
-        PDFConstructor = jsPDF;
-      } else {
-        throw new Error("Could not find jsPDF constructor");
-      }
-
-      // Create PDF document
-      const pdf = new PDFConstructor({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const pageWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const margin = 20;
-      const contentWidth = pageWidth - margin * 2;
-      let currentY = margin;
-
-      // Helper function to check if we need a new page
-      const checkPageBreak = (requiredSpace: number) => {
-        if (currentY + requiredSpace > pageHeight - margin) {
-          pdf.addPage();
-          currentY = margin;
-          return true;
-        }
-        return false;
-      };
-
-      // Function to capture chart images
-      const captureChartImages = async (): Promise<{
-        [key: string]: string;
-      }> => {
-        const chartImages: { [key: string]: string } = {};
-
-        // Wait for charts to render completely
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Primary strategy: Look for chart elements with data-chart-id
-        const chartElements = document.querySelectorAll("[data-chart-id]");
-        console.log(
-          `Found ${chartElements.length} elements with data-chart-id`
-        );
-
-        for (let i = 0; i < chartElements.length; i++) {
-          const element = chartElements[i] as HTMLElement;
-          const chartId = element.getAttribute("data-chart-id");
-
-          if (chartId && element.offsetWidth > 0 && element.offsetHeight > 0) {
-            try {
-              console.log(`Capturing chart ${chartId}...`);
-
-              // Ensure element is visible
-              element.scrollIntoView({ behavior: "instant", block: "center" });
-              await new Promise((resolve) => setTimeout(resolve, 500));
-
-              const canvas = await html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: "#ffffff",
-                width: element.offsetWidth,
-                height: element.offsetHeight,
-                logging: true,
-                foreignObjectRendering: true,
-                removeContainer: true,
-              });
-
-              chartImages[chartId] = canvas.toDataURL("image/png", 0.9);
-              console.log(`✓ Chart ${chartId} captured successfully`);
-            } catch (error) {
-              console.warn(`✗ Failed to capture chart ${chartId}:`, error);
-            }
-          }
-        }
-
-        // Secondary strategy: Look for Recharts components
-        if (Object.keys(chartImages).length === 0) {
-          const rechartsElements = document.querySelectorAll(
-            ".recharts-wrapper, .recharts-responsive-container"
-          );
-          console.log(`Found ${rechartsElements.length} Recharts elements`);
-
-          for (let i = 0; i < rechartsElements.length; i++) {
-            const element = rechartsElements[i] as HTMLElement;
-
-            if (element.offsetWidth > 100 && element.offsetHeight > 100) {
-              try {
-                console.log(`Capturing Recharts element ${i}...`);
-
-                const canvas = await html2canvas(element, {
-                  scale: 2,
-                  useCORS: true,
-                  allowTaint: true,
-                  backgroundColor: "#ffffff",
-                  logging: true,
-                  foreignObjectRendering: true,
-                  removeContainer: true,
-                });
-
-                chartImages[`recharts_${i}`] = canvas.toDataURL(
-                  "image/png",
-                  0.9
-                );
-                console.log(`✓ Recharts element ${i} captured successfully`);
-              } catch (error) {
-                console.warn(
-                  `✗ Failed to capture Recharts element ${i}:`,
-                  error
-                );
-              }
-            }
-          }
-        }
-
-        // Tertiary strategy: Look for canvas or SVG elements
-        if (Object.keys(chartImages).length === 0) {
-          const canvasElements = document.querySelectorAll("canvas");
-          const svgElements = document.querySelectorAll("svg");
-
-          console.log(
-            `Found ${canvasElements.length} canvas and ${svgElements.length} SVG elements`
-          );
-
-          // Capture canvas elements
-          canvasElements.forEach((canvas, index) => {
-            if (canvas.offsetWidth > 100 && canvas.offsetHeight > 100) {
-              try {
-                const dataURL = canvas.toDataURL("image/png", 0.9);
-                chartImages[`canvas_${index}`] = dataURL;
-                console.log(`✓ Canvas ${index} captured directly`);
-              } catch (error) {
-                console.warn(`✗ Failed to capture canvas ${index}:`, error);
-              }
-            }
-          });
-
-          // Capture SVG elements
-          for (let i = 0; i < svgElements.length; i++) {
-            const svg = svgElements[i] as SVGElement;
-
-            if (svg.offsetWidth > 100 && svg.offsetHeight > 100) {
-              try {
-                console.log(`Capturing SVG ${i}...`);
-
-                const captureElement = svg.parentElement || svg;
-
-                const canvas = await html2canvas(
-                  captureElement as HTMLElement,
-                  {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: "#ffffff",
-                    logging: true,
-                    foreignObjectRendering: true,
-                    removeContainer: true,
-                  }
-                );
-
-                chartImages[`svg_${i}`] = canvas.toDataURL("image/png", 0.9);
-                console.log(`✓ SVG ${i} captured successfully`);
-              } catch (error) {
-                console.warn(`✗ Failed to capture SVG ${i}:`, error);
-              }
-            }
-          }
-        }
-
-        console.log(
-          `Chart capture complete. Total images: ${
-            Object.keys(chartImages).length
-          }`
-        );
-        return chartImages;
-      };
-
-      // Capture chart images before generating PDF
-      console.log("Capturing chart images...");
-      const chartImages = await captureChartImages();
-      console.log(`Captured ${Object.keys(chartImages).length} chart images`);
-
-      // Generate timestamp
-      const reportDate = new Date();
-      const dateStr = reportDate.toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      const timeStr = reportDate.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      // === PAGE 1: COVER PAGE ===
-
-      // Header logo area
-      pdf.setFillColor(15, 118, 110); // Teal color
-      pdf.rect(margin, margin, contentWidth, 15, "F");
-
-      // Company/System name
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("CUSTOMER FLOW ANALYTICS SYSTEM", margin + 5, margin + 10);
-
-      currentY = margin + 25;
-
-      // Main title
-      pdf.setTextColor(15, 118, 110);
-      pdf.setFontSize(24);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("COMPREHENSIVE", pageWidth / 2, currentY, { align: "center" });
-      currentY += 10;
-      pdf.text("ANALYTICS REPORT", pageWidth / 2, currentY, {
-        align: "center",
-      });
-      currentY += 20;
-
-      // Subtitle
-      pdf.setTextColor(100, 100, 100);
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "normal");
-      pdf.text(
-        "Complete Business Intelligence Analysis",
-        pageWidth / 2,
-        currentY,
-        { align: "center" }
-      );
-      pdf.setFontSize(10);
-      currentY += 8;
-      pdf.text(
-        "Including Charts, Summary & Raw Data",
-        pageWidth / 2,
-        currentY,
-        { align: "center" }
-      );
-      currentY += 25;
-
-      // Report details box
-      pdf.setFillColor(248, 249, 250);
-      pdf.setDrawColor(222, 226, 230);
-      pdf.rect(margin + 20, currentY, contentWidth - 40, 70, "FD");
-
-      // Report info
-      pdf.setTextColor(0, 0, 0);
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "bold");
-
-      const infoY = currentY + 10;
-      pdf.text("Report Generated:", margin + 30, infoY);
-      pdf.text("Analysis ID:", margin + 30, infoY + 8);
-      pdf.text("Video UUID:", margin + 30, infoY + 16);
-      pdf.text("Confidence Score:", margin + 30, infoY + 24);
-      pdf.text("Processing Status:", margin + 30, infoY + 32);
-      pdf.text("Total Metrics:", margin + 30, infoY + 40);
-      pdf.text("Charts Generated:", margin + 30, infoY + 48);
-      pdf.text("Chart Images Captured:", margin + 30, infoY + 56);
-
-      pdf.setFont("helvetica", "normal");
-      pdf.text(`${dateStr} at ${timeStr}`, margin + 70, infoY);
-      pdf.text(`${analytics.id}`, margin + 70, infoY + 8);
-      pdf.text(
-        analytics.uuid.substring(0, 16) + "...",
-        margin + 70,
-        infoY + 16
-      );
-      pdf.text(`${analytics.confidence_score}%`, margin + 70, infoY + 24);
-      pdf.text(`${analytics.status.toUpperCase()}`, margin + 70, infoY + 32);
-      pdf.text(
-        `${Object.keys(analytics.parsed_metrics).length}`,
-        margin + 70,
-        infoY + 40
-      );
-      pdf.text(`${analytics.generated_charts.length}`, margin + 70, infoY + 48);
-      pdf.text(`${Object.keys(chartImages).length}`, margin + 70, infoY + 56);
-
-      currentY += 85;
-
-      // Processing status
-      pdf.setFillColor(15, 118, 110);
-      pdf.rect(margin, currentY, contentWidth, 8, "F");
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("PROCESSING STATUS", margin + 5, currentY + 6);
-      currentY += 15;
-
-      pdf.setTextColor(0, 0, 0);
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "normal");
-
-      const statusInfo = [
-        `Status: ${analytics.status.toUpperCase()}`,
-        `Priority: ${analytics.priority.toUpperCase()}`,
-        `Started: ${new Date(
-          analytics.processing_started_at
-        ).toLocaleString()}`,
-        `Completed: ${new Date(
-          analytics.processing_completed_at
-        ).toLocaleString()}`,
-        `Processing Steps: ${
-          analytics.video_metadata?.processing_steps?.join(", ") || "N/A"
-        }`,
-      ];
-
-      statusInfo.forEach((info, index) => {
-        pdf.text(`• ${info}`, margin, currentY);
-        currentY += 6;
-      });
-
-      // Footer
-      currentY = pageHeight - 30;
-      pdf.setDrawColor(15, 118, 110);
-      pdf.line(margin, currentY, pageWidth - margin, currentY);
-      pdf.setTextColor(100, 100, 100);
-      pdf.setFontSize(8);
-      pdf.text(
-        "Comprehensive Analytics Report - Charts & Data Included",
-        margin,
-        currentY + 8
-      );
-      pdf.text("Page 1", pageWidth - margin, currentY + 8, { align: "right" });
-
-      // === PAGE 2: KEY METRICS OVERVIEW ===
-      pdf.addPage();
-      currentY = margin;
-
-      // Page header
-      pdf.setFillColor(15, 118, 110);
-      pdf.rect(margin, currentY, contentWidth, 8, "F");
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("KEY PERFORMANCE METRICS", margin + 5, currentY + 6);
-      currentY += 20;
-
-      // Metrics grid
-      pdf.setTextColor(0, 0, 0);
-      const metrics = Object.entries(analytics.parsed_metrics);
-      const metricsPerRow = 2;
-      const metricBoxWidth = (contentWidth - 10) / metricsPerRow;
-      const metricBoxHeight = 40;
-
-      for (let i = 0; i < metrics.length; i += metricsPerRow) {
-        checkPageBreak(metricBoxHeight + 10);
-
-        for (let j = 0; j < metricsPerRow && i + j < metrics.length; j++) {
-          const [key, value] = metrics[i + j];
-          const x = margin + j * (metricBoxWidth + 5);
-
-          // Metric box
-          pdf.setFillColor(248, 249, 250);
-          pdf.setDrawColor(15, 118, 110);
-          pdf.setLineWidth(0.5);
-          pdf.rect(x, currentY, metricBoxWidth, metricBoxHeight, "FD");
-
-          // Icon area
-          pdf.setFillColor(15, 118, 110);
-          pdf.rect(x + 5, currentY + 5, 8, 8, "F");
-
-          // Metric label
-          pdf.setFontSize(8);
-          pdf.setFont("helvetica", "bold");
-          pdf.setTextColor(100, 100, 100);
-          const formattedKey = key.replace(/_/g, " ").toUpperCase();
-          pdf.text(formattedKey, x + 18, currentY + 10);
-
-          // Metric value
-          pdf.setFontSize(20);
-          pdf.setFont("helvetica", "bold");
-          pdf.setTextColor(15, 118, 110);
-          pdf.text(value.toString(), x + 5, currentY + 25);
-
-          // Unit
-          pdf.setFontSize(7);
-          pdf.setFont("helvetica", "normal");
-          pdf.setTextColor(120, 120, 120);
-          const unit = key.includes("time")
-            ? "minutes avg"
-            : key.includes("score")
-            ? "out of 5.0"
-            : key.includes("hours")
-            ? "total hours"
-            : key.includes("customers")
-            ? "total count"
-            : "measured units";
-          pdf.text(unit, x + 5, currentY + 32);
-        }
-
-        currentY += metricBoxHeight + 10;
-      }
-
-      // Add chart images if captured
-      if (Object.keys(chartImages).length > 0) {
-        pdf.addPage();
-        currentY = margin;
-
-        // Charts section header
-        pdf.setFillColor(15, 118, 110);
-        pdf.rect(margin, currentY, contentWidth, 8, "F");
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFontSize(12);
-        pdf.setFont("helvetica", "bold");
-        pdf.text("ANALYTICS CHARTS", margin + 5, currentY + 6);
-        currentY += 20;
-
-        // Add each chart image
-        for (const [chartId, imageData] of Object.entries(chartImages)) {
-          checkPageBreak(120); // Reserve space for chart
-
-          pdf.setTextColor(0, 0, 0);
-          pdf.setFontSize(10);
-          pdf.setFont("helvetica", "bold");
-          pdf.text(`Chart: ${chartId}`, margin, currentY);
-          currentY += 10;
-
-          try {
-            // Add the chart image
-            pdf.addImage(
-              imageData,
-              "PNG",
-              margin,
-              currentY,
-              contentWidth,
-              100 // Fixed height
-            );
-            currentY += 110;
-          } catch (error) {
-            console.warn(`Failed to add chart ${chartId} to PDF:`, error);
-            pdf.setTextColor(255, 0, 0);
-            pdf.setFont("helvetica", "normal");
-            pdf.text(`Failed to load chart: ${chartId}`, margin, currentY);
-            currentY += 10;
-          }
-        }
-      }
-
-      // Add summary if available
-      if (analytics.generated_summary?.content) {
-        pdf.addPage();
-        currentY = margin;
-
-        // Summary section header
-        pdf.setFillColor(15, 118, 110);
-        pdf.rect(margin, currentY, contentWidth, 8, "F");
-        pdf.setTextColor(255, 255, 255);
-        pdf.setFontSize(12);
-        pdf.setFont("helvetica", "bold");
-        pdf.text("ANALYSIS SUMMARY", margin + 5, currentY + 6);
-        currentY += 20;
-
-        // Add summary content with proper text wrapping
-        pdf.setTextColor(0, 0, 0);
-        pdf.setFontSize(10);
-        pdf.setFont("helvetica", "normal");
-
-        const summaryText = analytics.generated_summary.content;
-        const lines = pdf.splitTextToSize(summaryText, contentWidth);
-
-        for (const line of lines) {
-          checkPageBreak(8);
-          pdf.text(line, margin, currentY);
-          currentY += 6;
-        }
-      }
-
-      // Generate filename with timestamp
-      const timestamp = new Date()
-        .toISOString()
-        .replace(/[:.]/g, "-")
-        .substring(0, 19);
-      const filename = `analytics-report-${analytics.id}-${timestamp}.pdf`;
-
-      console.log("Saving PDF...");
-      pdf.save(filename);
-
-      const chartCount = Object.keys(chartImages).length;
-      alert(
-        `PDF report generated successfully with ${chartCount} chart images! Check your downloads folder.`
-      );
-    } catch (error) {
-      console.error("PDF export error:", error);
-
-      let errorMsg = "PDF export failed: ";
-
-      if (error instanceof Error) {
-        if (error.message.includes("not properly loaded")) {
-          errorMsg +=
-            "PDF libraries failed to load. Please refresh the page and try again.";
-        } else if (error.message.includes("constructor")) {
-          errorMsg +=
-            "PDF library initialization failed. This may be a browser compatibility issue.";
-        } else if (error.message.includes("timed out")) {
-          errorMsg +=
-            "Library loading timed out. Please check your internet connection and try again.";
-        } else {
-          errorMsg += error.message;
-        }
-      } else {
-        errorMsg += "An unknown error occurred during PDF generation.";
-      }
-
-      alert(errorMsg);
-    } finally {
-      setExportingPdf(false);
-    }
-  };
-
+  // Event handlers
   const handleRefresh = () => {
-    loadAnalytics();
+    switch (activeView) {
+      case "charts":
+        loadChartsOnly();
+        break;
+      case "summary":
+        loadSummaryOnly();
+        break;
+      case "raw":
+        loadAnalytics();
+        break;
+    }
+    loadInsights();
   };
 
   const handleBackToProcessed = () => {
@@ -961,304 +108,101 @@ const VideoMetricsPage: React.FC<VideoMetricsPageProps> = ({
     }
   };
 
+  // Determine current loading state and error
+  const getCurrentState = () => {
+    switch (activeView) {
+      case "charts":
+        return { loading: chartsLoading, error: chartsError };
+      case "summary":
+        return { loading: summaryLoading, error: summaryError };
+      case "raw":
+        return { loading: analyticsLoading, error: analyticsError };
+      default:
+        return { loading: false, error: "" };
+    }
+  };
+
+  const { loading, error } = getCurrentState();
+
+  // Render content based on active view
+  const renderContent = () => {
+    if (loading) {
+      return <LoadingState />;
+    }
+
+    if (error) {
+      return <ErrorState error={error} onRetry={handleRefresh} />;
+    }
+
+    switch (activeView) {
+      case "charts":
+        return (
+          <ChartDisplay
+            charts={
+              chartsOnly.length > 0
+                ? chartsOnly
+                : analytics?.generated_charts || []
+            }
+            analyticsId={mockMode ? null : analyticsId}
+            apiService={mockMode ? null : apiService}
+            mockMode={mockMode}
+          />
+        );
+
+      case "summary":
+        return (
+          <SummaryView
+            summary={summaryOnly || analytics?.generated_summary}
+            insights={insights}
+            analyticsId={analyticsId}
+            apiService={apiService}
+            mockMode={mockMode}
+          />
+        );
+
+      case "raw":
+        if (analytics) {
+          return <RawDataView data={analytics} insights={insights} />;
+        } else if (!loading && !error) {
+          return (
+            <div className="px-6">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-gray-700">No data available</p>
+              </div>
+            </div>
+          );
+        }
+        return null;
+
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100 ">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100">
       <div
         ref={pageContentRef}
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"
       >
-        {/* Page Header */}
-        <div className="rounded-2xl bg-white/40 backdrop-blur-sm border border-purple-200/50 mb-6">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-                <div>
-                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                    {videoTitle || (analytics?.video_metadata?.video_title) || (analytics?.parsed_metrics ? "Customer Flow Analysis" : "Loading...")}
-                  </h1>
-                  {analyticsId && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      Analytics ID: {analyticsId}
-                    </p>
-                  )}
-              </div>
+        <PageHeader
+          analyticsId={analyticsId}
+          videoTitle={videoTitle}
+          analytics={analytics}
+          loading={loading}
+          onRefresh={handleRefresh}
+          onBackToProcessed={handleBackToProcessed}
+        />
 
-              <div className="flex items-center space-x-2">
-                <div>
-                  {" "}
-                  <button
-                    onClick={handleBackToProcessed}
-                    className="flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <svg
-                      className="w-4 h-4 "
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M15 19l-7-7 7-7"
-                      />
-                    </svg>
-                    Back
-                  </button>
-                </div>
-
-                <button
-                  onClick={handleExportToPdf}
-                  disabled={exportingPdf || loading || !analytics}
-                  className="flex items-center px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Export to PDF"
-                >
-                  {exportingPdf ? (
-                    <>
-                      <svg
-                        className="w-4 h-4 mr-2 animate-spin"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
-                      Exporting...
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      Export PDF
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={handleRefresh}
-                  disabled={loading}
-                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 rounded-lg hover:bg-gray-100"
-                  title="Refresh data"
-                >
-                  <svg
-                    className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
         <div className="rounded-2xl bg-white/40 backdrop-blur-sm border border-purple-100/50">
-          {loading ? (
-            <div className="flex items-center justify-center p-12">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading analytics data...</p>
-              </div>
-            </div>
-          ) : error ? (
-            <div className="p-6">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex">
-                  <svg
-                    className="w-5 h-5 text-red-400 mt-0.5 mr-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                  <div>
-                    <h3 className="text-red-800 font-medium">
-                      Error Loading Analytics
-                    </h3>
-                    <p className="text-red-700 text-sm mt-1">{error}</p>
-                    <button
-                      onClick={handleRefresh}
-                      className="mt-3 inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm font-medium hover:bg-red-200 transition-colors"
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : analytics ? (
-            <div>
-              {/* Video Information Section */}
-              <div className="bg-green-50 border-l-4 border-green-400 p-4 mx-6 mt-6">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <svg
-                      className="h-5 w-5 text-green-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-green-800">
-                      Video Information
-                    </h3>
-                    <div className="mt-2 text-sm text-green-700">
-                      <p>Analysis Type: Customer Flow Analysis</p>
-                      <p>Processing Status: {analytics.status}</p>
-                      <p>Confidence Score: {analytics.confidence_score}%</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {analytics && <VideoInfoBanner analytics={analytics} />}
 
-              {/* Navigation Tabs */}
-              <div className="px-6 mt-6">
-                <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6">
-                  <button
-                    onClick={() => setActiveView("charts")}
-                    className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                      activeView === "charts"
-                        ? "bg-white text-teal-700 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    Analytics Charts
-                  </button>
-                  <button
-                    onClick={() => setActiveView("summary")}
-                    className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                      activeView === "summary"
-                        ? "bg-white text-teal-700 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    Analysis Summary
-                  </button>
-                  <button
-                    onClick={() => setActiveView("raw")}
-                    className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
-                      activeView === "raw"
-                        ? "bg-white text-teal-700 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    Raw Analytics Data
-                  </button>
-                </div>
-              </div>
+          <NavigationTabs
+            activeView={activeView}
+            onViewChange={setActiveView}
+          />
 
-              {/* Content based on active view */}
-              <div className="pb-6">
-                {activeView === "charts" && (
-                  <ChartDisplay
-                    charts={
-                      chartsOnly.length > 0
-                        ? chartsOnly
-                        : analytics?.generated_charts || []
-                    }
-                    analyticsId={mockMode ? null : analyticsId}
-                    apiService={mockMode ? null : apiService}
-                    mockMode={mockMode}
-                  />
-                )}
-                {activeView === "summary" && (
-                  <SummaryView
-                    summary={summaryOnly || analytics?.generated_summary}
-                    insights={insights}
-                    analyticsId={analyticsId}
-                    apiService={apiService}
-                    mockMode={mockMode}
-                  />
-                )}
-                {activeView === "summary" && analytics.generated_summary && (
-                  <div className="px-6">
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <h3 className="font-semibold text-gray-900 mb-3">
-                        Analysis Summary
-                      </h3>
-                      <div className="prose max-w-none text-gray-700">
-                        <div className="whitespace-pre-line">
-                          {analytics.generated_summary.content}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {activeView === "raw" && (
-                  <div>
-                    {/* Debug info - remove after fixing */}
-
-                    {analytics ? (
-                      <RawDataView data={analytics} insights={insights} />
-                    ) : loading ? (
-                      <div className="flex items-center justify-center p-12">
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto mb-4"></div>
-                          <p className="text-gray-600">Loading raw data...</p>
-                        </div>
-                      </div>
-                    ) : error ? (
-                      <div className="px-6">
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                          <p className="text-red-700">Error: {error}</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="px-6">
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                          <p className="text-gray-700">No data available</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          ) : activeView === "charts" && analyticsId && !loading && !error ? (
-            // Show chart display even when analytics is not loaded yet
-            <div className="pb-6">
-              <ChartDisplay
-                analyticsId={analyticsId}
-                apiService={apiService}
-                mockMode={mockMode}
-              />
-            </div>
-          ) : null}
+          <div className="pb-6">{renderContent()}</div>
         </div>
       </div>
     </div>

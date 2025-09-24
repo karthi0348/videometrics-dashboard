@@ -58,6 +58,7 @@ import {
   AlertTriangle,
   Filter,
   TrendingUp,
+  Copy,
 } from "lucide-react";
 
 const TemplatesPage: React.FC = () => {
@@ -87,6 +88,12 @@ const TemplatesPage: React.FC = () => {
   const [deleteModal, setDeleteModal] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState("");
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Clone template states
+  const [showCloneModal, setShowCloneModal] = useState(false);
+  const [selectedTemplateForClone, setSelectedTemplateForClone] = useState<Template | null>(null);
+  const [cloneLoading, setCloneLoading] = useState(false);
+  const [cloneName, setCloneName] = useState("");
 
   const handleOpenSettings = (template: Template) => {
     setSelectedTemplate(template);
@@ -143,6 +150,38 @@ const TemplatesPage: React.FC = () => {
   const deleteTemplate = (id: any) => {
     setSelectedId(id);
     setDeleteModal(true);
+  };
+
+  // Handle Use Template action
+  const handleUseTemplate = (template: any) => {
+    setSelectedTemplateForClone(template);
+    setCloneName(`${template.template_name} - Copy`);
+    setShowCloneModal(true);
+  };
+
+  // Handle the actual cloning
+  const handleCloneTemplate = async () => {
+      console.log('handleCloneTemplate called'); // Add this line
+
+    if (!selectedTemplateForClone || !cloneName.trim()) {
+      toast.error("Please provide a name for the new template", { containerId: "TR" });
+      return;
+    }
+
+    setCloneLoading(true);
+    try {
+    await templateApiService.cloneTemplate(selectedTemplateForClone.id, cloneName.trim());
+      toast.success("Template cloned successfully", { containerId: "TR" });
+      await getAllTemplate();
+      setShowCloneModal(false);
+      setSelectedTemplateForClone(null);
+      setCloneName("");
+    } catch (error: any) {
+      toast.error("Failed to clone template", { containerId: "TR" });
+      return ErrorHandler(error);
+    } finally {
+      setCloneLoading(false);
+    }
   };
 
   const getIcon = (iconName: string) => {
@@ -555,6 +594,12 @@ const TemplatesPage: React.FC = () => {
                             Edit Template
                           </DropdownMenuItem>
                           <DropdownMenuItem
+                            onClick={() => handleUseTemplate(template)}
+                          >
+                            <Copy className="w-4 h-4 mr-2" />
+                            Clone Template
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
                             onClick={() => deleteTemplate(template.id)}
                             className="text-red-600 focus:text-red-600"
                           >
@@ -609,11 +654,11 @@ const TemplatesPage: React.FC = () => {
                         <div className="flex items-center justify-center gap-1 mb-1">
                           <Users className="w-3 h-3 text-slate-500" />
                           <span className="text-xs text-slate-500">
-                            Assigned
+                            Rating
                           </span>
                         </div>
                         <span className="text-sm font-semibold text-slate-700">
-                          {template.assignedProfiles || 0}
+                          {template.rating}
                         </span>
                       </div>
                     </div>
@@ -656,10 +701,12 @@ const TemplatesPage: React.FC = () => {
 
                     <div className="flex flex-col sm:flex-row gap-2 pt-2">
                       <Button
+                        onClick={() => handleUseTemplate(template)}
                         variant="outline"
                         size="sm"
                         className="flex-1 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200/50 hover:from-purple-100 hover:to-blue-100 text-purple-700 text-xs sm:text-sm rounded-lg"
                       >
+                        <Copy className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                         Use Template
                       </Button>
                       <div className="flex gap-2">
@@ -682,7 +729,7 @@ const TemplatesPage: React.FC = () => {
                           ) : (
                             <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                           )}
-                          View
+                          
                         </Button>
                       </div>
                     </div>
@@ -749,6 +796,67 @@ const TemplatesPage: React.FC = () => {
           </CardContent>
         )}
       </div>
+
+      {/* Clone Template Modal */}
+      {showCloneModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Clone Template
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Create a copy of "{selectedTemplateForClone?.template_name}" with a new name.
+              </p>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="clone-name" className="block text-sm font-medium text-gray-700 mb-2">
+                    New Template Name
+                  </label>
+                  <Input
+                    id="clone-name"
+                    type="text"
+                    value={cloneName}
+                    onChange={(e) => setCloneName(e.target.value)}
+                    placeholder="Enter template name"
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCloneModal(false);
+                    setSelectedTemplateForClone(null);
+                    setCloneName("");
+                  }}
+                  disabled={cloneLoading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCloneTemplate}
+                  disabled={cloneLoading || !cloneName.trim()}
+                  className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                >
+                  {cloneLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Cloning...
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mr-2" />
+                      Clone Template
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       <NewTemplateModal

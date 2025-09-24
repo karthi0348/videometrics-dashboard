@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ProcessVideoApiService from "../../../helpers/service/processvideo/ProcessVideoApiservice";
 import ProfileApiService from "../../../helpers/service/profile/profile-api-service";
 import SubProfileApiService from "../../../helpers/service/subprofile/subprofile-api-service";
@@ -14,8 +14,103 @@ interface ProcessedVideosPageProps {
     page: string,
     analyticsId?: string,
     videoTitle?: string
-  ) => void; // Add videoTitle parameter
+  ) => void;
 }
+
+interface FilterState {
+  status: string[];
+  profiles: string[];
+  dateRange: {
+    from: string;
+    to: string;
+  };
+  confidenceRange: {
+    min: number;
+    max: number;
+  };
+  searchQuery: string;
+}
+
+// Custom Confirmation Dialog Hook
+const useConfirm = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
+  const [config, setConfig] = useState({
+    title: '',
+    message: '',
+    confirmText: 'OK',
+    cancelText: 'Cancel'
+  });
+
+  const confirm = useCallback((options: {
+    title?: string;
+    message?: string;
+    confirmText?: string;
+    cancelText?: string;
+  } = {}) => {
+    setConfig({
+      title: options.title || 'Confirm Action',
+      message: options.message || 'Are you sure?',
+      confirmText: options.confirmText || 'OK',
+      cancelText: options.cancelText || 'Cancel'
+    });
+    setIsOpen(true);
+
+    return new Promise<boolean>((resolve) => {
+      setResolver(() => resolve);
+    });
+  }, []);
+
+  const handleConfirm = useCallback(() => {
+    if (resolver) resolver(true);
+    setIsOpen(false);
+    setResolver(null);
+  }, [resolver]);
+
+  const handleCancel = useCallback(() => {
+    if (resolver) resolver(false);
+    setIsOpen(false);
+    setResolver(null);
+  }, [resolver]);
+
+  const ConfirmDialog = () => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-2xl max-w-md w-full border border-gray-200">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">{config.title}</h3>
+            </div>
+            <p className="text-gray-600 mb-6 leading-relaxed">{config.message}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancel}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+              >
+                {config.cancelText}
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                {config.confirmText}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return { confirm, ConfirmDialog };
+};
 
 const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
   newProcessedVideo,
@@ -55,6 +150,19 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize] = useState(12);
   const [isLoadingPage, setIsLoadingPage] = useState(false);
+
+  const [showFilter, setShowFilter] = useState(false);
+  const [allVideos, setAllVideos] = useState<ProcessedVideo[]>([]);
+  const [filters, setFilters] = useState<FilterState>({
+    status: [],
+    profiles: [],
+    dateRange: { from: "", to: "" },
+    confidenceRange: { min: 0, max: 100 },
+    searchQuery: "",
+  });
+
+  // Initialize custom confirm dialog
+  const { confirm, ConfirmDialog } = useConfirm();
 
   // Enhanced Mock data with more realistic examples
   const getMockData = (): ProcessedVideo[] => [
@@ -120,6 +228,119 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
       video_duration: "6:33",
     },
   ];
+
+  const filteredVideos = useMemo(() => {
+    let filtered = [...processedVideos];
+
+    // Search query filter
+    if (filters.searchQuery.trim()) {
+      const query = filters.searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (video) =>
+          video.video_title.toLowerCase().includes(query) ||
+          video.profile_name.toLowerCase().includes(query) ||
+          video.sub_profile_name.toLowerCase().includes(query) ||
+          video.template_name.toLowerCase().includes(query)
+      );
+    }
+
+    // Status filter
+    if (filters.status.length > 0) {
+      filtered = filtered.filter((video) =>
+        filters.status.includes(video.processing_status)
+      );
+    }
+
+    // Profile filter
+    if (filters.profiles.length > 0) {
+      filtered = filtered.filter((video) =>
+        filters.profiles.includes(video.profile_name)
+      );
+    }
+
+    // Date range filter
+    if (filters.dateRange.from || filters.dateRange.to) {
+      filtered = filtered.filter((video) => {
+        const videoDate = new Date(video.created_at);
+        const fromDate = filters.dateRange.from
+          ? new Date(filters.dateRange.from)
+          : null;
+        const toDate = filters.dateRange.to
+          ? new Date(filters.dateRange.to + "T23:59:59")
+          : null;
+
+        if (fromDate && videoDate < fromDate) return false;
+        if (toDate && videoDate > toDate) return false;
+        return true;
+      });
+    }
+
+    // Confidence range filter
+    if (filters.confidenceRange.min > 0 || filters.confidenceRange.max < 100) {
+      filtered = filtered.filter((video) => {
+        if (video.processing_status !== "completed") return true;
+        return (
+          video.confidence_score >= filters.confidenceRange.min &&
+          video.confidence_score <= filters.confidenceRange.max
+        );
+      });
+    }
+
+    return filtered;
+  }, [processedVideos, filters]);
+
+  // Add filter helper functions
+  const getUniqueProfiles = useCallback(() => {
+    return Array.from(
+      new Set(processedVideos.map((v) => v.profile_name))
+    ).sort();
+  }, [processedVideos]);
+
+  const getUniqueStatuses = useCallback(() => {
+    return Array.from(
+      new Set(processedVideos.map((v) => v.processing_status))
+    ).sort();
+  }, [processedVideos]);
+
+  const getActiveFilterCount = useCallback(() => {
+    let count = 0;
+    if (filters.status.length > 0) count++;
+    if (filters.profiles.length > 0) count++;
+    if (filters.dateRange.from || filters.dateRange.to) count++;
+    if (filters.confidenceRange.min > 0 || filters.confidenceRange.max < 100)
+      count++;
+    if (filters.searchQuery.trim()) count++;
+    return count;
+  }, [filters]);
+
+  // Filter handlers
+  const handleStatusFilter = useCallback((status: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      status: prev.status.includes(status)
+        ? prev.status.filter((s) => s !== status)
+        : [...prev.status, status],
+    }));
+  }, []);
+
+  const handleProfileFilter = useCallback((profile: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      profiles: prev.profiles.includes(profile)
+        ? prev.profiles.filter((p) => p !== profile)
+        : [...prev.profiles, profile],
+    }));
+  }, []);
+
+  const clearAllFilters = useCallback(() => {
+    setFilters({
+      status: [],
+      profiles: [],
+      dateRange: { from: "", to: "" },
+      confidenceRange: { min: 0, max: 100 },
+      searchQuery: "",
+    });
+  }, []);
 
   // Enhanced loading function with better error handling and performance
   const loadProcessedVideos = useCallback(
@@ -360,31 +581,21 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
     [onNavigate]
   );
 
-  const handlePlayVideo = useCallback((videoUrl?: string) => {
-    if (videoUrl) {
-      // Enhanced video playing with better error handling
-      try {
-        window.open(videoUrl, "_blank", "noopener,noreferrer");
-      } catch (error) {
-        console.error("Error opening video:", error);
-        setError(
-          "Unable to open video. Please check if the video URL is valid."
-        );
-      }
-    } else {
-      setError("No video URL available for playback");
-      setTimeout(() => setError(""), 3000);
-    }
-  }, []);
 
+
+  // Updated handleDeleteVideo with custom confirmation dialog
   const handleDeleteVideo = useCallback(
     async (analyticsId: string) => {
       const video = processedVideos.find((v) => v.analytics_id === analyticsId);
       const videoTitle = video?.video_title || "this video";
 
-      const confirmed = window.confirm(
-        `Are you sure you want to delete "${videoTitle}"?\n\nThis action cannot be undone and will permanently remove all associated analytics data.`
-      );
+      // Use custom confirmation dialog
+      const confirmed = await confirm({
+        title: 'Delete Video',
+        message: `Are you sure you want to delete "${videoTitle}"?\n\nThis action cannot be undone and will permanently remove all associated analytics data.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      });
 
       if (!confirmed) return;
 
@@ -421,9 +632,10 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
         );
       }
     },
-    [processedVideos, mockMode, apiService, handleRefresh]
+    [processedVideos, mockMode, apiService, handleRefresh, confirm]
   );
 
+  // Updated handleBulkDelete with custom confirmation dialog
   const handleBulkDelete = useCallback(async () => {
     if (selectedVideos.size === 0) {
       setError("Please select at least one video to delete");
@@ -442,11 +654,17 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
         ? `${videoTitles.join(", ")} and ${selectedCount - 3} more`
         : videoTitles.join(", ");
 
-    const confirmMessage = `Are you sure you want to delete ${selectedCount} selected video${
-      selectedCount > 1 ? "s" : ""
-    }?\n\n${titlePreview}\n\nThis action cannot be undone and will permanently remove all associated analytics data.`;
+    // Use custom confirmation dialog
+    const confirmed = await confirm({
+      title: 'Delete Multiple Videos',
+      message: `Are you sure you want to delete ${selectedCount} selected video${
+        selectedCount > 1 ? "s" : ""
+      }?\n\n${titlePreview}\n\nThis action cannot be undone and will permanently remove all associated analytics data.`,
+      confirmText: 'Delete All',
+      cancelText: 'Cancel'
+    });
 
-    if (!window.confirm(confirmMessage)) return;
+    if (!confirmed) return;
 
     setBulkDeleting(true);
     setBulkDeleteResult("");
@@ -528,7 +746,7 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
       setBulkDeleting(false);
       setBulkOperationProgress(0);
     }
-  }, [selectedVideos, processedVideos, mockMode, apiService, handleRefresh]);
+  }, [selectedVideos, processedVideos, mockMode, apiService, handleRefresh, confirm]);
 
   const handleSelectVideo = useCallback((id: number) => {
     setSelectedVideos((prev) => {
@@ -561,44 +779,60 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
   }, []);
 
   return (
-    <ProcessedVideosUI
-      // Enhanced State props
-      processedVideos={processedVideos}
-      loading={loading}
-      error={error}
-      viewMode={viewMode}
-      setViewMode={setViewMode}
-      mockMode={mockMode}
-      setMockMode={setMockMode}
-      selectedVideos={selectedVideos}
-      autoRefresh={autoRefresh}
-      setAutoRefresh={setAutoRefresh}
-      lastRefresh={lastRefresh}
-      newVideoAlert={newVideoAlert}
-      bulkDeleting={bulkDeleting}
-      bulkDeleteResult={bulkDeleteResult}
-      currentPage={currentPage}
-      totalPages={totalPages}
-      totalCount={totalCount}
-      pageSize={pageSize}
-      refreshInterval={refreshInterval}
-      // Enhanced additional state props
-      isRefreshing={isRefreshing}
-      isLoadingPage={isLoadingPage}
-      bulkOperationProgress={bulkOperationProgress}
-      // Enhanced Handler props
-      handleRefresh={handleRefresh}
-      handlePageChange={handlePageChange}
-      handleViewMetrics={handleViewMetrics}
-      handlePlayVideo={handlePlayVideo}
-      handleDeleteVideo={handleDeleteVideo}
-      handleBulkDelete={handleBulkDelete}
-      handleSelectVideo={handleSelectVideo}
-      handleSelectAll={handleSelectAll}
-      // Enhanced additional handlers
-      clearError={clearError}
-      clearAlert={clearAlert}
-    />
+    <>
+      {/* Custom Confirmation Dialog */}
+      <ConfirmDialog />
+      
+      <ProcessedVideosUI
+        // Enhanced State props
+        processedVideos={processedVideos}
+        loading={loading}
+        error={error}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        mockMode={mockMode}
+        setMockMode={setMockMode}
+        selectedVideos={selectedVideos}
+        autoRefresh={autoRefresh}
+        setAutoRefresh={setAutoRefresh}
+        lastRefresh={lastRefresh}
+        newVideoAlert={newVideoAlert}
+        bulkDeleting={bulkDeleting}
+        bulkDeleteResult={bulkDeleteResult}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        refreshInterval={refreshInterval}
+        // Enhanced additional state props
+        isRefreshing={isRefreshing}
+        isLoadingPage={isLoadingPage}
+        bulkOperationProgress={bulkOperationProgress}
+        // Enhanced Handler props
+        handleRefresh={handleRefresh}
+        handlePageChange={handlePageChange}
+        handleViewMetrics={handleViewMetrics}
+        handleDeleteVideo={handleDeleteVideo}
+        handleBulkDelete={handleBulkDelete}
+        handleSelectVideo={handleSelectVideo}
+        handleSelectAll={handleSelectAll}
+        // Enhanced additional handlers
+        clearError={clearError}
+        clearAlert={clearAlert}
+        filteredVideos={filteredVideos}
+        allVideos={processedVideos}
+        showFilter={showFilter}
+        setShowFilter={setShowFilter}
+        filters={filters}
+        setFilters={setFilters}
+        getUniqueProfiles={getUniqueProfiles}
+        getUniqueStatuses={getUniqueStatuses}
+        getActiveFilterCount={getActiveFilterCount}
+        handleStatusFilter={handleStatusFilter}
+        handleProfileFilter={handleProfileFilter}
+        clearAllFilters={clearAllFilters}
+      />
+    </>
   );
 };
 
