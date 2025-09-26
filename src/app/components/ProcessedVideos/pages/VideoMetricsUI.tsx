@@ -358,7 +358,7 @@ export const VideoInfoBanner: React.FC<VideoInfoBannerProps> = ({
 
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <label className="text-xs font-medium text-black-500 uppercase tracking-wide">
               Video Name
             </label>
             <p className="text-sm text-gray-900 break-words mt-1">
@@ -367,7 +367,7 @@ export const VideoInfoBanner: React.FC<VideoInfoBannerProps> = ({
           </div>
 
           <div>
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <label className="text-xs font-medium text-black-500 uppercase tracking-wide">
               Video URL
             </label>
             <p className="text-xs text-gray-700 break-all mt-1 font-mono bg-gray-50 rounded px-2 py-1">
@@ -376,7 +376,7 @@ export const VideoInfoBanner: React.FC<VideoInfoBannerProps> = ({
           </div>
 
           <div>
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <label className="text-xs font-medium text-black-900 uppercase tracking-wide">
               Processed URL
             </label>
             <p className="text-xs text-gray-700 break-all mt-1 font-mono bg-gray-50 rounded px-2 py-1">
@@ -386,7 +386,7 @@ export const VideoInfoBanner: React.FC<VideoInfoBannerProps> = ({
 
           <div>
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <label className="text-xs font-medium text-black-500 uppercase tracking-wide">
                 Confidence Score
               </label>
               <span className="text-sm font-semibold text-green-600">

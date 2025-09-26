@@ -182,11 +182,26 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
   const createChartVariations = (chart: GeneratedChart): ExtendedChart[] => {
     // Create variations for pie charts
     if (isValidPieChartData(chart)) {
+      // Convert pie to bar format for bar and histogram variations
+      const categories = chart.series?.label || chart.series?.category || [];
+      const values = chart.series?.values || chart.series?.value || [];
+      
+      const barVersion: ExtendedChart = {
+        ...chart,
+        plot_type: "bar" as const,
+        x_axis: categories,
+        series: {
+          data: values
+        } as any
+      };
+
       return [
         { ...chart, id: `${chart.id}_pie`, title: `${chart.title} (Pie Chart)`, chartType: 'pie' },
         { ...chart, id: `${chart.id}_donut`, title: `${chart.title} (Donut Chart)`, chartType: 'donut' },
         { ...chart, id: `${chart.id}_hbar`, title: `${chart.title} (Horizontal Bar)`, chartType: 'horizontal-bar' },
-        { ...chart, id: `${chart.id}_vbar`, title: `${chart.title} (Vertical Bar)`, chartType: 'vertical-bar' }
+        { ...chart, id: `${chart.id}_vbar`, title: `${chart.title} (Vertical Bar)`, chartType: 'vertical-bar' },
+        { ...barVersion, id: `${chart.id}_bar`, title: `${chart.title} (Bar Chart)`, chartType: 'bar' },
+        { ...barVersion, id: `${chart.id}_histogram`, title: `${chart.title} (Histogram)`, chartType: 'histogram' }
       ];
     }
 
@@ -208,9 +223,21 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
         } as ChartSeries
       };
 
+      // Convert gauge to bar format for bar and histogram variations
+      const barVersion: ExtendedChart = {
+        ...chart,
+        plot_type: "bar" as const,
+        x_axis: ["Current Value", "Remaining"],
+        series: {
+          data: [currentValue, remainingValue]
+        } as any
+      };
+
       return [
         { ...chart, id: `${chart.id}_gauge`, title: `${chart.title} (Gauge)`, chartType: 'gauge' },
-        { ...pieVersion, id: `${chart.id}_pie`, title: `${chart.title} (Pie Chart)`, chartType: 'pie' }
+        { ...pieVersion, id: `${chart.id}_pie`, title: `${chart.title} (Pie Chart)`, chartType: 'pie' },
+        { ...barVersion, id: `${chart.id}_bar`, title: `${chart.title} (Bar Chart)`, chartType: 'bar' },
+        { ...barVersion, id: `${chart.id}_histogram`, title: `${chart.title} (Histogram)`, chartType: 'histogram' }
       ];
     }
 
@@ -237,7 +264,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
           return [
             { ...chart, id: `${chart.id}_bar`, title: `${chart.title} (Bar Chart)`, chartType: 'bar' },
-            { ...chart, id: `${chart.id}_line`, title: `${chart.title} (Line Chart)`, chartType: 'line' },
+            { ...chart, id: `${chart.id}_histogram`, title: `${chart.title} (Histogram)`, chartType: 'histogram' },
             { ...pieVersion, id: `${chart.id}_pie`, title: `${chart.title} (Pie Chart)`, chartType: 'pie' }
           ];
         }
@@ -245,6 +272,167 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     }
 
     return [chart]; // Return original chart if no variations available
+  };
+
+  // Helper function to render bar chart from categories and values
+  const renderBarChart = (categories: string[], values: number[]) => {
+    return (
+      <div className="w-full">
+        <div className="flex flex-col items-center p-6">
+          <div className="text-center text-gray-600 mb-3 sm:mb-4 font-medium text-sm sm:text-base">
+            Bar Chart
+          </div>
+          <div className="w-full" style={{ height: "120px" }}>
+            {Array.isArray(values) && values.length > 0 && (
+              <svg 
+                width="100%" 
+                height="120" 
+                viewBox="0 0 300 120" 
+                preserveAspectRatio="xMidYMid meet"
+                className="overflow-visible"
+              >
+                {/* Chart bars */}
+                {values.map((value, index) => {
+                  const barWidth = Math.min(25, (280 / values.length) - 2);
+                  const maxValue = Math.max(...values);
+                  const barHeight = Math.max(3, (value / maxValue) * 70);
+                  const x = 20 + (index * (280 / values.length));
+                  const y = 90 - barHeight;
+                  
+                  return (
+                    <g key={index}>
+                      {/* Bar */}
+                      <rect
+                        x={x}
+                        y={y}
+                        width={barWidth}
+                        height={barHeight}
+                        fill="#3B82F6"
+                        rx="2"
+                        ry="2"
+                      />
+                      {/* Value label on top of bar */}
+                      <text
+                        x={x + barWidth/2}
+                        y={y - 3}
+                        textAnchor="middle"
+                        fontSize="8"
+                        fill="#374151"
+                        fontWeight="500"
+                      >
+                        {value}
+                      </text>
+                      {/* X-axis label */}
+                      <text
+                        x={x + barWidth/2}
+                        y={105}
+                        textAnchor="middle"
+                        fontSize="10"
+                        fill="#6B7280"
+                        transform={`rotate(-10, ${x + barWidth/2}, 105)`}
+                      >
+                        {categories[index] || `Item ${index + 1}`}
+                      </text>
+                    </g>
+                  );
+                })}
+                {/* Y-axis line */}
+                <line x1="15" y1="20" x2="15" y2="90" stroke="#E5E7EB" strokeWidth="1"/>
+                {/* X-axis line */}
+                <line x1="15" y1="90" x2="285" y2="90" stroke="#E5E7EB" strokeWidth="1"/>
+              </svg>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Helper function to render histogram from categories and values
+  const renderHistogramChart = (categories: string[], values: number[]) => {
+    return (
+      <div className="w-full">
+        <div className="flex flex-col items-center p-6">
+          <div className="text-center text-gray-600 mb-3 sm:mb-4 font-medium text-sm sm:text-base">
+            Histogram
+          </div>
+          <div className="w-full" style={{ height: "120px" }}>
+            {Array.isArray(values) && values.length > 0 && (
+              <svg 
+                width="100%" 
+                height="120" 
+                viewBox="0 0 300 120" 
+                preserveAspectRatio="xMidYMid meet"
+                className="overflow-visible"
+              >
+                {values.map((value, index) => {
+                  const barWidth = Math.max(8, (260 / values.length));
+                  const maxValue = Math.max(...values);
+                  const barHeight = Math.max(3, (value / maxValue) * 70);
+                  const x = 20 + (index * barWidth);
+                  const y = 90 - barHeight;
+                  
+                  return (
+                    <g key={index}>
+                      {/* Histogram bar - no gaps between bars */}
+                      <rect
+                        x={x}
+                        y={y}
+                        width={barWidth}
+                        height={barHeight}
+                        fill="#10B981"
+                        stroke="#059669"
+                        strokeWidth="0.5"
+                      />
+                      {/* Value label on top of bar */}
+                      <text
+                        x={x + barWidth/2}
+                        y={y - 3}
+                        textAnchor="middle"
+                        fontSize="8"
+                        fill="#374151"
+                        fontWeight="500"
+                      >
+                        {value}
+                      </text>
+                      {/* X-axis label */}
+                      <text
+                        x={x + barWidth/2}
+                        y={105}
+                        textAnchor="middle"
+                        fontSize="8"
+                        fill="#6B7280"
+                        transform={`rotate(-10, ${x + barWidth/2}, 105)`}
+                      >
+                        {categories[index] || `${index + 1}`}
+                      </text>
+                    </g>
+                  );
+                })}
+                {/* Y-axis line */}
+                <line x1="15" y1="20" x2="15" y2="90" stroke="#E5E7EB" strokeWidth="1"/>
+                {/* X-axis line */}
+                <line x1="15" y1="90" x2="285" y2="90" stroke="#E5E7EB" strokeWidth="1"/>
+                {/* Y-axis ticks and labels */}
+                {[0, 25, 50, 75, 100].map((tick, idx) => {
+                  const maxValue = Math.max(...values);
+                  const tickValue = Math.round((tick / 100) * maxValue);
+                  const tickY = 90 - (tick / 100) * 70;
+                  return (
+                    <g key={idx}>
+                      <line x1="12" y1={tickY} x2="15" y2={tickY} stroke="#9CA3AF" strokeWidth="1"/>
+                      <text x="10" y={tickY + 2} textAnchor="end" fontSize="7" fill="#6B7280">
+                        {tickValue}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // Function to render the appropriate chart based on chartType
@@ -265,6 +453,18 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
             size={180} // Reduced from 140 for mobile
           />
         );
+      } else if (chartType === 'bar') {
+        // Convert gauge to bar chart
+        const maxValue = chart.styling?.max_value || 100;
+        const currentValue = chart.value as number;
+        const remainingValue = Math.max(0, maxValue - currentValue);
+        return renderBarChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
+      } else if (chartType === 'histogram') {
+        // Convert gauge to histogram
+        const maxValue = chart.styling?.max_value || 100;
+        const currentValue = chart.value as number;
+        const remainingValue = Math.max(0, maxValue - currentValue);
+        return renderHistogramChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
       }
     }
     
@@ -278,6 +478,16 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
           return <HorizontalBarChart data={chart.series} status={chart.status} size={220} />;
         case 'vertical-bar':
           return <VerticalBarChart data={chart.series} status={chart.status} size={200} />;
+        case 'bar':
+          // Convert pie data to bar chart format
+          const categories = chart.series?.label || chart.series?.category || [];
+          const values = chart.series?.values || chart.series?.value || [];
+          return renderBarChart(categories, values);
+        case 'histogram':
+          // Convert pie data to histogram format
+          const histCategories = chart.series?.label || chart.series?.category || [];
+          const histValues = chart.series?.values || chart.series?.value || [];
+          return renderHistogramChart(histCategories, histValues);
         case 'pie':
         default:
           return <PieChart data={chart.series} status={chart.status} size={180} />;
@@ -288,12 +498,12 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     if (chart.plot_type === "bar" && isValidBarChartData(chart)) {
       const chartType = chart.chartType || 'bar';
       
-      if (chartType === 'line') {
+      if (chartType === 'histogram') {
         return (
           <div className="w-full">
             <div className="flex flex-col items-center p-6">
               <div className="text-center text-gray-600 mb-3 sm:mb-4 font-medium text-sm sm:text-base">
-                Line Chart
+                Histogram
               </div>
               <div className="space-y-3">
                 {Object.entries(chart.series).map(([seriesName, values]) => (
@@ -301,62 +511,77 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                     <div className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
                       {seriesName.charAt(0).toUpperCase() + seriesName.slice(1)}
                     </div>
-                    <div className="relative w-full" style={{ height: "110px" }}>
+                    <div className="relative w-full" style={{ height: "120px" }}>
                       <svg 
                         width="100%" 
-                        height="85" 
-                        viewBox="0 0 280 85" 
+                        height="120" 
+                        viewBox="0 0 300 120" 
                         preserveAspectRatio="xMidYMid meet"
                         className="overflow-visible"
                       >
                         {Array.isArray(values) && (values as number[]).map((value, index) => {
-                          const svgWidth = 260;
-                          const svgHeight = 65;
-                          const padding = 10;
-                          
-                          const x = padding + (index / ((values as number[]).length - 1)) * (svgWidth - 2 * padding);
-                          const y = svgHeight - padding - ((value / Math.max(...(values as number[]))) * (svgHeight - 2 * padding));
-                          
-                          const nextValue = (values as number[])[index + 1];
-                          const nextX = nextValue !== undefined ? 
-                            padding + ((index + 1) / ((values as number[]).length - 1)) * (svgWidth - 2 * padding) : x;
-                          const nextY = nextValue !== undefined ? 
-                            svgHeight - padding - ((nextValue / Math.max(...(values as number[]))) * (svgHeight - 2 * padding)) : y;
+                          const barWidth = Math.max(8, (260 / (values as number[]).length));
+                          const maxValue = Math.max(...(values as number[]));
+                          const barHeight = Math.max(3, (value / maxValue) * 70);
+                          const x = 20 + (index * barWidth);
+                          const y = 90 - barHeight;
                           
                           return (
                             <g key={index}>
-                              {index < (values as number[]).length - 1 && (
-                                <line
-                                  x1={x}
-                                  y1={y}
-                                  x2={nextX}
-                                  y2={nextY}
-                                  stroke="#8B5CF6"
-                                  strokeWidth="2"
-                                  fill="none"
-                                />
-                              )}
-                              <circle
-                                cx={x}
-                                cy={y}
-                                r="3"
-                                fill="#8B5CF6"
+                              {/* Histogram bar - no gaps between bars */}
+                              <rect
+                                x={x}
+                                y={y}
+                                width={barWidth}
+                                height={barHeight}
+                                fill="#10B981"
+                                stroke="#059669"
+                                strokeWidth="0.5"
                               />
+                              {/* Value label on top of bar */}
+                              <text
+                                x={x + barWidth/2}
+                                y={y - 3}
+                                textAnchor="middle"
+                                fontSize="8"
+                                fill="#374151"
+                                fontWeight="500"
+                              >
+                                {value}
+                              </text>
+                              {/* X-axis label */}
+                              <text
+                                x={x + barWidth/2}
+                                y={105}
+                                textAnchor="middle"
+                                fontSize="8"
+                                fill="#6B7280"
+                                transform={`rotate(-10, ${x + barWidth/2}, 105)`}
+                              >
+                                {chart.x_axis?.[index] || `${index + 1}`}
+                              </text>
+                            </g>
+                          );
+                        })}
+                        {/* Y-axis line */}
+                        <line x1="15" y1="20" x2="15" y2="90" stroke="#E5E7EB" strokeWidth="1"/>
+                        {/* X-axis line */}
+                        <line x1="15" y1="90" x2="285" y2="90" stroke="#E5E7EB" strokeWidth="1"/>
+                        {/* Y-axis ticks and labels */}
+                        {[0, 25, 50, 75, 100].map((tick, idx) => {
+                          const maxValue = Math.max(...Object.values(chart.series).flat() as number[]);
+                          const tickValue = Math.round((tick / 100) * maxValue);
+                          const tickY = 90 - (tick / 100) * 70;
+                          return (
+                            <g key={idx}>
+                              <line x1="12" y1={tickY} x2="15" y2={tickY} stroke="#9CA3AF" strokeWidth="1"/>
+                              <text x="10" y={tickY + 2} textAnchor="end" fontSize="7" fill="#6B7280">
+                                {tickValue}
+                              </text>
                             </g>
                           );
                         })}
                       </svg>
-                      <div className="flex justify-between mt-2 px-2 overflow-x-auto">
-                        {chart.x_axis?.map((label, index) => (
-                          <span 
-                            key={index} 
-                            className="text-xs text-gray-600 text-center flex-1 min-w-0" 
-                            style={{ fontSize: "9px", wordBreak: "break-word" }}
-                          >
-                            {label}
-                          </span>
-                        ))}
-                      </div>
                     </div>
                   </div>
                 ))}
@@ -448,16 +673,16 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
       );
     }
     
-    // Handle series-based charts (line, histogram, waterfall, etc.) with mobile responsiveness
+    // Handle series-based charts (histogram, waterfall, etc.) with mobile responsiveness
     if (chart.series && chart.x_axis) {
       const chartType = chart.chartType;
       
-      if (chartType === 'line') {
+      if (chartType === 'histogram') {
         return (
           <div className="w-full">
             <div className="p-4">
               <div className="text-center text-gray-600 mb-3 sm:mb-4 font-medium text-sm sm:text-base">
-                Line Chart
+                Histogram
               </div>
               <div className="space-y-3">
                 {Object.entries(chart.series).map(([seriesName, values]) => (
@@ -474,41 +699,41 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                         className="overflow-visible"
                       >
                         {Array.isArray(values) && (values as number[]).map((value, index) => {
-                          const svgWidth = 260;
-                          const svgHeight = 65;
-                          const padding = 10;
-                          
-                          const x = padding + (index / ((values as number[]).length - 1)) * (svgWidth - 2 * padding);
-                          const y = svgHeight - padding - ((value / Math.max(...(values as number[]))) * (svgHeight - 2 * padding));
-                          
-                          const nextValue = (values as number[])[index + 1];
-                          const nextX = nextValue !== undefined ? 
-                            padding + ((index + 1) / ((values as number[]).length - 1)) * (svgWidth - 2 * padding) : x;
-                          const nextY = nextValue !== undefined ? 
-                            svgHeight - padding - ((nextValue / Math.max(...(values as number[]))) * (svgHeight - 2 * padding)) : y;
+                          const barWidth = Math.max(6, (240 / (values as number[]).length));
+                          const maxValue = Math.max(...(values as number[]));
+                          const barHeight = Math.max(3, (value / maxValue) * 50);
+                          const x = 20 + (index * barWidth);
+                          const y = 65 - barHeight;
                           
                           return (
                             <g key={index}>
-                              {index < (values as number[]).length - 1 && (
-                                <line
-                                  x1={x}
-                                  y1={y}
-                                  x2={nextX}
-                                  y2={nextY}
-                                  stroke="#8B5CF6"
-                                  strokeWidth="2"
-                                  fill="none"
-                                />
-                              )}
-                              <circle
-                                cx={x}
-                                cy={y}
-                                r="3"
-                                fill="#8B5CF6"
+                              {/* Histogram bar - no gaps */}
+                              <rect
+                                x={x}
+                                y={y}
+                                width={barWidth}
+                                height={barHeight}
+                                fill="#10B981"
+                                stroke="#059669"
+                                strokeWidth="0.5"
                               />
+                              {/* Value label */}
+                              <text
+                                x={x + barWidth/2}
+                                y={y - 2}
+                                textAnchor="middle"
+                                fontSize="6"
+                                fill="#374151"
+                                fontWeight="500"
+                              >
+                                {value}
+                              </text>
                             </g>
                           );
                         })}
+                        {/* Axes */}
+                        <line x1="15" y1="15" x2="15" y2="65" stroke="#E5E7EB" strokeWidth="1"/>
+                        <line x1="15" y1="65" x2="265" y2="65" stroke="#E5E7EB" strokeWidth="1"/>
                       </svg>
                       <div className="flex justify-between mt-2 px-2 overflow-x-auto">
                         {chart.x_axis?.map((label, index) => (
@@ -629,7 +854,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Get chart type label - updated to include all chart types
+  // Get chart type label - updated to include histogram
   const getChartTypeLabel = (chartType?: string) => {
     switch (chartType) {
       case 'donut': return 'Donut Chart';
@@ -637,7 +862,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
       case 'vertical-bar': return 'Vertical Bar';
       case 'pie': return 'Pie Chart';
       case 'gauge': return 'Circular Gauge';
-      case 'line': return 'Line Chart';
+      case 'histogram': return 'Histogram';
       case 'bar': return 'Bar Chart';
       default: return '';
     }
@@ -738,15 +963,15 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
       {/* Charts Grid - Mobile responsive */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-  {expandedCharts.map((chart) => (
-    <div
-      key={chart.id}
-      className="chart-container bg-white rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-200 p-4 sm:p-6 lg:p-8 relative flex flex-col"
-      data-chart-id={chart.id}
-      data-chart-type={chart.plot_type}
-      data-chart-title={chart.title}
-      style={{ minHeight: "400px" }}
-    >
+        {expandedCharts.map((chart) => (
+          <div
+            key={chart.id}
+            className="chart-container bg-white rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-200 p-4 sm:p-6 lg:p-8 relative flex flex-col"
+            data-chart-id={chart.id}
+            data-chart-type={chart.plot_type}
+            data-chart-title={chart.title}
+            style={{ minHeight: "400px" }}
+          >
             {/* Individual chart refresh button - only for original charts, mobile responsive */}
             {analyticsId && !mockMode && apiService && !chart.chartType && (
               <button
@@ -803,7 +1028,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
             {/* Chart Visualization Area - Mobile responsive */}
             <div
               className=" "
-              style={{ minHeight: "100xpx" }}
+              style={{ minHeight: "100px" }}
             >
               {renderChart(chart)}
             </div>
