@@ -281,8 +281,22 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
                 {video.processing_status}
               </span>
             </div>
-            {/* Metadata grid */}
-            <div className="grid grid-cols-1 gap-3 mb-6">
+            
+            
+           {/* Metadata grid */}
+            <div className="grid grid-cols-1 gap-1 mb-6">
+              {video.template_name &&
+                video.template_name !== "Unknown Template" && (
+                  <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm font-medium text-gray-600">
+                      Template
+                    </span>
+                    <span className="text-sm text-gray-900 font-medium">
+                      {video.template_name}
+                    </span>
+                  </div>
+                )}
+
               {video.profile_name &&
                 video.profile_name !== "Unknown Profile" && (
                   <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
@@ -328,13 +342,6 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
                   </div>
                 </div>
               )}
-              {/* 
-      {video.processing_duration && (
-        <div className="flex items-center justify-between py-2 px-3 bg-blue-50 rounded-lg">
-          <span className="text-sm font-medium text-blue-700">Duration</span>
-          <span className="text-sm text-blue-900 font-medium">{video.processing_duration}</span>
-        </div>
-      )} */}
             </div>
 
             {/* Footer with updated timestamp */}

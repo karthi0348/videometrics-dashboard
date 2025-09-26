@@ -62,7 +62,6 @@ interface User {
   email: string;
 }
 
-// Interface for VideoActivity to match VideoThumbnail component
 interface VideoActivity {
   id: number;
   analytics_id?: string;
@@ -227,16 +226,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     }
   };
 
-  const handleVideoClick = (activity: VideoActivity) => {
-    console.log("Video clicked:", activity);
-    // You can add navigation logic here, e.g., to play video or show details
-    if (onNavigate) {
-      onNavigate(
-        "videoDetails",
-        activity.analytics_id || activity.id.toString()
-      );
-    }
-  };
+  // const handleVideoClick = (activity: VideoActivity) => {
+  //   console.log("Video clicked:", activity);
+  //   // You can add navigation logic here, e.g., to play video or show details
+  //   if (onNavigate) {
+  //     onNavigate(
+  //       "videoDetails",
+  //       activity.analytics_id || activity.id.toString()
+  //     );
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -467,7 +466,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                   <VideoThumbnail
                     key={video.id}
                     activity={video}
-                    onClick={handleVideoClick}
+                    // onClick={handleVideoClick}
                   />
                 ))}
               </div>
@@ -511,7 +510,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 <TableHeader>
                   <TableRow className="bg-gradient-to-r from-purple-50/50 to-blue-50/50 hover:from-purple-100/50 hover:to-blue-100/50">
                     <TableHead className="font-semibold text-slate-700">
-                      Video Name
+                      Video No.
                     </TableHead>
                     <TableHead className="font-semibold text-slate-700">
                       Status

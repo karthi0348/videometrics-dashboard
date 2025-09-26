@@ -39,7 +39,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
   const [refreshingCharts, setRefreshingCharts] = useState<Set<string>>(
     new Set()
   );
-  // Remove the chart view modes state since we'll show all charts
 
   const loadChartsFromAPI = useCallback(async () => {
     if (!analyticsId || !apiService) {
@@ -157,7 +156,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Helper function to validate gauge chart data - FIXED
+  // Helper function to validate gauge chart data
   const isValidGaugeChartData = (chart: GeneratedChart): boolean => {
     return (
       chart.plot_type === "gauge" &&
@@ -168,7 +167,18 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Function to create multiple chart variations for pie data and gauge data
+  // Helper function to validate bar chart data
+  const isValidBarChartData = (chart: GeneratedChart): boolean => {
+    return (
+      chart.plot_type === "bar" &&
+      chart.series &&
+      chart.x_axis &&
+      Array.isArray(chart.x_axis) &&
+      chart.x_axis.length > 0
+    );
+  };
+
+  // Function to create multiple chart variations for pie data, gauge data, and bar data
   const createChartVariations = (chart: GeneratedChart): ExtendedChart[] => {
     // Create variations for pie charts
     if (isValidPieChartData(chart)) {
@@ -180,10 +190,10 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
       ];
     }
 
-    // Create variations for gauge charts - FIXED
+    // Create variations for gauge charts
     if (isValidGaugeChartData(chart)) {
       const maxValue = chart.styling?.max_value || 100;
-      const currentValue = chart.value as number; // Safe to cast since we validated it
+      const currentValue = chart.value as number;
       const remainingValue = Math.max(0, maxValue - currentValue);
       
       // Convert gauge to pie format for pie chart variation
@@ -198,43 +208,40 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
         } as ChartSeries
       };
 
-      // Convert gauge to line chart format (showing progress over time simulation)
-      const lineVersion: ExtendedChart = {
-        ...chart,
-        plot_type: "line" as const,
-        series: {
-          "Progress": [0, currentValue * 0.3, currentValue * 0.6, currentValue * 0.85, currentValue]
-        } as ChartSeries,
-        x_axis: ["Start", "25%", "50%", "75%", "Current"]
-      };
-
-      // Convert gauge to histogram format (showing distribution)
-      const histogramVersion: ExtendedChart = {
-        ...chart,
-        plot_type: "histogram" as const,
-        series: {
-          "Frequency": [2, 5, 8, 12, 15, 10, 6, 3]
-        } as ChartSeries,
-        x_axis: ["0-12.5", "12.5-25", "25-37.5", "37.5-50", "50-62.5", "62.5-75", "75-87.5", "87.5-100"]
-      };
-
-      // Convert gauge to waterfall format (showing breakdown)
-      const waterfallVersion: ExtendedChart = {
-        ...chart,
-        plot_type: "waterfall" as const,
-        series: {
-          "Values": [0, currentValue * 0.4, currentValue * 0.3, currentValue * 0.2, currentValue * 0.1]
-        } as ChartSeries,
-        x_axis: ["Base", "Component 1", "Component 2", "Component 3", "Total"]
-      };
-
       return [
         { ...chart, id: `${chart.id}_gauge`, title: `${chart.title} (Gauge)`, chartType: 'gauge' },
-        { ...pieVersion, id: `${chart.id}_pie`, title: `${chart.title} (Pie Chart)`, chartType: 'pie' },
-        { ...lineVersion, id: `${chart.id}_line`, title: `${chart.title} (Line Chart)`, chartType: 'line' },
-        { ...histogramVersion, id: `${chart.id}_histogram`, title: `${chart.title} (Histogram)`, chartType: 'histogram' },
-        { ...waterfallVersion, id: `${chart.id}_waterfall`, title: `${chart.title} (Waterfall)`, chartType: 'waterfall' }
+        { ...pieVersion, id: `${chart.id}_pie`, title: `${chart.title} (Pie Chart)`, chartType: 'pie' }
       ];
+    }
+
+    // Create variations for bar charts
+    if (isValidBarChartData(chart)) {
+      // Get the first series data for variations
+      const seriesEntries = Object.entries(chart.series);
+      if (seriesEntries.length > 0) {
+        const [seriesName, seriesData] = seriesEntries[0];
+        const values = Array.isArray(seriesData) ? seriesData : [];
+        
+        if (values.length > 0 && chart.x_axis) {
+          // Convert bar to pie format
+          const pieVersion: ExtendedChart = {
+            ...chart,
+            plot_type: "pie" as const,
+            series: {
+              category: chart.x_axis,
+              value: values,
+              label: chart.x_axis,
+              values: values
+            } as ChartSeries
+          };
+
+          return [
+            { ...chart, id: `${chart.id}_bar`, title: `${chart.title} (Bar Chart)`, chartType: 'bar' },
+            { ...chart, id: `${chart.id}_line`, title: `${chart.title} (Line Chart)`, chartType: 'line' },
+            { ...pieVersion, id: `${chart.id}_pie`, title: `${chart.title} (Pie Chart)`, chartType: 'pie' }
+          ];
+        }
+      }
     }
 
     return [chart]; // Return original chart if no variations available
@@ -243,64 +250,78 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
   // Function to render the appropriate chart based on chartType
   const renderChart = (chart: ExtendedChart) => {
     
-    // FIXED: Enhanced validation for gauge charts
-    if (chart.plot_type === "gauge" && chart.value !== undefined && chart.value !== null && typeof chart.value === "number" && !isNaN(chart.value)) {
+    // Handle gauge charts with responsive sizing
+    if (chart.plot_type === "gauge" && isValidGaugeChartData(chart)) {
       const chartType = chart.chartType || 'gauge';
       
       if (chartType === 'gauge') {
         return (
           <CircularGauge
-            value={chart.value}
+            value={chart.value as number}
             maxValue={chart.styling?.max_value || 100}
             title=""
             unit={chart.styling?.unit}
             status={chart.status}
-            size={140}
+            size={180} // Reduced from 140 for mobile
           />
         );
       }
     }
     
+    // Handle pie charts with responsive sizing
     if (isValidPieChartData(chart)) {
       const chartType = chart.chartType || 'pie';
       switch (chartType) {
         case 'donut':
-          return <DonutChart data={chart.series} status={chart.status} size={200} />;
+          return <DonutChart data={chart.series} status={chart.status} size={160} />;
         case 'horizontal-bar':
-          return <HorizontalBarChart data={chart.series} status={chart.status} size={280} />;
+          return <HorizontalBarChart data={chart.series} status={chart.status} size={220} />;
         case 'vertical-bar':
-          return <VerticalBarChart data={chart.series} status={chart.status} size={250} />;
+          return <VerticalBarChart data={chart.series} status={chart.status} size={200} />;
         case 'pie':
         default:
           return <PieChart data={chart.series} status={chart.status} size={180} />;
       }
     }
     
-    // Handle line charts, histograms, and waterfall charts
-    if (chart.series && chart.x_axis) {
-      const chartType = chart.chartType;
+    // Handle bar charts with mobile-responsive layout
+    if (chart.plot_type === "bar" && isValidBarChartData(chart)) {
+      const chartType = chart.chartType || 'bar';
       
       if (chartType === 'line') {
         return (
           <div className="w-full">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-center text-gray-600 mb-4 font-medium">
+            <div className="flex flex-col items-center p-6">
+              <div className="text-center text-gray-600 mb-3 sm:mb-4 font-medium text-sm sm:text-base">
                 Line Chart
               </div>
               <div className="space-y-3">
                 {Object.entries(chart.series).map(([seriesName, values]) => (
                   <div key={seriesName}>
-                    <div className="text-sm font-medium text-gray-700 mb-2">
+                    <div className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
                       {seriesName.charAt(0).toUpperCase() + seriesName.slice(1)}
                     </div>
-                    <div className="relative" style={{ height: "120px" }}>
-                      <svg width="100%" height="120" className="overflow-visible">
+                    <div className="relative w-full" style={{ height: "110px" }}>
+                      <svg 
+                        width="100%" 
+                        height="85" 
+                        viewBox="0 0 280 85" 
+                        preserveAspectRatio="xMidYMid meet"
+                        className="overflow-visible"
+                      >
                         {Array.isArray(values) && (values as number[]).map((value, index) => {
-                          const x = (index / ((values as number[]).length - 1)) * 280;
-                          const y = 100 - (value / Math.max(...(values as number[]))) * 80;
+                          const svgWidth = 260;
+                          const svgHeight = 65;
+                          const padding = 10;
+                          
+                          const x = padding + (index / ((values as number[]).length - 1)) * (svgWidth - 2 * padding);
+                          const y = svgHeight - padding - ((value / Math.max(...(values as number[]))) * (svgHeight - 2 * padding));
+                          
                           const nextValue = (values as number[])[index + 1];
-                          const nextX = ((index + 1) / ((values as number[]).length - 1)) * 280;
-                          const nextY = nextValue ? 100 - (nextValue / Math.max(...(values as number[]))) * 80 : y;
+                          const nextX = nextValue !== undefined ? 
+                            padding + ((index + 1) / ((values as number[]).length - 1)) * (svgWidth - 2 * padding) : x;
+                          const nextY = nextValue !== undefined ? 
+                            svgHeight - padding - ((nextValue / Math.max(...(values as number[]))) * (svgHeight - 2 * padding)) : y;
                           
                           return (
                             <g key={index}>
@@ -318,16 +339,20 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                               <circle
                                 cx={x}
                                 cy={y}
-                                r="4"
+                                r="3"
                                 fill="#8B5CF6"
                               />
                             </g>
                           );
                         })}
                       </svg>
-                      <div className="flex justify-between mt-2">
+                      <div className="flex justify-between mt-2 px-2 overflow-x-auto">
                         {chart.x_axis?.map((label, index) => (
-                          <span key={index} className="text-xs text-gray-600 text-center" style={{ fontSize: "10px" }}>
+                          <span 
+                            key={index} 
+                            className="text-xs text-gray-600 text-center flex-1 min-w-0" 
+                            style={{ fontSize: "9px", wordBreak: "break-word" }}
+                          >
                             {label}
                           </span>
                         ))}
@@ -341,156 +366,243 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
         );
       }
       
-      if (chartType === 'histogram') {
-        return (
-          <div className="w-full">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-center text-gray-600 mb-4 font-medium">
-                Histogram
-              </div>
-              <div className="space-y-3">
-                {Object.entries(chart.series).map(([seriesName, values]) => (
-                  <div key={seriesName}>
-                    <div className="text-sm font-medium text-gray-700 mb-2">
-                      {seriesName.charAt(0).toUpperCase() + seriesName.slice(1)}
-                    </div>
-                    <div className="flex items-end justify-center space-x-0.5" style={{ height: "100px", paddingBottom: "25px" }}>
-                      {Array.isArray(values) &&
-                        (values as number[]).map((value, index) => (
-                          <div
-                            key={index}
-                            className="flex flex-col items-center"
-                            style={{ width: "28px" }}
-                          >
-                            <div
-                              className="bg-blue-500 w-full"
-                              style={{
-                                height: `${(value / Math.max(...(values as number[]))) * 70}px`,
-                                minHeight: "4px",
-                              }}
-                            ></div>
-                            <span
-                              className="text-xs text-gray-600 mt-2 text-center leading-3"
-                              style={{
-                                fontSize: "8px",
-                                maxWidth: "32px",
-                                wordWrap: "break-word",
-                                lineHeight: "10px"
-                              }}
-                            >
-                              {chart.x_axis?.[index]}
-                            </span>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      }
-      
-      if (chartType === 'waterfall') {
-        return (
-          <div className="w-full">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-center text-gray-600 mb-4 font-medium">
-                Waterfall Chart
-              </div>
-              <div className="space-y-3">
-                {Object.entries(chart.series).map(([seriesName, values]) => (
-                  <div key={seriesName}>
-                    <div className="text-sm font-medium text-gray-700 mb-2">
-                      {seriesName.charAt(0).toUpperCase() + seriesName.slice(1)}
-                    </div>
-                    <div className="flex items-end justify-center space-x-2" style={{ height: "140px", paddingTop: "20px" }}>
-                      {Array.isArray(values) &&
-                        (values as number[]).map((value, index) => {
-                          const maxValue = Math.max(...(values as number[]));
-                          const isFirst = index === 0;
-                          const isLast = index === (values as number[]).length - 1;
-                          
-                          return (
-                            <div
-                              key={index}
-                              className="flex flex-col items-center"
-                              style={{ width: "50px" }}
-                            >
-                              <div
-                                className={`w-full ${
-                                  isFirst ? 'bg-gray-400' : 
-                                  isLast ? 'bg-green-500' : 
-                                  value > 0 ? 'bg-blue-500' : 'bg-red-500'
-                                }`}
-                                style={{
-                                  height: `${Math.abs(value) / maxValue * 90}px`,
-                                  minHeight: "8px"
-                                }}
-                              ></div>
-                              <span
-                                className="text-xs text-gray-600 mt-3 text-center"
-                                style={{
-                                  fontSize: "9px",
-                                  maxWidth: "55px",
-                                  lineHeight: "12px"
-                                }}
-                              >
-                                {chart.x_axis?.[index]}
-                              </span>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      }
-      
-      // Default series rendering for other chart types
+      // Default bar chart rendering with mobile responsiveness and PDF-friendly SVG
       return (
         <div className="w-full">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-center text-gray-600 mb-4 font-medium">
+          <div className="flex flex-col items-center p-6">
+            <div className="text-center text-gray-600 mb-3 sm:mb-4 font-medium text-sm sm:text-base">
+              Bar Chart
+            </div>
+            <div className="space-y-3">
+              {Object.entries(chart.series).map(([seriesName, values]) => (
+                <div key={seriesName}>
+                  <div className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                    {seriesName.charAt(0).toUpperCase() + seriesName.slice(1)}
+                  </div>
+                  <div className="w-full" style={{ height: "120px" }}>
+                    {Array.isArray(values) && values.length > 0 && (
+                      <svg 
+                        width="100%" 
+                        height="120" 
+                        viewBox="0 0 300 120" 
+                        preserveAspectRatio="xMidYMid meet"
+                        className="overflow-visible"
+                      >
+                        {/* Chart bars */}
+                        {(values as number[]).map((value, index) => {
+                          const barWidth = Math.min(25, (280 / (values as number[]).length) - 2);
+                          const maxValue = Math.max(...(values as number[]));
+                          const barHeight = Math.max(3, (value / maxValue) * 70);
+                          const x = 20 + (index * (280 / (values as number[]).length));
+                          const y = 90 - barHeight;
+                          
+                          return (
+                            <g key={index}>
+                              {/* Bar */}
+                              <rect
+                                x={x}
+                                y={y}
+                                width={barWidth}
+                                height={barHeight}
+                                fill="#3B82F6"
+                                rx="2"
+                                ry="2"
+                              />
+                              {/* Value label on top of bar */}
+                              <text
+                                x={x + barWidth/2}
+                                y={y - 3}
+                                textAnchor="middle"
+                                fontSize="8"
+                                fill="#374151"
+                                fontWeight="500"
+                              >
+                                {value}
+                              </text>
+                              {/* X-axis label */}
+                              <text
+                                x={x + barWidth/2}
+                                y={105}
+                                textAnchor="middle"
+                                fontSize="10"
+                                fill="#6B7280"
+                                transform={`rotate(-10, ${x + barWidth/2}, 105)`}
+                              >
+                                {chart.x_axis?.[index] || `Item ${index + 1}`}
+                              </text>
+                            </g>
+                          );
+                        })}
+                        {/* Y-axis line */}
+                        <line x1="15" y1="20" x2="15" y2="90" stroke="#E5E7EB" strokeWidth="1"/>
+                        {/* X-axis line */}
+                        <line x1="15" y1="90" x2="285" y2="90" stroke="#E5E7EB" strokeWidth="1"/>
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Handle series-based charts (line, histogram, waterfall, etc.) with mobile responsiveness
+    if (chart.series && chart.x_axis) {
+      const chartType = chart.chartType;
+      
+      if (chartType === 'line') {
+        return (
+          <div className="w-full">
+            <div className="p-4">
+              <div className="text-center text-gray-600 mb-3 sm:mb-4 font-medium text-sm sm:text-base">
+                Line Chart
+              </div>
+              <div className="space-y-3">
+                {Object.entries(chart.series).map(([seriesName, values]) => (
+                  <div key={seriesName}>
+                    <div className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      {seriesName.charAt(0).toUpperCase() + seriesName.slice(1)}
+                    </div>
+                    <div className="relative w-full" style={{ height: "110px" }}>
+                      <svg 
+                        width="100%" 
+                        height="85" 
+                        viewBox="0 0 280 85" 
+                        preserveAspectRatio="xMidYMid meet"
+                        className="overflow-visible"
+                      >
+                        {Array.isArray(values) && (values as number[]).map((value, index) => {
+                          const svgWidth = 260;
+                          const svgHeight = 65;
+                          const padding = 10;
+                          
+                          const x = padding + (index / ((values as number[]).length - 1)) * (svgWidth - 2 * padding);
+                          const y = svgHeight - padding - ((value / Math.max(...(values as number[]))) * (svgHeight - 2 * padding));
+                          
+                          const nextValue = (values as number[])[index + 1];
+                          const nextX = nextValue !== undefined ? 
+                            padding + ((index + 1) / ((values as number[]).length - 1)) * (svgWidth - 2 * padding) : x;
+                          const nextY = nextValue !== undefined ? 
+                            svgHeight - padding - ((nextValue / Math.max(...(values as number[]))) * (svgHeight - 2 * padding)) : y;
+                          
+                          return (
+                            <g key={index}>
+                              {index < (values as number[]).length - 1 && (
+                                <line
+                                  x1={x}
+                                  y1={y}
+                                  x2={nextX}
+                                  y2={nextY}
+                                  stroke="#8B5CF6"
+                                  strokeWidth="2"
+                                  fill="none"
+                                />
+                              )}
+                              <circle
+                                cx={x}
+                                cy={y}
+                                r="3"
+                                fill="#8B5CF6"
+                              />
+                            </g>
+                          );
+                        })}
+                      </svg>
+                      <div className="flex justify-between mt-2 px-2 overflow-x-auto">
+                        {chart.x_axis?.map((label, index) => (
+                          <span 
+                            key={index} 
+                            className="text-xs text-gray-600 text-center flex-1 min-w-0" 
+                            style={{ fontSize: "9px", wordBreak: "break-word" }}
+                          >
+                            {label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
+      
+      // Default series rendering for other chart types with mobile responsiveness and PDF-friendly SVG
+      return (
+        <div className="w-full">
+          <div className="p-4">
+            <div className="text-center text-gray-600 mb-3 sm:mb-4 font-medium text-sm sm:text-base">
               {chart.plot_type.charAt(0).toUpperCase() + chart.plot_type.slice(1)} Chart
             </div>
             <div className="space-y-3">
               {Object.entries(chart.series).map(([seriesName, values]) => (
                 <div key={seriesName}>
-                  <div className="text-sm font-medium text-gray-700 mb-2">
+                  <div className="text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     {seriesName.charAt(0).toUpperCase() + seriesName.slice(1)}
                   </div>
-                  <div className="flex items-end space-x-1" style={{ height: "80px" }}>
-                    {Array.isArray(values) &&
-                      (values as number[]).map((value, index) => (
-                        <div
-                          key={index}
-                          className="flex flex-col items-center flex-1"
-                          style={{ maxWidth: "40px" }}
-                        >
-                          <div
-                            className="bg-purple-500 w-full rounded-t"
-                            style={{
-                              height: `${(value / Math.max(...(values as number[]))) * 60}px`,
-                              minHeight: "4px",
-                            }}
-                          ></div>
-                          <span
-                            className="text-xs text-gray-600 mt-1 text-center"
-                            style={{
-                              transform: "rotate(-45deg)",
-                              transformOrigin: "center bottom",
-                              marginTop: "8px",
-                              fontSize: "10px",
-                            }}
-                          >
-                            {chart.x_axis?.[index]}
-                          </span>
-                        </div>
-                      ))}
+                  <div className="w-full" style={{ height: "100px" }}>
+                    {Array.isArray(values) && values.length > 0 && (
+                      <svg 
+                        width="100%" 
+                        height="100" 
+                        viewBox="0 0 300 100" 
+                        preserveAspectRatio="xMidYMid meet"
+                        className="overflow-visible"
+                      >
+                        {/* Chart bars */}
+                        {(values as number[]).map((value, index) => {
+                          const barWidth = Math.min(20, (260 / (values as number[]).length) - 2);
+                          const maxValue = Math.max(...(values as number[]));
+                          const barHeight = Math.max(3, (value / maxValue) * 50);
+                          const x = 20 + (index * (260 / (values as number[]).length));
+                          const y = 70 - barHeight;
+                          
+                          return (
+                            <g key={index}>
+                              {/* Bar */}
+                              <rect
+                                x={x}
+                                y={y}
+                                width={barWidth}
+                                height={barHeight}
+                                fill="#8B5CF6"
+                                rx="2"
+                                ry="2"
+                              />
+                              {/* Value label on top of bar */}
+                              <text
+                                x={x + barWidth/2}
+                                y={y - 2}
+                                textAnchor="middle"
+                                fontSize="7"
+                                fill="#374151"
+                                fontWeight="500"
+                              >
+                                {value}
+                              </text>
+                              {/* X-axis label */}
+                              <text
+                                x={x + barWidth/2}
+                                y={85}
+                                textAnchor="middle"
+                                fontSize="6"
+                                fill="#6B7280"
+                                transform={`rotate(-45, ${x + barWidth/2}, 85)`}
+                              >
+                                {chart.x_axis?.[index] || `Item ${index + 1}`}
+                              </text>
+                            </g>
+                          );
+                        })}
+                        {/* Y-axis line */}
+                        <line x1="15" y1="20" x2="15" y2="70" stroke="#E5E7EB" strokeWidth="1"/>
+                        {/* X-axis line */}
+                        <line x1="15" y1="70" x2="285" y2="70" stroke="#E5E7EB" strokeWidth="1"/>
+                      </svg>
+                    )}
                   </div>
                 </div>
               ))}
@@ -501,9 +613,9 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     }
     
     return (
-      <div className="w-full bg-gray-50 rounded-lg p-8 text-center">
+      <div className="w-full bg-gray-50 rounded-lg p-4 sm:p-8 text-center">
         <div className="text-gray-400 mb-2">
-          <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-8 h-8 sm:w-12 sm:h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -512,7 +624,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
             />
           </svg>
         </div>
-        <p className="text-gray-500 text-sm">Chart data not available</p>
+        <p className="text-gray-500 text-xs sm:text-sm">Chart data not available</p>
       </div>
     );
   };
@@ -526,8 +638,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
       case 'pie': return 'Pie Chart';
       case 'gauge': return 'Circular Gauge';
       case 'line': return 'Line Chart';
-      case 'histogram': return 'Histogram';
-      case 'waterfall': return 'Waterfall Chart';
+      case 'bar': return 'Bar Chart';
       default: return '';
     }
   };
@@ -537,10 +648,10 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
+      <div className="flex items-center justify-center p-8 sm:p-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading charts...</p>
+          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm sm:text-base">Loading charts...</p>
         </div>
       </div>
     );
@@ -548,18 +659,18 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
   if (error) {
     return (
-      <div className="px-6 pb-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
           <div className="flex">
-            <svg className="w-5 h-5 text-red-400 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
-            <div>
-              <h3 className="text-red-800 font-medium">Error Loading Charts</h3>
-              <p className="text-red-700 text-sm mt-1">{error}</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-red-800 font-medium text-sm sm:text-base">Error Loading Charts</h3>
+              <p className="text-red-700 text-xs sm:text-sm mt-1 break-words">{error}</p>
               <button
                 onClick={loadChartsFromAPI}
-                className="mt-3 inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm font-medium hover:bg-red-200 transition-colors"
+                className="mt-3 inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-md text-xs sm:text-sm font-medium hover:bg-red-200 transition-colors"
               >
                 Try Again
               </button>
@@ -572,9 +683,9 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
   if (!charts || charts.length === 0) {
     return (
-      <div className="text-center p-12 text-gray-500">
+      <div className="text-center p-8 sm:p-12 text-gray-500">
         <div className="mb-4">
-          <svg className="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -583,11 +694,11 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
             />
           </svg>
         </div>
-        <p>No charts available for this video.</p>
+        <p className="text-sm sm:text-base">No charts available for this video.</p>
         {analyticsId && !mockMode && apiService && (
           <button
             onClick={loadChartsFromAPI}
-            className="mt-4 inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded-md text-sm font-medium hover:bg-teal-600 transition-colors"
+            className="mt-4 inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded-md text-xs sm:text-sm font-medium hover:bg-teal-600 transition-colors"
           >
             Load Charts
           </button>
@@ -597,18 +708,18 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
   }
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
-      {/* Header with refresh button */}
-      <div className="flex justify-between items-center mb-8">
-        <h3 className="text-2xl font-semibold text-gray-900">Analytics Charts</h3>
+    <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
+      {/* Header with refresh button - Mobile responsive */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0">
+        <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">Analytics Charts</h3>
         {analyticsId && apiService && (
           <button
             onClick={handleRefreshAll}
             disabled={loading}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors disabled:opacity-50 border border-teal-200"
+            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors disabled:opacity-50 border border-teal-200 w-full sm:w-auto"
           >
             <svg
-              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+              className={`w-3 h-3 sm:w-4 sm:h-4 mr-2 ${loading ? "animate-spin" : ""}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -625,28 +736,27 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
         )}
       </div>
 
-      {/* Charts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-        {expandedCharts.map((chart) => (
-          // MAIN CHART CONTAINER - This is what gets captured for PDF
-          <div
-            key={chart.id}
-            className="chart-container bg-white rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-200 p-8 relative flex flex-col"
-            data-chart-id={chart.id}
-            data-chart-type={chart.plot_type}
-            data-chart-title={chart.title}
-            style={{ minHeight: "400px" }} // Increased minimum height
-          >
-            {/* Individual chart refresh button - only for original charts */}
+      {/* Charts Grid - Mobile responsive */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+  {expandedCharts.map((chart) => (
+    <div
+      key={chart.id}
+      className="chart-container bg-white rounded-xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-200 p-4 sm:p-6 lg:p-8 relative flex flex-col"
+      data-chart-id={chart.id}
+      data-chart-type={chart.plot_type}
+      data-chart-title={chart.title}
+      style={{ minHeight: "400px" }}
+    >
+            {/* Individual chart refresh button - only for original charts, mobile responsive */}
             {analyticsId && !mockMode && apiService && !chart.chartType && (
               <button
                 onClick={() => refreshChart(chart.id.replace(/_[^_]*$/, ''))} // Remove variation suffix
                 disabled={refreshingCharts.has(chart.id.replace(/_[^_]*$/, ''))}
-                className="absolute top-4 right-4 z-10 p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 bg-white rounded-full shadow-md border border-gray-200 hover:shadow-lg"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 bg-white rounded-full shadow-md border border-gray-200 hover:shadow-lg"
                 title="Refresh this chart"
               >
                 <svg
-                  className={`w-4 h-4 ${
+                  className={`w-3 h-3 sm:w-4 sm:h-4 ${
                     refreshingCharts.has(chart.id.replace(/_[^_]*$/, '')) ? "animate-spin" : ""
                   }`}
                   fill="none"
@@ -663,14 +773,14 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
               </button>
             )}
 
-            {/* Chart Title - Always present for PDF capture */}
-            <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 text-center mb-4">
+            {/* Chart Title - Mobile responsive */}
+            <div className="mb-4 sm:mb-6 lg:mb-8">
+              <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 text-center mb-3 sm:mb-4 leading-tight">
                 {chart.title}
               </h3>
-              <div className="flex justify-center items-center space-x-3">
+              <div className="flex flex-col sm:flex-row justify-center items-center space-y-2 sm:space-y-0 sm:space-x-3">
                 <span
-                  className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
+                  className={`inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold ${
                     chart.status === "excellent"
                       ? "bg-green-100 text-green-800 border-2 border-green-200"
                       : chart.status === "good"
@@ -683,29 +793,29 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                 
                 {/* Show chart type for variations */}
                 {chart.chartType && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                  <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
                     {getChartTypeLabel(chart.chartType)}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Chart Visualization Area */}
+            {/* Chart Visualization Area - Mobile responsive */}
             <div
-              className="chart-visualization mb-8 flex justify-center items-center flex-grow"
-              style={{ minHeight: "220px" }}
+              className=" "
+              style={{ minHeight: "100xpx" }}
             >
               {renderChart(chart)}
             </div>
 
-            {/* Data Summary for PDF capture */}
+            {/* Data Summary for PDF capture - Mobile responsive */}
             {(chart.value !== undefined || chart.series) && (
-              <div className="data-summary bg-gray-50 rounded-xl p-4 mb-6 text-sm border border-gray-100">
-                <div className="font-semibold text-gray-800 mb-3 flex items-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+              <div className="data-summary bg-gray-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-xs sm:text-sm border border-gray-100">
+                <div className="font-semibold text-gray-800 mb-2 sm:mb-3 flex items-center">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-blue-500 rounded-full mr-2"></div>
                   Data Summary
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5 sm:space-y-2">
                   {chart.value !== undefined && chart.value !== null && (
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600 font-medium">Value:</span>
@@ -720,8 +830,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                       <>
                         {chart.series.category.map((category, idx) => (
                           <div key={idx} className="flex justify-between items-center">
-                            <span className="text-gray-600 font-medium">{category}:</span>
-                            <span className="font-bold text-gray-900">
+                            <span className="text-gray-600 font-medium truncate mr-2">{category}:</span>
+                            <span className="font-bold text-gray-900 flex-shrink-0">
                               {Array.isArray(chart.series.value)
                                 ? chart.series.value[idx]
                                 : chart.series.value}
@@ -730,25 +840,45 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                         ))}
                       </>
                     )}
+                  {/* Handle bar chart series data */}
+                  {chart.plot_type === "bar" && chart.series && chart.x_axis && (
+                    <>
+                      {Object.entries(chart.series).map(([seriesName, seriesValues]) => (
+                        <div key={seriesName} className="space-y-1">
+                          <div className="text-gray-700 font-medium text-xs uppercase tracking-wide">
+                            {seriesName}
+                          </div>
+                          {Array.isArray(seriesValues) && chart.x_axis && seriesValues.map((value, idx) => (
+                            <div key={idx} className="flex justify-between items-center pl-2 sm:pl-4">
+                              <span className="text-gray-600 font-medium truncate mr-2">{chart.x_axis[idx]}:</span>
+                              <span className="font-bold text-gray-900 flex-shrink-0">
+                                {value} {chart.y_axis_label || ""}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* Insights section for each chart - Always at bottom */}
+            {/* Insights section for each chart - Mobile responsive */}
             {chart.insights && chart.insights.length > 0 && (
-              <div className="insights-section border-t border-gray-200 pt-6 mt-auto">
-                <h4 className="font-semibold text-gray-900 mb-4 text-base flex items-center">
-                  <span className="w-3 h-3 bg-teal-500 rounded-full mr-2"></span>
+              <div className="insights-section border-t border-gray-200 pt-6 ">
+                <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base flex items-center">
+                  <span className="w-2 h-2 sm:w-3 sm:h-3 bg-teal-500 rounded-full mr-2"></span>
                   Key Insights
                 </h4>
-                <ul className="space-y-3">
+                <ul className="space-y-2 sm:space-y-3">
                   {chart.insights.map((insight: string, index: number) => (
                     <li
                       key={index}
-                      className="text-gray-700 text-sm flex items-start leading-relaxed"
+                      className="text-gray-700 text-xs sm:text-sm flex items-start leading-relaxed"
                     >
-                      <span className="text-teal-500 mr-3 mt-1 text-lg">•</span>
-                      <span>{insight}</span>
+                      <span className="text-teal-500 mr-2 sm:mr-3 mt-0.5 sm:mt-1 text-base sm:text-lg flex-shrink-0">•</span>
+                      <span className="min-w-0">{insight}</span>
                     </li>
                   ))}
                 </ul>

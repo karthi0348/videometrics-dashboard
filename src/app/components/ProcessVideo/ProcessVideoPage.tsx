@@ -14,7 +14,7 @@ import {
   ProcessVideoPageProps,
   ProcessVideoRequest,
   ProcessVideoResponse,
-  ProcessedVideoNotification
+  ProcessedVideoNotification,
 } from "./types/types";
 
 // Shadcn UI components
@@ -22,7 +22,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, RefreshCw, Video, Clock, CheckCircle, XCircle, AlertCircle, Play, BarChart3, X, Eye } from "lucide-react";
+import {
+  Loader2,
+  RefreshCw,
+  Video,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Play,
+  BarChart3,
+  X,
+  Eye,
+} from "lucide-react";
 
 interface VideoItem {
   id: number;
@@ -156,8 +168,9 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
       const videosArray = Array.isArray(data)
         ? data
-        : (data as { videos?: VideoItem[]; results?: VideoItem[] })?.videos || 
-          (data as { videos?: VideoItem[]; results?: VideoItem[] })?.results || [];
+        : (data as { videos?: VideoItem[]; results?: VideoItem[] })?.videos ||
+          (data as { videos?: VideoItem[]; results?: VideoItem[] })?.results ||
+          [];
       setVideos(videosArray);
     } catch (err) {
       console.error("Error loading videos:", err);
@@ -166,48 +179,56 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
     }
   }, [videoApiService]);
 
-  // Load profiles from API
-  const loadProfiles = useCallback(async () => {
-    if (propProfiles && propProfiles.length > 0) {
-      setProfiles(propProfiles);
-      for (const profile of propProfiles) {
-        await loadSubProfiles(profile.id);
-      }
-      return;
-    }
+ // Load profiles from API
+const loadProfiles = useCallback(async () => {
+  if (propProfiles && propProfiles.length > 0) {
+    setProfiles(propProfiles);
+    return;
+  }
 
-    try {
-      console.log("Loading profiles...");
-      const data = await profileApiService.getAllProfile("");
-      console.log("Loaded profiles:", data);
+  try {
+    console.log("Loading profiles...");
+    const data = await profileApiService.getAllProfile("");
+    console.log("Loaded profiles:", data);
 
-      const profilesArray = Array.isArray(data)
-        ? data
-        : (data as { profiles?: ProfileApiResponse[]; results?: ProfileApiResponse[] })?.profiles || 
-          (data as { profiles?: ProfileApiResponse[]; results?: ProfileApiResponse[] })?.results || [];
+    const profilesArray = Array.isArray(data)
+      ? data
+      : (
+          data as {
+            profiles?: ProfileApiResponse[];
+            results?: ProfileApiResponse[];
+          }
+        )?.profiles ||
+        (
+          data as {
+            profiles?: ProfileApiResponse[];
+            results?: ProfileApiResponse[];
+          }
+        )?.results ||
+        [];
 
-      const transformedProfiles: Profile[] = profilesArray.map((item: ProfileApiResponse) => ({
+    const transformedProfiles: Profile[] = profilesArray.map(
+      (item: ProfileApiResponse) => ({
         id: Number(item.id) || Date.now(),
         name: item.profile_name || item.name || "Untitled Profile",
         email: item.email || "",
         tag: item.tag || "default",
         contact: item.contact || item.contact_person || "",
         description: item.description || "",
-      }));
+      })
+    );
 
-      setProfiles(transformedProfiles);
+    setProfiles(transformedProfiles);
+    // Removed the loadSubProfiles calls from here
+  } catch (err) {
+    console.error("Error loading profiles:", err);
+    setError(err instanceof Error ? err.message : "Failed to load profiles");
+    setProfiles([]);
+  }
+}, [propProfiles, profileApiService]); // Removed loadSubProfiles from dependencies
 
-      for (const profile of transformedProfiles) {
-        await loadSubProfiles(profile.id);
-      }
-    } catch (err) {
-      console.error("Error loading profiles:", err);
-      setError(err instanceof Error ? err.message : "Failed to load profiles");
-      setProfiles([]);
-    }
-  }, [propProfiles, profileApiService]);
-
-  const loadSubProfiles = useCallback(async (profileId: number) => {
+const loadSubProfiles = useCallback(
+  async (profileId: number) => {
     try {
       console.log(`Loading sub-profiles for profile ${profileId}...`);
       const data = await subProfileApiService.getAllSubProfile(profileId, "");
@@ -215,8 +236,19 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
       const subProfilesArray = Array.isArray(data)
         ? data
-        : (data as { subProfiles?: SubProfileApiResponse[]; results?: SubProfileApiResponse[] })?.subProfiles || 
-          (data as { subProfiles?: SubProfileApiResponse[]; results?: SubProfileApiResponse[] })?.results || [];
+        : (
+            data as {
+              subProfiles?: SubProfileApiResponse[];
+              results?: SubProfileApiResponse[];
+            }
+          )?.subProfiles ||
+          (
+            data as {
+              subProfiles?: SubProfileApiResponse[];
+              results?: SubProfileApiResponse[];
+            }
+          )?.results ||
+          [];
 
       const transformed: SubProfile[] = subProfilesArray.map(
         (item: SubProfileApiResponse, index: number) => ({
@@ -247,39 +279,59 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
         err
       );
     }
-  }, [subProfileApiService]);
+  },
+  [subProfileApiService]
+);
+
+// Add this new useEffect to load sub-profiles when profiles change
+useEffect(() => {
+  const loadAllSubProfiles = async () => {
+    if (profiles.length > 0) {
+      setSubProfiles([]); // Clear existing sub-profiles
+      for (const profile of profiles) {
+        await loadSubProfiles(profile.id);
+      }
+    }
+  };
+  
+  loadAllSubProfiles();
+}, [profiles, loadSubProfiles]); // Depend on profiles array and loadSubProfiles
 
   // New function to check processing queue and redirect if empty
   const checkProcessingQueue = useCallback(async (): Promise<boolean> => {
     try {
       console.log("Checking processing queue...");
-      
-      const response: AnalyticsListResponse = await apiService.getAnalyticsList({
-        page: 1,
-        page_size: 50,
-        sort_by: "created_at",
-        sort_order: "desc",
-        status: "processing",
-      });
+
+      const response: AnalyticsListResponse = await apiService.getAnalyticsList(
+        {
+          page: 1,
+          page_size: 50,
+          sort_by: "created_at",
+          sort_order: "desc",
+          status: "processing",
+        }
+      );
 
       console.log("Processing queue response:", response);
 
       // Check if the response data is empty
       const hasProcessingVideos = response?.data && response.data.length > 0;
-      
+
       if (!hasProcessingVideos) {
         console.log("No videos in processing queue - triggering redirect");
-        
+
         setProcessingQueue([]);
-        
+
         // Trigger redirect to next page
         if (onRedirectToNextPage) {
           onRedirectToNextPage();
         } else {
           // Fallback redirect logic if no callback provided
-          console.log("No redirect callback provided, implement fallback redirect here");
+          console.log(
+            "No redirect callback provided, implement fallback redirect here"
+          );
         }
-        
+
         return true; // Indicates redirect was triggered
       }
 
@@ -318,20 +370,24 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
 
           console.log(`Checking status for video UUID: ${video.uuid}`);
 
-          const response: AnalyticsListResponse = await apiService.getAnalyticsList({
-            page: 1,
-            page_size: 50,
-            sort_by: "updated_at",
-            sort_order: "desc",
-            status: "processing",
-          });
+          const response: AnalyticsListResponse =
+            await apiService.getAnalyticsList({
+              page: 1,
+              page_size: 50,
+              sort_by: "updated_at",
+              sort_order: "desc",
+              status: "processing",
+            });
 
           console.log("Analytics response for UUID check:", response);
 
           if (response?.data?.length > 0) {
             console.log(`Looking for UUID: ${video.uuid}`);
-            console.log(`Available UUIDs:`, response.data.map(v => v.uuid || v.analytics_id));
-            
+            console.log(
+              `Available UUIDs:`,
+              response.data.map((v) => v.uuid || v.analytics_id)
+            );
+
             const matchingVideo = response.data.find(
               (analyticsVideo: AnalyticsListItem) =>
                 analyticsVideo.uuid === video.uuid ||
@@ -343,7 +399,8 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
               console.log(`Found matching video:`, matchingVideo);
 
               // Check both processing_status and status fields
-              const status = matchingVideo.processing_status || matchingVideo.status;
+              const status =
+                matchingVideo.processing_status || matchingVideo.status;
 
               if (
                 status === "completed" ||
@@ -354,7 +411,9 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                   uuid: video.uuid,
                   video_name: video.video_name,
                   status: status as "completed" | "failed",
-                  error_message: matchingVideo.error_message ? String(matchingVideo.error_message) : "",
+                  error_message: matchingVideo.error_message
+                    ? String(matchingVideo.error_message)
+                    : "",
                   videoData: matchingVideo as any, // Cast to maintain compatibility
                 };
               } else {
@@ -389,7 +448,10 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
           }
           return null;
         } catch (statusError) {
-          console.error(`Error checking status for ${video.uuid}:`, statusError);
+          console.error(
+            `Error checking status for ${video.uuid}:`,
+            statusError
+          );
 
           const typedError = statusError as ErrorResponse;
           if (typedError?.response?.status === 404) {
@@ -469,7 +531,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
     };
 
     initialQueueCheck();
-  }, [loading, checkProcessingQueue]);
+  }, [loading]);
 
   // Start status polling when there are videos in queue
   useEffect(() => {
@@ -513,7 +575,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
     };
 
     loadAllData();
-  }, [loadVideos, loadProfiles]);
+  }, []);
 
   // Updated handleProcessVideo function
   const handleProcessVideo = async (
@@ -540,7 +602,9 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
       console.log("Process video response:", response);
 
       // Extract the actual response data (API returns response wrapped in axios response)
-      const responseData: ProcessVideoResponse = (response as { data?: ProcessVideoResponse })?.data || response as ProcessVideoResponse;
+      const responseData: ProcessVideoResponse =
+        (response as { data?: ProcessVideoResponse })?.data ||
+        (response as ProcessVideoResponse);
 
       // Validate that we received a proper UUID
       if (!responseData.uuid) {
@@ -561,6 +625,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
         selectedVideo?.video_name ||
         selectedVideo?.name ||
         selectedVideo?.title ||
+        payload.video_name || 
         payload.video_url;
 
       const processingVideo: ExtendedProcessingVideo = {
@@ -744,21 +809,38 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
               { step: 1, title: "Select Video", active: true },
               { step: 2, title: "Select Analytics", active: true },
               { step: 3, title: "Process", active: true },
-              { step: 4, title: "View Results", active: false, completed: false }
+              {
+                step: 4,
+                title: "View Results",
+                active: false,
+                completed: false,
+              },
             ].map((item, index) => (
               <div key={item.step} className="flex items-center min-w-0">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold flex-shrink-0 transition-all duration-300 ${
-                  item.active 
-                    ? "bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg" 
-                    : item.completed
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-300 text-gray-600"
-                }`}>
-                  {item.completed ? <CheckCircle className="w-5 h-5" /> : item.step}
+                <div
+                  className={`flex items-center justify-center w-10 h-10 rounded-full text-sm font-semibold flex-shrink-0 transition-all duration-300 ${
+                    item.active
+                      ? "bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg"
+                      : item.completed
+                      ? "bg-green-500 text-white"
+                      : "bg-gray-300 text-gray-600"
+                  }`}
+                >
+                  {item.completed ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : (
+                    item.step
+                  )}
                 </div>
-                <span className={`ml-3 text-sm font-medium truncate transition-colors ${
-                  item.active ? "text-violet-600" : item.completed ? "text-green-600" : "text-gray-500"
-                }`}>
+                <span
+                  className={`ml-3 text-sm font-medium truncate transition-colors ${
+                    item.active
+                      ? "text-violet-600"
+                      : item.completed
+                      ? "text-green-600"
+                      : "text-gray-500"
+                  }`}
+                >
                   {item.title}
                 </span>
                 {index < 3 && (
@@ -776,13 +858,18 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
           {success && (
             <Alert className="mb-4 backdrop-blur-sm bg-emerald-50/80 border-emerald-200/50">
               <CheckCircle className="h-4 w-4 text-emerald-600" />
-              <AlertDescription className="text-emerald-800" dangerouslySetInnerHTML={{ __html: success }} />
+              <AlertDescription
+                className="text-emerald-800"
+                dangerouslySetInnerHTML={{ __html: success }}
+              />
             </Alert>
           )}
           {error && (
             <Alert className="mb-4 backdrop-blur-sm bg-red-50/80 border-red-200/50">
               <AlertCircle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">{error}</AlertDescription>
+              <AlertDescription className="text-red-800">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
         </div>
@@ -793,11 +880,14 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="space-y-3">
             {completedVideos.map((video) => (
-              <Card key={video.uuid} className={`backdrop-blur-sm border-white/30 ${
-                video.status === "completed"
-                  ? "bg-emerald-50/80 border-emerald-200/50"
-                  : "bg-red-50/80 border-red-200/50"
-              }`}>
+              <Card
+                key={video.uuid}
+                className={`backdrop-blur-sm border-white/30 ${
+                  video.status === "completed"
+                    ? "bg-emerald-50/80 border-emerald-200/50"
+                    : "bg-red-50/80 border-red-200/50"
+                }`}
+              >
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                     <div className="flex items-start sm:items-center">
@@ -806,11 +896,19 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                       ) : (
                         <XCircle className="w-5 h-5 mr-3 mt-0.5 sm:mt-0 text-red-500 flex-shrink-0" />
                       )}
-                      <div className={`min-w-0 flex-1 ${
-                        video.status === "completed" ? "text-emerald-800" : "text-red-800"
-                      }`}>
+                      <div
+                        className={`min-w-0 flex-1 ${
+                          video.status === "completed"
+                            ? "text-emerald-800"
+                            : "text-red-800"
+                        }`}
+                      >
                         <div className="font-semibold truncate">
-                          Video "{video.video_name}" {video.status === "completed" ? "completed" : "failed"} processing!
+                          Video "{video.video_name}"{" "}
+                          {video.status === "completed"
+                            ? "completed"
+                            : "failed"}{" "}
+                          processing!
                         </div>
                         {video.status === "completed" && (
                           <p className="text-sm mt-1 opacity-80">
@@ -880,10 +978,14 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                     </h2>
                     <div className="flex items-center gap-2 mt-1">
                       <p className="text-sm text-gray-600/80">
-                        Videos currently being processed ({processingQueue.length})
+                        Videos currently being processed (
+                        {processingQueue.length})
                       </p>
                       {processingQueue.length > 0 && pollingInterval && (
-                        <Badge variant="outline" className="bg-blue-500/10 text-blue-700 border-blue-200 text-xs">
+                        <Badge
+                          variant="outline"
+                          className="bg-blue-500/10 text-blue-700 border-blue-200 text-xs"
+                        >
                           Auto-updating
                         </Badge>
                       )}
@@ -906,7 +1008,10 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                 ) : (
                   <div className="space-y-4 max-h-96 overflow-y-auto">
                     {processingQueue.map((video) => (
-                      <Card key={video.uuid} className="backdrop-blur-sm bg-white/60 border-white/40">
+                      <Card
+                        key={video.uuid}
+                        className="backdrop-blur-sm bg-white/60 border-white/40"
+                      >
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center min-w-0 flex-1">
@@ -915,19 +1020,26 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                                 {video.video_name}
                               </span>
                             </div>
-                            <Badge variant="outline" className={getPriorityColor(video.priority)}>
+                            <Badge
+                              variant="outline"
+                              className={getPriorityColor(video.priority)}
+                            >
                               {video.priority}
                             </Badge>
                           </div>
-                          
+
                           <div className="text-xs text-gray-600/80 space-y-1 mb-4">
                             <div className="flex justify-between">
                               <span>Status:</span>
-                              <span className="font-medium">{video.status}</span>
+                              <span className="font-medium">
+                                {video.status}
+                              </span>
                             </div>
                             <div className="flex justify-between">
                               <span>ETA:</span>
-                              <span className="font-medium">{video.estimated_completion}</span>
+                              <span className="font-medium">
+                                {video.estimated_completion}
+                              </span>
                             </div>
                             <div className="break-all">
                               <span>UUID: </span>
@@ -936,7 +1048,7 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
                               </code>
                             </div>
                           </div>
-                          
+
                           <div className="flex gap-2">
                             <Button
                               onClick={() => handleViewAnalytics(video.uuid)}

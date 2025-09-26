@@ -1,5 +1,60 @@
 import React, { useState, useEffect } from "react";
 
+// Icon components as inline SVG
+const ChevronDownIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+  </svg>
+);
+
+const ExclamationTriangleIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+  </svg>
+);
+
+const XMarkIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+const LightBulbIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+  </svg>
+);
+
+const DocumentTextIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+const ClockIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const TagIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+  </svg>
+);
+
+const ArrowPathIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+  </svg>
+);
+
+const ChartBarIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
 interface GeneratedSummary {
   format: string;
   content: string;
@@ -13,7 +68,7 @@ interface GeneratedSummary {
 
 interface SummaryViewProps {
   summary?: GeneratedSummary;
-  insights?: any; // Add insights prop
+  insights?: any;
   analyticsId?: string | null;
   apiService?: any;
   mockMode?: boolean;
@@ -21,7 +76,7 @@ interface SummaryViewProps {
 
 const SummaryView: React.FC<SummaryViewProps> = ({
   summary: propSummary,
-  insights: propInsights, // Add insights prop
+  insights: propInsights,
   analyticsId,
   apiService,
   mockMode = false,
@@ -30,15 +85,14 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   const [summary, setSummary] = useState<GeneratedSummary | null>(
     propSummary || null
   );
-  const [insights, setInsights] = useState<any>(propInsights || null); // Add insights state
+  const [insights, setInsights] = useState<any>(propInsights || null);
   const [error, setError] = useState<string>("");
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    // If we don't have a summary prop but have analyticsId, fetch it
     if (!propSummary && analyticsId && !mockMode) {
       loadSummary();
     }
-    // Set insights if provided via props
     if (propInsights) {
       setInsights(propInsights);
     }
@@ -55,8 +109,6 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
     try {
       console.log("Fetching summary for analytics ID:", analyticsId);
-
-      // Use the new getAnalyticsSummary method instead of getSummary
       const response = await apiService.getAnalyticsSummary(analyticsId);
 
       let data;
@@ -90,31 +142,54 @@ const SummaryView: React.FC<SummaryViewProps> = ({
     }
   };
 
+  const toggleSection = (index: number) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedSections(newExpanded);
+  };
+
   const formatContent = (content: string) => {
-    // Split content by double newlines to create paragraphs
     const paragraphs = content.split("\n\n").filter((p) => p.trim());
 
     return paragraphs.map((paragraph, index) => {
-      // Handle headers (text that starts with **)
       if (paragraph.startsWith("**") && paragraph.includes("**\n")) {
         const [header, ...rest] = paragraph.split("\n");
         const headerText = header.replace(/\*\*/g, "");
         const content = rest.join("\n");
+        const isExpanded = expandedSections.has(index);
 
         return (
-          <div key={index} className="mb-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3 border-b border-gray-200 pb-2">
-              {headerText}
-            </h4>
-            <div className="text-gray-700 leading-relaxed">
-              {formatParagraphContent(content)}
-            </div>
+          <div key={index} className="mb-8 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <button
+              onClick={() => toggleSection(index)}
+              className="w-full px-6 py-4 bg-gradient-to-r from-slate-50 to-gray-50 hover:from-slate-100 hover:to-gray-100 transition-all duration-200 flex items-center justify-between text-left group"
+            >
+              <h4 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-200">
+                {headerText}
+              </h4>
+              <ChevronDownIcon 
+                className={`w-5 h-5 text-gray-500 group-hover:text-blue-600 transition-all duration-200 ${
+                  isExpanded ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
+            {isExpanded && (
+              <div className="px-6 py-4 bg-white border-t border-gray-50">
+                <div className="text-gray-700 leading-relaxed">
+                  {formatParagraphContent(content)}
+                </div>
+              </div>
+            )}
           </div>
         );
       }
 
       return (
-        <div key={index} className="mb-4 text-gray-700 leading-relaxed">
+        <div key={index} className="mb-6 text-gray-700 leading-relaxed bg-white rounded-lg p-4 shadow-sm border border-gray-50">
           {formatParagraphContent(paragraph)}
         </div>
       );
@@ -122,42 +197,43 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   };
 
   const formatParagraphContent = (content: string) => {
-    // Handle bold text and bullet points
     const lines = content.split("\n");
 
     return lines.map((line, index) => {
       if (line.trim().match(/^\d+\./)) {
-        // Numbered list item
         const parts = line.split("**");
         return (
-          <div key={index} className="mb-2 ml-4">
-            {parts.map((part, partIndex) =>
-              partIndex % 2 === 1 ? (
-                <strong key={partIndex} className="font-semibold text-gray-900">
-                  {part}
-                </strong>
-              ) : (
-                <span key={partIndex}>{part}</span>
-              )
-            )}
+          <div key={index} className="mb-3 ml-4 flex items-start">
+            <div className="w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5 flex-shrink-0">
+              {line.match(/^\d+/)?.[0]}
+            </div>
+            <div className="flex-1">
+              {parts.map((part, partIndex) =>
+                partIndex % 2 === 1 ? (
+                  <strong key={partIndex} className="font-semibold text-gray-900">
+                    {part}
+                  </strong>
+                ) : (
+                  <span key={partIndex}>{part.replace(/^\d+\.\s*/, '')}</span>
+                )
+              )}
+            </div>
           </div>
         );
       } else if (line.trim().startsWith("*   ")) {
-        // Bullet point
         return (
-          <div key={index} className="mb-2 ml-6 flex">
-            <span className="text-gray-400 mr-2">•</span>
-            <span>{line.replace("*   ", "")}</span>
+          <div key={index} className="mb-2 ml-6 flex items-start">
+            <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full mr-3 mt-2 flex-shrink-0"></div>
+            <span className="flex-1">{line.replace("*   ", "")}</span>
           </div>
         );
       } else {
-        // Regular text with potential bold formatting
         const parts = line.split("**");
         return (
           <div key={index} className={line.trim() ? "mb-2" : "mb-1"}>
             {parts.map((part, partIndex) =>
               partIndex % 2 === 1 ? (
-                <strong key={partIndex} className="font-semibold text-gray-900">
+                <strong key={partIndex} className="font-semibold text-gray-900 bg-yellow-50 px-1 py-0.5 rounded">
                   {part}
                 </strong>
               ) : (
@@ -178,11 +254,17 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading summary...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 p-4 sm:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-blue-200 rounded-full animate-spin border-t-blue-600"></div>
+              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent rounded-full animate-ping border-t-blue-400"></div>
+            </div>
+            <div className="mt-6 text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Analysis</h3>
+              <p className="text-gray-600">Generating your summary...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -191,31 +273,28 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex">
-            <svg
-              className="w-5 h-5 text-red-400 mt-0.5 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-            <div>
-              <h3 className="text-red-800 font-medium">
-                Error Loading Summary
-              </h3>
-              <p className="text-red-700 text-sm mt-1">{error}</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg border border-red-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-red-50 to-pink-50 px-6 py-4 border-b border-red-100">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                  <XMarkIcon className="w-5 h-5 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-red-900">
+                    Unable to Load Summary
+                  </h3>
+                  <p className="text-red-700 text-sm mt-1">{error}</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6">
               <button
                 onClick={handleRefresh}
-                className="mt-3 inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-md text-sm font-medium hover:bg-red-200 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg font-medium hover:from-red-700 hover:to-pink-700 transition-all duration-200 shadow-sm hover:shadow-md"
               >
+                <ArrowPathIcon className="w-4 h-4 mr-2" />
                 Try Again
               </button>
             </div>
@@ -227,29 +306,23 @@ const SummaryView: React.FC<SummaryViewProps> = ({
 
   if (!summary) {
     return (
-      <div className="p-6">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex">
-            <svg
-              className="w-5 h-5 text-yellow-400 mt-0.5 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
-            <div>
-              <h3 className="text-yellow-800 font-medium">
-                No Summary Available
-              </h3>
-              <p className="text-yellow-700 text-sm mt-1">
-                No summary data is available for this analysis.
-              </p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg border border-yellow-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 px-6 py-4 border-b border-yellow-100">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-yellow-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-yellow-900">
+                    No Summary Available
+                  </h3>
+                  <p className="text-yellow-700 text-sm mt-1">
+                    No summary data is available for this analysis.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -258,116 +331,140 @@ const SummaryView: React.FC<SummaryViewProps> = ({
   }
 
   return (
-    <div className="p-6">
-      {/* Summary Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold text-gray-900">
-            Analysis Summary
-          </h3>
-          <div className="flex items-center space-x-4 text-sm text-gray-500">
-            <span>Type: {summary.summary_type}</span>
-            <span>Words: {summary.word_count}</span>
-            <span>
-              Generated: {new Date(summary.generated_at).toLocaleDateString()}
-            </span>
-          </div>
-        </div>
-
-        {/* Highlighted Metrics */}
-        {summary.metrics_highlighted &&
-          summary.metrics_highlighted.length > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">
-                Key Metrics Highlighted
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {summary.metrics_highlighted.map((metric, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                  >
-                    {metric
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-      </div>
-
-      {/* Add this section after the Summary Header and before Summary Content */}
-      {/* Insights Section */}
-      {insights && (
-        <div className="mb-6">
-          <div className="bg-gradient-to-r from-teal-50 to-blue-50 border border-teal-200 rounded-lg p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <svg
-                className="w-5 h-5 mr-2 text-teal-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                />
-              </svg>
-              Analytics Insights
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(insights).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="bg-white rounded-lg p-4 border border-gray-200"
-                >
-                  <div className="text-sm font-medium text-gray-600 mb-1">
-                    {key
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-700 via-blue-700 to-purple-600 px-6 sm:px-8 py-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-4 sm:mb-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center">
+                    <div className="w-8 h-8 mr-3" />
+                    Analysis Summary
+                  </h1>
+               
+                </div>
+                <div className="flex flex-wrap gap-3 text-sm">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 text-white flex items-center">
+                    <TagIcon className="w-4 h-4 mr-1" />
+                    {summary.summary_type}
                   </div>
-                  <div className="text-lg font-semibold text-gray-900">
-                    {typeof value === "object"
-                      ? JSON.stringify(value)
-                      : String(value)}
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 text-white flex items-center">
+                    <DocumentTextIcon className="w-4 h-4 mr-1" />
+                    {summary.word_count.toLocaleString()} words
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 text-white flex items-center">
+                    <ClockIcon className="w-4 h-4 mr-1" />
+                    {new Date(summary.generated_at).toLocaleDateString()}
                   </div>
                 </div>
-              ))}
+              </div>
+            </div>
+
+            {/* Highlighted Metrics */}
+            {summary.metrics_highlighted && summary.metrics_highlighted.length > 0 && (
+              <div className="px-6 sm:px-8 py-6 bg-gradient-to-r from-blue-50 to-teal-50 border-b border-gray-100">
+                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <ChartBarIcon className="w-5 h-5 mr-2 text-blue-600" />
+                  Key Metrics Highlighted
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {summary.metrics_highlighted.map((metric, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-teal-100 text-blue-800 border border-blue-200 hover:from-blue-200 hover:to-teal-200 transition-all duration-200"
+                    >
+                      {metric
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Insights Section */}
+        {insights && (
+          <div className="mb-8">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-teal-50 via-blue-50 to-indigo-50 px-6 sm:px-8 py-6 border-b border-gray-100">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                  <LightBulbIcon className="w-6 h-6 mr-3 text-teal-600" />
+                  Analytics Insights
+                </h2>
+                <p className="text-gray-600 mt-1">Key performance indicators and metrics</p>
+              </div>
+              <div className="p-6 sm:p-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {Object.entries(insights).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-4 border border-gray-100 hover:shadow-md transition-all duration-200 hover:scale-105"
+                    >
+                      <div className="text-sm font-medium text-gray-600 mb-2">
+                        {key
+                          .replace(/_/g, " ")
+                          .replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </div>
+                      <div className="text-xl font-bold text-gray-900 truncate">
+                        {typeof value === "object"
+                          ? JSON.stringify(value)
+                          : String(value)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Summary Content */}
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-gray-50 to-slate-50 px-6 sm:px-8 py-4 border-b border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Detailed Analysis
+              </h2>
+            </div>
+            <div className="p-6 sm:p-8">
+              <div className="space-y-6">
+                {formatContent(summary.content)}
+              </div>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Summary Content */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="prose prose-gray max-w-none">
-          {formatContent(summary.content)}
-        </div>
-      </div>
-
-      {/* Summary Sections Navigation */}
-      {summary.sections && summary.sections.length > 0 && (
-        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-gray-900 mb-3">
-            Report Sections
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {summary.sections.map((section, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
-              >
-                {section
-                  .replace(/_/g, " ")
-                  .replace(/\b\w/g, (l) => l.toUpperCase())}
-              </span>
-            ))}
+        {/* Summary Sections */}
+        {summary.sections && summary.sections.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="bg-gradient-to-r from-slate-50 to-gray-50 px-6 sm:px-8 py-4 border-b border-gray-100">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Report Sections
+                </h2>
+              </div>
+              <div className="p-6 sm:p-8">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                  {summary.sections.map((section, index) => (
+                    <div
+                      key={index}
+                      className="bg-gradient-to-r from-gray-100 to-slate-100 text-gray-700 rounded-lg px-3 py-2 text-sm font-medium text-center hover:from-blue-100 hover:to-teal-100 hover:text-blue-800 transition-all duration-200 cursor-pointer"
+                    >
+                      {section
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

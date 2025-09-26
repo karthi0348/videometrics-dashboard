@@ -396,7 +396,7 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
               id: video.id,
               analytics_id: video.analytics_id,
               video_title:
-                video.template_name || video.video_title || "Untitled Video",
+                video.video_name || video.video_title || "Untitled Video",
               processing_status: video.status,
               confidence_score: parseFloat(
                 video.confidence_score?.toString() || "0"

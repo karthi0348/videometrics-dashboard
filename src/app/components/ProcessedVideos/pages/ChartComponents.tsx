@@ -96,7 +96,7 @@ export const PieChart: React.FC<{
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+    <div className=" ">
       <h3 className="font-medium text-gray-900 mb-4 text-center">{title}</h3>
       <div className="flex flex-col items-center">
         <div style={{ width: "100%", height: "250px" }}>
@@ -310,7 +310,7 @@ export const BarChartComponent: React.FC<{
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+    <div className=" ">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium text-gray-900">{title}</h3>
         <div
@@ -409,7 +409,7 @@ export const LineChartComponent: React.FC<{
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+    <div className=" ">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium text-gray-900">{title}</h3>
         <div
@@ -511,7 +511,7 @@ export const AreaChartComponent: React.FC<{
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+    <div className=" ">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-medium text-gray-900">{title}</h3>
         <div

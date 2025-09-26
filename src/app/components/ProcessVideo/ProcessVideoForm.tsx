@@ -141,6 +141,9 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
       return;
     }
 
+    // Get video name with fallback to "Unnamed Video"
+    const videoName = video.video_name || video.name || "Unnamed Video";
+
     setError("");
 
     try {
@@ -169,6 +172,7 @@ const ProcessVideoForm: React.FC<ProcessVideoFormProps> = ({
 
       const payload: ProcessVideoRequest = {
         video_url: videoUrl,
+        video_name: videoName, // Added video_name field
         profile_id: profileId,
         sub_profile_id: subProfileId,
         template_id: templateId,

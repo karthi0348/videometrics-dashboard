@@ -71,6 +71,7 @@ export interface CustomParameters {
 
 export interface ProcessVideoRequest {
   video_url: string;
+  video_name: string;
   profile_id: number;
   sub_profile_id: number;
   template_id: number;

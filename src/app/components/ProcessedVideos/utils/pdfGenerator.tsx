@@ -147,7 +147,7 @@ const captureWithHtml2Canvas = async (element: HTMLElement, chartId: string): Pr
     if (!window.html2canvas) return null;
     
     const canvas = await window.html2canvas(element, {
-      scale: 2,
+      scale: 3,
       useCORS: true,
       allowTaint: true,
       backgroundColor: "#ffffff",
@@ -167,7 +167,7 @@ const captureWithHtml2Canvas = async (element: HTMLElement, chartId: string): Pr
     });
     
     if (canvas && canvas.width > 0 && canvas.height > 0) {
-      return canvas.toDataURL("image/png", 0.9);
+      return canvas.toDataURL("image/png", 1.0);
     }
   } catch (error) {
     console.warn(`html2canvas capture failed for ${chartId}:`, error);
@@ -185,7 +185,7 @@ const captureCanvasElements = async (element: HTMLElement, chartId: string): Pro
     for (const canvas of canvasElements) {
       const canvasElement = canvas as HTMLCanvasElement;
       if (canvasElement.width > 0 && canvasElement.height > 0) {
-        return canvasElement.toDataURL("image/png", 0.9);
+        return canvasElement.toDataURL("image/png", 1.0);
       }
     }
   } catch (error) {
@@ -212,8 +212,8 @@ const captureSVGElements = async (element: HTMLElement, chartId: string): Promis
         
         if (!ctx) continue;
         
-        canvas.width = rect.width * 2; // High DPI
-        canvas.height = rect.height * 2;
+        canvas.width = rect.width * 3; // High DPI
+        canvas.height = rect.height * 3;
         
         const img = new Image();
         const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
@@ -221,10 +221,10 @@ const captureSVGElements = async (element: HTMLElement, chartId: string): Promis
         
         return new Promise<string>((resolve, reject) => {
           img.onload = () => {
-            ctx.scale(2, 2);
+            ctx.scale(3, 3);
             ctx.drawImage(img, 0, 0);
             URL.revokeObjectURL(url);
-            resolve(canvas.toDataURL("image/png", 0.9));
+            resolve(canvas.toDataURL("image/png", 1.0));
           };
           img.onerror = () => {
             URL.revokeObjectURL(url);
