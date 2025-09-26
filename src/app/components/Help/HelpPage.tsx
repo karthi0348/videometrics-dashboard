@@ -78,7 +78,6 @@ const HelpPage: React.FC<HelpPageProps> = ({ onNavigate }) => {
             Our complete help center with tutorials, guides, and live support is coming soon
           </p>
           
-          {/* Progress Bar */}
           <div className="mb-6">
             <div className="flex justify-between items-center mb-4">
               <span className="text-sm font-semibold text-purple-700">Development Progress</span>
