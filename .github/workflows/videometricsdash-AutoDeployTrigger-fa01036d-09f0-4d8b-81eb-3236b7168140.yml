@@ -5,7 +5,7 @@ on:
   # Automatically trigger it when detected changes in repo
   push:
     branches: 
-      [ master ]
+      - master
     paths:
     - '**'
     - '.github/workflows/videometricsdash-AutoDeployTrigger-fa01036d-09f0-4d8b-81eb-3236b7168140.yml'
@@ -17,12 +17,12 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions: 
-      id-token: write #This is required for requesting the OIDC JWT Token
-      contents: read #Required when GH token is used to authenticate with private repo
+      id-token: write # This is required for requesting the OIDC JWT Token
+      contents: read # Required when GH token is used to authenticate with private repo
 
     steps:
       - name: Checkout to the branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Azure Login
         uses: azure/login@v2
@@ -35,15 +35,10 @@ jobs:
         uses: azure/container-apps-deploy-action@v2
         with:
           appSourcePath: ${{ github.workspace }}
-          _dockerfilePathKey_: _dockerfilePath_
-          _targetLabelKey_: _targetLabel_
+          dockerfilePath: Dockerfile
           registryUrl: videometricsdash.azurecr.io
           registryUsername: ${{ secrets.VIDEOMETRICSDASH_REGISTRY_USERNAME }}
           registryPassword: ${{ secrets.VIDEOMETRICSDASH_REGISTRY_PASSWORD }}
           containerAppName: videometricsdash
           resourceGroup: videometrics
           imageToBuild: videometricsdash.azurecr.io/videometricsdash:${{ github.sha }}
-          _buildArgumentsKey_: |
-            _buildArgumentsValues_
-
-
