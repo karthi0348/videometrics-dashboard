@@ -29,14 +29,25 @@ export default function RootLayout({
         <meta name="theme-color" content="#1976d2" />
       </head>
       <body className={`${inter.className} h-100`}>
-        {/* Client side auth handler */}
         <ClientAuthHandler />
-        <ToastContainer containerId={'TR'} />
-        <ToastContainer containerId={'BC'} />
+
+        <ToastContainer
+          position="top-right"  
+          autoClose={3000}      
+          hideProgressBar={false}
+          newestOnTop={true}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="colored"      
+        />
+
         <div id="root" className="h-100">
           {children}
         </div>
-        {/* Bootstrap JS for interactive components */}
+
         <script
           src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
           integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"

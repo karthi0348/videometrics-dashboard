@@ -4,43 +4,82 @@ import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import { Plus, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { Profile } from "@/app/types/profiles";
-import { CreateSubProfileAPIRequest } from "@/app/types/subprofiles";
 import YourProfiles from "@/app/components/Profiles/YourProfiles";
 import ProfileDetails from "@/app/components/Profiles/ProfileDetails";
 import SubProfiles from "@/app/components/Profiles/Subprofile/SubProfiles";
 import CreateProfile from "@/app/components/Profiles/CreateProfile";
-import { API_ENDPOINTS } from "../../config/api";
-import { SubProfileService } from "@/app/services/subprofile-service";
+import ProfileService from "../../../helpers/service/profile/profile-api-service";
 import { Button } from "@/components/ui/button";
+import { toast } from "react-toastify";
 
-interface ApiProfileResponse {
-  id?: string | number;
-  _id?: string | number;
-  name?: string;
-  email?: string;
-  tag?: string;
-  contact?: string;
-  contact_person?: string;
-  description?: string;
-  location?: string;
-  industry?: string;
-  business_type?: string;
-  businessType?: string;
-  contact_email?: string;
-  contactEmail?: string;
-  contactPerson?: string;
-  phone_number?: string;
-  phoneNumber?: string;
-  tags?: string[] | string;
-  status?: string;
-  created_at?: string;
-  created?: string;
-  updated_at?: string;
-  lastUpdated?: string;
-  [key: string]: unknown;
+interface DeleteConfirmModalProps {
+  isOpen: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  isDeleting?: boolean;
 }
 
-// Main page component - acts as the controller and state manager
+const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
+  isOpen,
+  onConfirm,
+  onCancel,
+  isDeleting = false,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+        onClick={onCancel}
+      />
+
+      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6 animate-in fade-in zoom-in duration-200">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+            <AlertCircle className="w-5 h-5 text-red-600" />
+          </div>
+
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Confirm Deletion
+            </h3>
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete this profile and all its
+              sub-profiles?
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-3 mt-6 justify-end">
+          <Button
+            variant="outline"
+            onClick={onCancel}
+            disabled={isDeleting}
+            className="border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="bg-red-600 hover:bg-red-700 text-white"
+          >
+            {isDeleting ? (
+              <>
+                <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                Deleting...
+              </>
+            ) : (
+              "Delete"
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ProfilesPage: React.FC = () => {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [activeView, setActiveView] = useState<
@@ -49,22 +88,42 @@ const ProfilesPage: React.FC = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const subProfileService = new SubProfileService();
+  // Delete confirmation modal state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [profileToDelete, setProfileToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Helper function to get the authentication headers
-  const getAuthHeaders = () => {
-    const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) {
-      throw new Error("Authentication token not found. Please log in.");
-    }
+  // Initialize service
+  const profileService = new ProfileService();
+
+  const transformApiResponseToProfile = (apiData: any): Profile => {
+    const profileId = apiData.id || apiData.uuid || 0;
+
     return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
+      id: Number(profileId),
+      name: apiData.profile_name || "",
+      email: apiData.contact_email || "",
+      tag:
+        Array.isArray(apiData.tags) && apiData.tags.length > 0
+          ? apiData.tags[0]
+          : "default",
+      contact: apiData.contact_person || "",
+      description: apiData.description || "",
+      location: apiData.location || "",
+      industry: apiData.industry_sector || "",
+      businessType: apiData.business_type || "",
+      contactEmail: apiData.contact_email || "",
+      contactPerson: apiData.contact_person || "",
+      phoneNumber: apiData.phone_number || "",
+      tags: Array.isArray(apiData.tags) ? apiData.tags : [],
+      status: apiData.is_active ? "Active" : "Inactive",
+      created: apiData.created_at || new Date().toISOString(),
+      lastUpdated: apiData.updated_at || new Date().toISOString(),
     };
   };
 
-  // Load profiles on component mount
   useEffect(() => {
     loadProfiles();
   }, []);
@@ -74,60 +133,24 @@ const ProfilesPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(API_ENDPOINTS.LIST_PROFILES, {
-        method: "GET",
-        headers: getAuthHeaders(),
-      });
+      const response = await profileService.getAllProfiles("");
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Authentication required. Please log in again.");
-        }
-        if (response.status === 403) {
-          throw new Error(
-            "Access denied. You do not have permission to view profiles."
-          );
-        }
-        throw new Error(
-          `Failed to fetch profiles: ${response.status} - ${response.statusText}`
-        );
+      let data = response;
+      if (
+        response &&
+        typeof response === "object" &&
+        "data" in response &&
+        "status" in response
+      ) {
+        data = response.data;
       }
 
-      const data = await response.json();
-
-      // Handle both array and object responses
       const profilesArray = Array.isArray(data)
         ? data
         : data.profiles || [data];
 
-      // Transform API response to match Profile interface
       const transformedProfiles: Profile[] = profilesArray.map(
-        (item: ApiProfileResponse) => ({
-          id: Number(item.id || item._id) || Date.now(),
-          name: item.name || "",
-          email: item.email || "",
-          tag: item.tag || "default",
-          contact: item.contact || item.contact_person || "",
-          description: item.description || "",
-          location: item.location || "",
-          industry: item.industry || "",
-          businessType: item.business_type || item.businessType || "",
-          contactEmail:
-            item.contact_email || item.contactEmail || item.email || "",
-          contactPerson:
-            item.contact_person || item.contactPerson || item.contact || "",
-          phoneNumber: item.phone_number || item.phoneNumber || "",
-          tags: Array.isArray(item.tags)
-            ? item.tags
-            : item.tags
-            ? item.tags.split(",").map((t: string) => t.trim())
-            : [],
-          status: item.status || "Active",
-          created:
-            item.created_at || item.created || new Date().toLocaleString(),
-          lastUpdated:
-            item.updated_at || item.lastUpdated || new Date().toLocaleString(),
-        })
+        transformApiResponseToProfile
       );
 
       setProfiles(transformedProfiles);
@@ -151,81 +174,76 @@ const ProfilesPage: React.FC = () => {
     setActiveView(view);
   };
 
-  const handleCreateProfile = async (
-    newProfile: Omit<Profile, "id" | "created" | "lastUpdated">
-  ) => {
+  const handleCreateProfile = async (formData: any) => {
     try {
       setLoading(true);
       setError(null);
 
       const payload = {
-        name: newProfile.name,
-        email: newProfile.email,
-        tag: newProfile.tag,
-        contact: newProfile.contact,
-        description: newProfile.description,
-        location: newProfile.location,
-        industry: newProfile.industry,
-        business_type: newProfile.businessType,
-        contact_email: newProfile.contactEmail,
-        contact_person: newProfile.contactPerson,
-        phone_number: newProfile.phoneNumber,
-        tags: Array.isArray(newProfile.tags) ? newProfile.tags : [],
-        status: newProfile.status,
+        profile_name: formData.profile_name,
+        description: formData.description,
+        tags: Array.isArray(formData.tags) ? formData.tags : [],
+        location: formData.location,
+        industry_sector: formData.industry_sector,
+        business_type: formData.business_type,
+        contact_person: formData.contact_person,
+        contact_email: formData.contact_email,
+        phone_number: formData.phone_number,
       };
 
-      const response = await fetch(API_ENDPOINTS.CREATE_PROFILE, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
-      });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Authentication required. Please log in again.");
-        }
-        if (response.status === 403) {
-          throw new Error(
-            "Access denied. You do not have permission to create profiles."
-          );
-        }
-        const errorData = await response.json().catch(() => ({}));
+      const response = await profileService.createProfile(payload);
+
+
+      let data = response;
+
+      if (
+        response &&
+        typeof response === "object" &&
+        "data" in response &&
+        "status" in response
+      ) {
+        data = response.data;
+
+      }
+
+      if (!data || typeof data !== "object") {
+        console.error(
+          "Invalid API response structure. Full response:",
+          response
+        );
         throw new Error(
-          errorData.message ||
-            `Failed to create profile: ${response.status} - ${response.statusText}`
+          `Invalid server response. Expected object, got ${typeof data}`
         );
       }
 
-      const data = await response.json();
+      const profileId = data.id || data.uuid;
+      if (!profileId) {
+        console.error(
+          "Missing ID in response. Available fields:",
+          Object.keys(data)
+        );
+        console.error("Full data object:", JSON.stringify(data, null, 2));
+        throw new Error(
+          `Server response missing profile ID. Available fields: ${Object.keys(
+            data
+          ).join(", ")}`
+        );
+      }
 
-      const createdProfile: Profile = {
-        id: Number(data.id || data._id) || Date.now(),
-        name: data.name || payload.name,
-        email: data.email || payload.email,
-        tag: data.tag || payload.tag,
-        contact: data.contact || data.contact_person || payload.contact,
-        description: data.description || payload.description,
-        location: data.location || payload.location,
-        industry: data.industry || payload.industry,
-        businessType: data.business_type || payload.business_type,
-        contactEmail: data.contact_email || payload.contact_email,
-        contactPerson: data.contact_person || payload.contact_person,
-        phoneNumber: data.phone_number || payload.phone_number,
-        tags: Array.isArray(data.tags)
-          ? data.tags
-          : data.tags
-          ? data.tags.split(",").map((t: string) => t.trim())
-          : payload.tags,
-        status: data.status || payload.status,
-        created: data.created_at || data.created || new Date().toLocaleString(),
-        lastUpdated:
-          data.updated_at || data.lastUpdated || new Date().toLocaleString(),
-      };
 
-      setProfiles((prev) => [...prev, createdProfile]);
+      const createdProfile: Profile = transformApiResponseToProfile(data);
+
+
+      setProfiles((prev) => [createdProfile, ...prev]);
       setActiveView("list");
+      setError(null);
+      toast.success("Profile created successfully 🎉");
+
     } catch (err) {
+      console.error("Profile creation error:", err);
       setError(err instanceof Error ? err.message : "Failed to create profile");
+      throw err; 
     } finally {
       setLoading(false);
     }
@@ -236,132 +254,92 @@ const ProfilesPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
-      const payload = {
-        name: updatedProfile.name,
-        email: updatedProfile.email,
-        tag: updatedProfile.tag,
-        contact: updatedProfile.contact,
-        description: updatedProfile.description,
-        location: updatedProfile.location,
-        industry: updatedProfile.industry,
-        business_type: updatedProfile.businessType,
-        contact_email: updatedProfile.contactEmail,
-        contact_person: updatedProfile.contactPerson,
-        phone_number: updatedProfile.phoneNumber,
-        tags: Array.isArray(updatedProfile.tags) ? updatedProfile.tags : [],
-        status: updatedProfile.status,
-      };
-
-      const url = API_ENDPOINTS.UPDATE_PROFILE.replace(
-        "{profile_id}",
-        updatedProfile.id.toString()
-      );
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Authentication required. Please log in again.");
-        }
-        if (response.status === 403) {
-          throw new Error(
-            "Access denied. You do not have permission to update this profile."
-          );
-        }
-        const errorData = await response.json().catch(() => ({}));
+      if (!updatedProfile.id || isNaN(Number(updatedProfile.id))) {
         throw new Error(
-          errorData.message || `Failed to update profile: ${response.status}`
+          "Invalid profile ID. Cannot update profile without a valid server ID."
         );
       }
 
-      const data = await response.json();
-
-      const updated: Profile = {
-        id: data.id || updatedProfile.id,
-        name: data.name || payload.name,
-        email: data.email || payload.email,
-        tag: data.tag || payload.tag,
-        contact: data.contact || data.contact_person || payload.contact,
-        description: data.description || payload.description,
-        location: data.location || payload.location,
-        industry: data.industry || payload.industry,
-        businessType: data.business_type || payload.business_type,
-        contactEmail: data.contact_email || payload.contact_email,
-        contactPerson: data.contact_person || payload.contact_person,
-        phoneNumber: data.phone_number || payload.phone_number,
-        tags: Array.isArray(data.tags)
-          ? data.tags
-          : data.tags
-          ? data.tags.split(",").map((t: string) => t.trim())
-          : payload.tags,
-        status: data.status || payload.status,
-        created: updatedProfile.created,
-        lastUpdated:
-          data.updated_at || data.lastUpdated || new Date().toLocaleString(),
+      const payload = {
+        profile_name: updatedProfile.name,
+        description: updatedProfile.description,
+        tags: Array.isArray(updatedProfile.tags) ? updatedProfile.tags : [],
+        location: updatedProfile.location,
+        industry_sector: updatedProfile.industry,
+        business_type: updatedProfile.businessType,
+        contact_person: updatedProfile.contactPerson,
+        contact_email: updatedProfile.contactEmail,
+        phone_number: updatedProfile.phoneNumber,
+        is_active: updatedProfile.status === "Active",
       };
+
+    
+
+      const data = await profileService.updateProfile(
+        updatedProfile.id,
+        payload
+      );
+
+
+      const updated: Profile = data
+        ? transformApiResponseToProfile(data)
+        : {
+            ...updatedProfile,
+            lastUpdated: new Date().toISOString(),
+          };
 
       setProfiles((prev) =>
         prev.map((p) => (p.id === updated.id ? updated : p))
       );
+
       setSelectedProfile(updated);
+      setError(null);
+      toast.info("Profile updated successfully ✅");
+
     } catch (err) {
+      console.error("Profile update error:", err);
       setError(err instanceof Error ? err.message : "Failed to update profile");
+      throw err; 
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteProfile = async (profileId: number) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this profile and all its sub-profiles?"
-      )
-    ) {
-      return;
-    }
+    setProfileToDelete(profileId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!profileToDelete) return;
 
     try {
-      setLoading(true);
+      setIsDeleting(true);
       setError(null);
 
-      const url = API_ENDPOINTS.DELETE_PROFILE.replace(
-        "{profile_id}",
-        profileId.toString()
-      );
-      const response = await fetch(url, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      });
+      await profileService.deleteProfile(profileToDelete);
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Authentication required. Please log in again.");
-        }
-        if (response.status === 403) {
-          throw new Error(
-            "Access denied. You do not have permission to delete this profile."
-          );
-        }
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || `Failed to delete profile: ${response.status}`
-        );
-      }
+      setProfiles((prev) => prev.filter((p) => p.id !== profileToDelete));
 
-      setProfiles((prev) => prev.filter((p) => p.id !== profileId));
-
-      if (selectedProfile?.id === profileId) {
+      if (selectedProfile?.id === profileToDelete) {
         setSelectedProfile(null);
         setActiveView("list");
       }
+
+      setDeleteConfirmOpen(false);
+      setProfileToDelete(null);
+      toast.error("Profile deleted successfully 🗑️");
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete profile");
     } finally {
-      setLoading(false);
+      setIsDeleting(false);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmOpen(false);
+    setProfileToDelete(null);
   };
 
   return (
@@ -377,37 +355,57 @@ const ProfilesPage: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div className="flex items-center gap-4">
-          <h1 className="text-sm font-mono text-violet-600">
-            Profiles
-          </h1>
-          <span className="text-sm font-medium text-violet-500">
-            Manage your profiles and sub-profiles
-          </span>
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          {activeView !== "create" && (
-            <Button 
-              className="flex-1 sm:flex-none bg-violet-600 hover:bg-violet-700 text-white"
-              onClick={() => handleViewChange("create")}
-              disabled={loading}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Profile
-            </Button>
-          )}
-          {activeView !== "list" && (
-            <Button
-              variant="outline"
-              onClick={() => handleViewChange("list")}
-              className="flex-1 sm:flex-none border-violet-200 text-violet-600 hover:bg-violet-50 hover:border-violet-300"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to List
-            </Button>
-
+            <h1 className="text-sm font-mono text-violet-600">Profiles</h1>
+            <span className="text-sm font-medium text-violet-500">
+              Manage your profiles and sub-profiles
+            </span>
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            {activeView !== "create" && (
+              <Button
+                className="flex-1 sm:flex-none bg-violet-600 hover:bg-violet-700 text-white"
+                onClick={() => handleViewChange("create")}
+                disabled={loading}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Profile
+              </Button>
+            )}
+            {activeView !== "list" && (
+              <Button
+                variant="outline"
+                onClick={() => handleViewChange("list")}
+                className="flex-1 sm:flex-none border-violet-200 text-violet-600 hover:bg-violet-50 hover:border-violet-300"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to List
+              </Button>
             )}
           </div>
         </div>
+
+        {success && (
+          <div
+            className="mb-6 border px-4 py-3 rounded-lg"
+            style={{
+              backgroundColor: "rgb(34, 197, 94, 0.05)", 
+              borderColor: "rgb(34, 197, 94, 0.2)", 
+              color: "rgb(22, 101, 52)", 
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Success:</span>
+              <span>{success}</span>
+            </div>
+            <button
+              onClick={() => setSuccess(null)}
+              className="mt-3 text-sm underline hover:no-underline transition-colors"
+              style={{ color: "rgb(22, 101, 52)" }}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -441,6 +439,17 @@ const ProfilesPage: React.FC = () => {
                     </p>
                   </div>
                 )}
+                {error.includes("404") && (
+                  <div className="mt-2 text-sm">
+                    <p>The profile could not be found on the server.</p>
+                    <p className="mt-1">This might happen if:</p>
+                    <ul className="list-disc list-inside mt-1 space-y-1">
+                      <li>The profile was deleted</li>
+                      <li>The profile ID is invalid</li>
+                      <li>There was an issue during profile creation</li>
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
             <button
@@ -459,7 +468,6 @@ const ProfilesPage: React.FC = () => {
           </div>
         )}
 
-        {/* Content Area */}
         <div
           style={{
             boxShadow:
@@ -467,7 +475,6 @@ const ProfilesPage: React.FC = () => {
             borderColor: "rgb(196, 127, 254, 0.2)",
           }}
         >
-          {/* Loading Overlay */}
           {loading && (
             <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-2xl">
               <div className="flex items-center gap-3">
@@ -517,9 +524,19 @@ const ProfilesPage: React.FC = () => {
             <CreateProfile
               onCreateProfile={handleCreateProfile}
               onCancel={() => handleViewChange("list")}
+              isLoading={loading}
+              error={error}
             />
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmModal
+          isOpen={deleteConfirmOpen}
+          onConfirm={confirmDelete}
+          onCancel={cancelDelete}
+          isDeleting={isDeleting}
+        />
       </div>
     </>
   );

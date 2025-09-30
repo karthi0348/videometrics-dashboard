@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Profile } from '@/app/types/profiles';
-import { API_ENDPOINTS } from '../../config/api';
 import { 
   User, 
   Mail, 
@@ -18,8 +17,10 @@ import {
 } from 'lucide-react';
 
 interface CreateProfileProps {
-  onCreateProfile: (newProfile: Profile) => void;
+  onCreateProfile: (formData: any) => Promise<void>;
   onCancel: () => void;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 // API payload interface matching the backend requirements
@@ -35,10 +36,14 @@ interface CreateProfilePayload {
   phone_number: string;
 }
 
-const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+const CreateProfile: React.FC<CreateProfileProps> = ({ 
+  onCreateProfile, 
+  onCancel,
+  isLoading = false,
+  error = null
+}) => {
   const [tagInput, setTagInput] = useState('');
+  const [localError, setLocalError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<CreateProfilePayload>({
     profile_name: '',
@@ -55,9 +60,8 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear error when user starts typing
-    if (error) setError(null);
+    // Clear errors when user starts typing
+    if (localError) setLocalError(null);
   };
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -78,81 +82,81 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
     }));
   };
 
-  const createProfile = async (payload: CreateProfilePayload) => {
-    const response = await fetch(API_ENDPOINTS.CREATE_PROFILE, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+  const validateForm = (): { isValid: boolean; error?: string } => {
+    if (!formData.profile_name.trim()) {
+      return { isValid: false, error: 'Profile name is required' };
     }
-
-    return response.json();
+    if (!formData.contact_email.trim()) {
+      return { isValid: false, error: 'Contact email is required' };
+    }
+    if (!validateEmail(formData.contact_email)) {
+      return { isValid: false, error: 'Please enter a valid email address' };
+    }
+    if (!formData.contact_person.trim()) {
+      return { isValid: false, error: 'Contact person is required' };
+    }
+    if (!formData.description.trim()) {
+      return { isValid: false, error: 'Description is required' };
+    }
+    if (!formData.location.trim()) {
+      return { isValid: false, error: 'Location is required' };
+    }
+    if (!formData.industry_sector.trim()) {
+      return { isValid: false, error: 'Industry sector is required' };
+    }
+    if (!formData.business_type.trim()) {
+      return { isValid: false, error: 'Business type is required' };
+    }
+    if (!formData.phone_number.trim()) {
+      return { isValid: false, error: 'Phone number is required' };
+    }
+    return { isValid: true };
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    
+    // Validate form
+    const validation = validateForm();
+    if (!validation.isValid) {
+      setLocalError(validation.error || 'Please complete all required fields');
+      return;
+    }
+
+    setLocalError(null);
 
     try {
-      const apiResponse = await createProfile(formData);
-      
-      // Transform API response to match frontend Profile interface
-      const newProfile: Profile = {
-        id: apiResponse.id || apiResponse.uuid || `profile_${Date.now()}`,
-        name: apiResponse.profile_name || formData.profile_name,
-        email: formData.contact_email,
-        tag: formData.tags[0] || '', // Use first tag as main tag for compatibility
-        contact: formData.contact_person,
-        description: formData.description,
-        location: formData.location,
-        industry: apiResponse.industry_sector || formData.industry_sector,
-        businessType: apiResponse.business_type || formData.business_type,
-        contactEmail: formData.contact_email,
-        contactPerson: formData.contact_person,
-        phoneNumber: formData.phone_number,
-        tags: formData.tags,
-        status: apiResponse.is_active ? 'Active' : 'Inactive',
-        created: apiResponse.created_at || new Date().toLocaleString(),
-        lastUpdated: apiResponse.updated_at || new Date().toLocaleString()
-      };
-
-      onCreateProfile(newProfile);
+      console.log('Submitting profile with data:', formData);
+      await onCreateProfile(formData);
+      // Success - parent will handle navigation
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create profile');
-    } finally {
-      setIsLoading(false);
+      // Error is handled by parent component
+      console.error('Error in CreateProfile:', err);
+      setLocalError(err instanceof Error ? err.message : 'Failed to create profile');
     }
   };
 
   const isFormValid = () => {
-    return (
-      formData.profile_name.trim() &&
-      formData.contact_email.trim() &&
-      formData.contact_person.trim() &&
-      formData.description.trim() &&
-      formData.location.trim() &&
-      formData.industry_sector.trim() &&
-      formData.business_type.trim() &&
-      formData.phone_number.trim()
-    );
+    return validateForm().isValid;
   };
 
+  // Display either parent error or local error
+  const displayError = error || localError;
+
   return (
-    <div className="min-h-screen rounded-2xl p-4 sm:p-6 lg:p-8  bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen rounded-2xl p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-blue-300 via-purple-500 to-indigo-100">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 border border-purple-200">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-100 border border-purple-200">
             <UserPlus className="w-6 h-6 text-purple-600" />
           </div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
             Create New Profile
           </h1>
         </div>
@@ -162,20 +166,28 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
       </div>
       
       {/* Error Alert */}
-      {error && (
+      {displayError && (
         <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg mb-6">
           <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-red-700">
-            <p className="font-medium">Error creating profile</p>
-            <p className="text-red-600 mt-1">{error}</p>
+          <div className="flex-1">
+            <p className="font-medium text-sm text-red-700">Error creating profile</p>
+            <p className="text-red-600 mt-1 text-sm">{displayError}</p>
           </div>
+          <button
+            onClick={() => {
+              setLocalError(null);
+            }}
+            className="text-red-400 hover:text-red-600 transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
 
       {/* Form */}
-      <div className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-8">
         {/* Basic Information Card */}
-        <div className=" rounded-xl bg-white/40 backdrop-blur-sm border border-purple-200/50">
+        <div className="rounded-xl bg-white/40 backdrop-blur-sm border border-purple-200/50">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -183,7 +195,7 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
-                <p className="text-sm text-black-500">Profile details and contact information</p>
+                <p className="text-sm text-gray-600">Profile details and contact information</p>
               </div>
             </div>
           </div>
@@ -269,7 +281,7 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
         </div>
 
         {/* Business Information Card */}
-        <div className=" rounded-xl bg-white/40 backdrop-blur-sm border border-purple-200/50">
+        <div className="rounded-xl bg-white/40 backdrop-blur-sm border border-purple-200/50">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 rounded-lg">
@@ -277,7 +289,7 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Business Information</h2>
-                <p className="text-sm text-black-500">Location and industry details</p>
+                <p className="text-sm text-gray-600">Location and industry details</p>
               </div>
             </div>
           </div>
@@ -329,15 +341,15 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
         </div>
 
         {/* Tags Card */}
-        <div className=" rounded-xl bg-white/40 backdrop-blur-sm border border-purple-200/50">
-          <div className="p-6 border-b border-black-800">
+        <div className="rounded-xl bg-white/40 backdrop-blur-sm border border-purple-200/50">
+          <div className="p-6 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-amber-100 rounded-lg">
                 <Hash className="w-5 h-5 text-amber-600" />
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Tags</h2>
-                <p className="text-sm text-black-500">Optional categorization tags</p>
+                <p className="text-sm text-gray-600">Optional categorization tags</p>
               </div>
             </div>
           </div>
@@ -413,8 +425,7 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
                 Cancel
               </button>
               <button
-                type="button"
-                onClick={handleSubmit}
+                type="submit"
                 disabled={!isFormValid() || isLoading}
                 className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
@@ -433,7 +444,7 @@ const CreateProfile: React.FC<CreateProfileProps> = ({ onCreateProfile, onCancel
             </div>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 };
