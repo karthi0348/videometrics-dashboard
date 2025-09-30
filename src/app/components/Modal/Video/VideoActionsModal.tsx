@@ -95,7 +95,7 @@ const VideoActionsModal: React.FC<VideoActionsModalProps> = ({
   const getStreamingUrl = async (videoUrl: string, expirationMinutes: number = 60): Promise<string | null> => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch('http://172.174.114.7:8000/get-streaming-url', {
+      const response = await fetch('https://videometricsbackend.salmonrock-70d8a746.eastus.azurecontainerapps.io/get-streaming-url', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

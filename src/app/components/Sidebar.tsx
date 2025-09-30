@@ -230,7 +230,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {
           type: "LOGOUT",
         },
-        "http://172.174.114.7/"
+        "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io/"
       );
 
       
@@ -238,7 +238,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       window.opener.focus();
       window.close();
     } else {
-      window.location.href = "'http://172.174.114.7/";
+      window.location.href = "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io/";
     }
   }, []);
 
