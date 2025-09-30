@@ -63,7 +63,7 @@ const AssignmentModal = ({
 
   const getAllProfile = useCallback(async () => {
     try {
-      const result = await profileApiService.getAllProfile("");
+      const result = await profileApiService.getAllProfiles("");
       setProfile(result as unknown as Profile[]);
     } catch (error) {
       setProfile([]);
