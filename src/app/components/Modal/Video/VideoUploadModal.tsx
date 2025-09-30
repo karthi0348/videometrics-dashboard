@@ -58,7 +58,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     const handleMessage = (event: MessageEvent) => {
       console.log('Received message:', event.data, 'from origin:', event.origin);
       
-      if (event.origin !== 'https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io/') {
+      if (event.origin !== 'https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io') {
         console.log('Message rejected - invalid origin:', event.origin);
         return;
       }
@@ -117,7 +117,7 @@ const VideoUploadModal: React.FC<VideoUploadModalProps> = ({
     if (window.opener && !window.opener.closed) {
       window.opener.postMessage(
         { type: 'LOGOUT' },
-        'https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io/'
+        'https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io'
       );
     }
 

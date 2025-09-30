@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'https://videometricsbackend.salmonrock-70d8a746.eastus.azurecontainerapps.io/';
+export const API_BASE_URL = 'https://videometricsbackend.salmonrock-70d8a746.eastus.azurecontainerapps.io';
 
 export const API_ENDPOINTS = {
   UPLOAD_VIDEO: `${API_BASE_URL}/upload-video`,

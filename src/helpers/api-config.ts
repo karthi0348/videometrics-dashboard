@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from "axios";
 
 class ApiConfig {
 
-    private baseURL = 'https://videometricsbackend.salmonrock-70d8a746.eastus.azurecontainerapps.io/';
+    private baseURL = 'https://videometricsbackend.salmonrock-70d8a746.eastus.azurecontainerapps.io';
 
 
     private apiBaseUrl: string;

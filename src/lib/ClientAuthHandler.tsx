@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 export default function ClientAuthHandler() {
   useEffect(() => {
     const receiveMessage = (event: MessageEvent) => {
-      if (event.origin !== 'https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io/') return;
+      if (event.origin !== 'https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io') return;
 
       if (event.data?.type === 'AUTH_MESSAGE') {
         const { token, accessToken, user } = event.data;

@@ -230,7 +230,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {
           type: "LOGOUT",
         },
-        "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io/"
+        "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io"
       );
 
       
@@ -238,7 +238,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       window.opener.focus();
       window.close();
     } else {
-      window.location.href = "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io/";
+      window.location.href = "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io";
     }
   }, []);
 
