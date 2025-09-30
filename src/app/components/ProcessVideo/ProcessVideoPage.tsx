@@ -5,7 +5,6 @@ import SubProfileApiService from "../../../helpers/service/subprofile/subprofile
 import VideoApiService from "../../../helpers/service/video/video-api-service";
 import ProcessVideoForm from "./ProcessVideoForm";
 
-// Import types
 import {
   Profile,
   SubProfile,
@@ -17,7 +16,6 @@ import {
   ProcessedVideoNotification,
 } from "./types/types";
 
-// Shadcn UI components
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -46,7 +44,6 @@ interface VideoItem {
   file_url?: string;
 }
 
-// Define profile API response interface
 interface ProfileApiResponse {
   id: number | string;
   profile_name?: string;
@@ -58,7 +55,6 @@ interface ProfileApiResponse {
   description?: string;
 }
 
-// Define sub-profile API response interface
 interface SubProfileApiResponse {
   id: number | string;
   sub_profile_name?: string;
@@ -71,11 +67,10 @@ interface SubProfileApiResponse {
   is_active?: boolean;
 }
 
-// Define the actual API response structure for analytics
 interface AnalyticsListItem {
   id: number;
   analytics_id: string;
-  uuid?: string; // Make uuid optional since it might not exist
+  uuid?: string; 
   processing_status?: string;
   status?: string;
   error_message?: unknown;
@@ -98,7 +93,6 @@ interface AnalyticsListResponse {
   page_size?: number;
 }
 
-// Define error response interfaces
 interface ValidationError {
   loc?: string[];
   msg?: string;
@@ -188,7 +182,7 @@ const loadProfiles = useCallback(async () => {
 
   try {
     console.log("Loading profiles...");
-    const data = await profileApiService.getAllProfile("");
+    const data = await profileApiService.getAllProfiles("");
     console.log("Loaded profiles:", data);
 
     const profilesArray = Array.isArray(data)
