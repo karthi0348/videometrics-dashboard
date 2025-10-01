@@ -34,32 +34,39 @@ interface FilterState {
 // Custom Confirmation Dialog Hook
 const useConfirm = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [resolver, setResolver] = useState<((value: boolean) => void) | null>(null);
+  const [resolver, setResolver] = useState<((value: boolean) => void) | null>(
+    null
+  );
   const [config, setConfig] = useState({
-    title: '',
-    message: '',
-    confirmText: 'OK',
-    cancelText: 'Cancel'
+    title: "",
+    message: "",
+    confirmText: "OK",
+    cancelText: "Cancel",
   });
 
-  const confirm = useCallback((options: {
-    title?: string;
-    message?: string;
-    confirmText?: string;
-    cancelText?: string;
-  } = {}) => {
-    setConfig({
-      title: options.title || 'Confirm Action',
-      message: options.message || 'Are you sure?',
-      confirmText: options.confirmText || 'OK',
-      cancelText: options.cancelText || 'Cancel'
-    });
-    setIsOpen(true);
+  const confirm = useCallback(
+    (
+      options: {
+        title?: string;
+        message?: string;
+        confirmText?: string;
+        cancelText?: string;
+      } = {}
+    ) => {
+      setConfig({
+        title: options.title || "Confirm Action",
+        message: options.message || "Are you sure?",
+        confirmText: options.confirmText || "OK",
+        cancelText: options.cancelText || "Cancel",
+      });
+      setIsOpen(true);
 
-    return new Promise<boolean>((resolve) => {
-      setResolver(() => resolve);
-    });
-  }, []);
+      return new Promise<boolean>((resolve) => {
+        setResolver(() => resolve);
+      });
+    },
+    []
+  );
 
   const handleConfirm = useCallback(() => {
     if (resolver) resolver(true);
@@ -82,13 +89,27 @@ const useConfirm = () => {
           <div className="p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg
+                  className="w-5 h-5 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">{config.title}</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {config.title}
+              </h3>
             </div>
-            <p className="text-gray-600 mb-6 leading-relaxed">{config.message}</p>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              {config.message}
+            </p>
             <div className="flex gap-3">
               <button
                 onClick={handleCancel}
@@ -380,7 +401,8 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
           sort_by: "processing_completed_at",
           sort_order: "desc",
         });
-
+        console.log("Full API Response:", response);
+        console.log("Number of videos:", response?.length);
         if (response) {
           // Enhanced filtering with better status handling
           const filteredVideos = response.filter(
@@ -389,30 +411,48 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
               video.status === "failed" ||
               video.status === "processing"
           );
+          console.log("Filtered videos:", filteredVideos);
 
           // Enhanced transformation with better data handling
           const transformedVideos: ProcessedVideo[] = filteredVideos.map(
-            (video: any) => ({
-              id: video.id,
-              analytics_id: video.analytics_id,
-              video_title:
-                video.video_name || video.video_title || "Untitled Video",
-              processing_status: video.status,
-              confidence_score: parseFloat(
-                video.confidence_score?.toString() || "0"
-              ),
-              created_at: video.created_at,
-              updated_at: video.processing_completed_at || video.updated_at,
-              error_message: video.error_message,
-              profile_name: video.profile_name || "Unknown Profile",
-              sub_profile_name: video.sub_profile_name || "Unknown Sub-Profile",
-              template_name: video.template_name || "Template",
-              processing_duration: video.processing_duration || "N/A",
-              file_size: video.file_size || "Unknown",
-              video_duration: video.video_duration || "N/A",
-              video_url: video.video_url,
-              thumbnail_url: video.thumbnail_url,
-            })
+            (video: any) => {
+              // ADD DEBUG FOR FAILED VIDEOS
+              if (video.status === "failed") {
+                console.log("Failed Video Details:", {
+                  id: video.id,
+                  title: video.video_name || video.video_title,
+                  error_message: video.error_message,
+                  error: video.error,
+                  failure_reason: video.failure_reason,
+                  message: video.message,
+                  status: video.status,
+                  all_keys: Object.keys(video),
+                  full_video_data: video,
+                });
+              }
+              return {
+                id: video.id,
+                analytics_id: video.analytics_id,
+                video_title:
+                  video.video_name || video.video_title || "Untitled Video",
+                processing_status: video.status,
+                confidence_score: parseFloat(
+                  video.confidence_score?.toString() || "0"
+                ),
+                created_at: video.created_at,
+                updated_at: video.processing_completed_at || video.updated_at,
+                error_message: video.error_message,
+                profile_name: video.profile_name || "Unknown Profile",
+                sub_profile_name:
+                  video.sub_profile_name || "Unknown Sub-Profile",
+                template_name: video.template_name || "Template",
+                processing_duration: video.processing_duration || "N/A",
+                file_size: video.file_size || "Unknown",
+                video_duration: video.video_duration || "N/A",
+                video_url: video.video_url,
+                thumbnail_url: video.thumbnail_url,
+              };
+            }
           );
 
           // Enhanced new video detection for auto-refresh
@@ -581,8 +621,6 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
     [onNavigate]
   );
 
-
-
   // Updated handleDeleteVideo with custom confirmation dialog
   const handleDeleteVideo = useCallback(
     async (analyticsId: string) => {
@@ -591,10 +629,10 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
 
       // Use custom confirmation dialog
       const confirmed = await confirm({
-        title: 'Delete Video',
+        title: "Delete Video",
         message: `Are you sure you want to delete "${videoTitle}"?\n\nThis action cannot be undone and will permanently remove all associated analytics data.`,
-        confirmText: 'Delete',
-        cancelText: 'Cancel'
+        confirmText: "Delete",
+        cancelText: "Cancel",
       });
 
       if (!confirmed) return;
@@ -656,12 +694,12 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
 
     // Use custom confirmation dialog
     const confirmed = await confirm({
-      title: 'Delete Multiple Videos',
+      title: "Delete Multiple Videos",
       message: `Are you sure you want to delete ${selectedCount} selected video${
         selectedCount > 1 ? "s" : ""
       }?\n\n${titlePreview}\n\nThis action cannot be undone and will permanently remove all associated analytics data.`,
-      confirmText: 'Delete All',
-      cancelText: 'Cancel'
+      confirmText: "Delete All",
+      cancelText: "Cancel",
     });
 
     if (!confirmed) return;
@@ -746,7 +784,14 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
       setBulkDeleting(false);
       setBulkOperationProgress(0);
     }
-  }, [selectedVideos, processedVideos, mockMode, apiService, handleRefresh, confirm]);
+  }, [
+    selectedVideos,
+    processedVideos,
+    mockMode,
+    apiService,
+    handleRefresh,
+    confirm,
+  ]);
 
   const handleSelectVideo = useCallback((id: number) => {
     setSelectedVideos((prev) => {
@@ -782,7 +827,7 @@ const ProcessedVideosPage: React.FC<ProcessedVideosPageProps> = ({
     <>
       {/* Custom Confirmation Dialog */}
       <ConfirmDialog />
-      
+
       <ProcessedVideosUI
         // Enhanced State props
         processedVideos={processedVideos}

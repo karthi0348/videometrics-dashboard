@@ -385,42 +385,42 @@ const SummaryView: React.FC<SummaryViewProps> = ({
             )}
           </div>
         </div>
-
-        {/* Insights Section */}
-        {insights && (
-          <div className="mb-8">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-teal-50 via-blue-50 to-indigo-50 px-6 sm:px-8 py-6 border-b border-gray-100">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                  <LightBulbIcon className="w-6 h-6 mr-3 text-teal-600" />
-                  Analytics Insights
-                </h2>
-                <p className="text-gray-600 mt-1">Key performance indicators and metrics</p>
-              </div>
-              <div className="p-6 sm:p-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {Object.entries(insights).map(([key, value]) => (
-                    <div
-                      key={key}
-                      className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-4 border border-gray-100 hover:shadow-md transition-all duration-200 hover:scale-105"
-                    >
-                      <div className="text-sm font-medium text-gray-600 mb-2">
-                        {key
-                          .replace(/_/g, " ")
-                          .replace(/\b\w/g, (l) => l.toUpperCase())}
-                      </div>
-                      <div className="text-xl font-bold text-gray-900 truncate">
-                        {typeof value === "object"
-                          ? JSON.stringify(value)
-                          : String(value)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+{/* Insights Section */}
+{insights && (
+  <div className="mb-6">
+    <div className="bg-white rounded-md border border-gray-200">
+      <div className="px-4 py-3 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-800">
+          Analytics Insights
+        </h2>
+        <p className="text-sm text-gray-500">Key performance indicators</p>
+      </div>
+      <div className="p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {insights.map((insight: any, index: number) => (
+            <div
+              key={index}
+              className="bg-white rounded border border-gray-200 p-3"
+            >
+              <h3 className="text-sm font-semibold text-gray-700">
+                {insight.title || "Untitled"}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {insight.description || "No description"}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Confidence: {insight.confidence ?? "-"} | Severity:{" "}
+                {insight.severity ?? "-"}
+              </p>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
 
         {/* Summary Content */}
         <div className="mb-8">

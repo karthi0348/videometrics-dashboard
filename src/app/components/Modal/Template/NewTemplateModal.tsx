@@ -34,7 +34,7 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
     description: "",
     tags: [],
     analysisPrompt: "",
-    makePublic: false,
+    makePublic: true,
   });
 
   const [tagInput, setTagInput] = useState("");
@@ -116,7 +116,7 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
         description: "",
         tags: [],
         analysisPrompt: "",
-        makePublic: false,
+        makePublic: true,
       });
       setTagInput("");
       setJsonContent(`{
@@ -373,6 +373,7 @@ const NewTemplateModal: React.FC<NewTemplateModalProps> = ({
                       id="makePublic"
                       checked={formData.makePublic}
                       onChange={(e) =>
+                        
                         setFormData({
                           ...formData,
                           makePublic: e.target.checked,
