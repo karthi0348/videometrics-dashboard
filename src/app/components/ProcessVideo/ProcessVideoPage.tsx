@@ -70,7 +70,7 @@ interface SubProfileApiResponse {
 interface AnalyticsListItem {
   id: number;
   analytics_id: string;
-  uuid?: string; 
+  uuid?: string;
   processing_status?: string;
   status?: string;
   error_message?: unknown;
@@ -173,123 +173,123 @@ const ProcessVideoPage: React.FC<ProcessVideoPageProps> = ({
     }
   }, [videoApiService]);
 
- // Load profiles from API
-const loadProfiles = useCallback(async () => {
-  if (propProfiles && propProfiles.length > 0) {
-    setProfiles(propProfiles);
-    return;
-  }
+  // Load profiles from API
+  const loadProfiles = useCallback(async () => {
+    if (propProfiles && propProfiles.length > 0) {
+      setProfiles(propProfiles);
+      return;
+    }
 
-  try {
-    console.log("Loading profiles...");
-    const data = await profileApiService.getAllProfiles("");
-    console.log("Loaded profiles:", data);
-
-    const profilesArray = Array.isArray(data)
-      ? data
-      : (
-          data as {
-            profiles?: ProfileApiResponse[];
-            results?: ProfileApiResponse[];
-          }
-        )?.profiles ||
-        (
-          data as {
-            profiles?: ProfileApiResponse[];
-            results?: ProfileApiResponse[];
-          }
-        )?.results ||
-        [];
-
-    const transformedProfiles: Profile[] = profilesArray.map(
-      (item: ProfileApiResponse) => ({
-        id: Number(item.id) || Date.now(),
-        name: item.profile_name || item.name || "Untitled Profile",
-        email: item.email || "",
-        tag: item.tag || "default",
-        contact: item.contact || item.contact_person || "",
-        description: item.description || "",
-      })
-    );
-
-    setProfiles(transformedProfiles);
-    // Removed the loadSubProfiles calls from here
-  } catch (err) {
-    console.error("Error loading profiles:", err);
-    setError(err instanceof Error ? err.message : "Failed to load profiles");
-    setProfiles([]);
-  }
-}, [propProfiles, profileApiService]); // Removed loadSubProfiles from dependencies
-
-const loadSubProfiles = useCallback(
-  async (profileId: number) => {
     try {
-      console.log(`Loading sub-profiles for profile ${profileId}...`);
-      const data = await subProfileApiService.getAllSubProfile(profileId, "");
-      console.log(`Loaded sub-profiles for profile ${profileId}:`, data);
+      console.log("Loading profiles...");
+      const data = await profileApiService.getAllProfiles("");
+      console.log("Loaded profiles:", data);
 
-      const subProfilesArray = Array.isArray(data)
+      const profilesArray = Array.isArray(data)
         ? data
         : (
             data as {
-              subProfiles?: SubProfileApiResponse[];
-              results?: SubProfileApiResponse[];
+              profiles?: ProfileApiResponse[];
+              results?: ProfileApiResponse[];
             }
-          )?.subProfiles ||
+          )?.profiles ||
           (
             data as {
-              subProfiles?: SubProfileApiResponse[];
-              results?: SubProfileApiResponse[];
+              profiles?: ProfileApiResponse[];
+              results?: ProfileApiResponse[];
             }
           )?.results ||
           [];
 
-      const transformed: SubProfile[] = subProfilesArray.map(
-        (item: SubProfileApiResponse, index: number) => ({
-          id: Number(item.id) || Date.now() + index,
-          name: item.sub_profile_name || item.name || "Untitled Sub-Profile",
-          profile_id: Number(item.profile_id || profileId),
+      const transformedProfiles: Profile[] = profilesArray.map(
+        (item: ProfileApiResponse) => ({
+          id: Number(item.id) || Date.now(),
+          name: item.profile_name || item.name || "Untitled Profile",
+          email: item.email || "",
+          tag: item.tag || "default",
+          contact: item.contact || item.contact_person || "",
           description: item.description || "",
-          areaType: item.area_type || item.areaType || "general",
-          isActive:
-            item.isActive !== undefined
-              ? item.isActive
-              : item.is_active !== undefined
-              ? item.is_active
-              : true,
         })
       );
 
-      setSubProfiles((prev) => {
-        const existingIds = new Set(prev.map((sp) => sp.id));
-        const newSubProfiles = transformed.filter(
-          (sp) => !existingIds.has(sp.id)
-        );
-        return [...prev, ...newSubProfiles];
-      });
+      setProfiles(transformedProfiles);
+      // Removed the loadSubProfiles calls from here
     } catch (err) {
-      console.error(
-        `Error loading sub-profiles for profile ${profileId}:`,
-        err
-      );
+      console.error("Error loading profiles:", err);
+      setError(err instanceof Error ? err.message : "Failed to load profiles");
+      setProfiles([]);
     }
-  },
-  [subProfileApiService]
-);
+  }, [propProfiles, profileApiService]); // Removed loadSubProfiles from dependencies
 
-// Add this new useEffect to load sub-profiles when profiles change
-useEffect(() => {
-  const loadAllSubProfiles = async () => {
-    if (profiles.length > 0) {
-      setSubProfiles([]); // Clear existing sub-profiles
-      for (const profile of profiles) {
-        await loadSubProfiles(profile.id);
+  const loadSubProfiles = useCallback(
+    async (profileId: number) => {
+      try {
+        console.log(`Loading sub-profiles for profile ${profileId}...`);
+        const data = await subProfileApiService.getAllSubProfile(profileId, "");
+        console.log(`Loaded sub-profiles for profile ${profileId}:`, data);
+
+        const subProfilesArray = Array.isArray(data)
+          ? data
+          : (
+              data as {
+                subProfiles?: SubProfileApiResponse[];
+                results?: SubProfileApiResponse[];
+              }
+            )?.subProfiles ||
+            (
+              data as {
+                subProfiles?: SubProfileApiResponse[];
+                results?: SubProfileApiResponse[];
+              }
+            )?.results ||
+            [];
+
+        const transformed: SubProfile[] = subProfilesArray.map(
+          (item: SubProfileApiResponse, index: number) => ({
+            id: Number(item.id) || Date.now() + index,
+            name: item.sub_profile_name || item.name || "Untitled Sub-Profile",
+            profile_id: Number(item.profile_id || profileId),
+            description: item.description || "",
+            areaType: item.area_type || item.areaType || "general",
+            isActive:
+              item.isActive !== undefined
+                ? item.isActive
+                : item.is_active !== undefined
+                ? item.is_active
+                : true,
+          })
+        );
+
+        setSubProfiles((prev) => {
+          const existingIds = new Set(prev.map((sp) => sp.id));
+          const newSubProfiles = transformed.filter(
+            (sp) => !existingIds.has(sp.id)
+          );
+          return [...prev, ...newSubProfiles];
+        });
+      } catch (err) {
+        console.error(
+          `Error loading sub-profiles for profile ${profileId}:`,
+          err
+        );
       }
-    }
-  };
-  
-  loadAllSubProfiles();
-}, [profiles, loadSubProfiles]); // Depend on profiles array and loadSubProfiles
+    },
+    [subProfileApiService]
+  );
+
+  // Add this new useEffect to load sub-profiles when profiles change
+  useEffect(() => {
+    const loadAllSubProfiles = async () => {
+      if (profiles.length > 0) {
+        setSubProfiles([]); // Clear existing sub-profiles
+        for (const profile of profiles) {
+          await loadSubProfiles(profile.id);
+        }
+      }
+    };
+
+    loadAllSubProfiles();
+  }, [profiles, loadSubProfiles]); // Depend on profiles array and loadSubProfiles
 
   // New function to check processing queue and redirect if empty
   const checkProcessingQueue = useCallback(async (): Promise<boolean> => {
@@ -592,8 +592,29 @@ useEffect(() => {
           "Missing required fields: video_url, profile_id, sub_profile_id, or template_id"
         );
       }
-      const response = await apiService.processVideo(payload);
-      console.log("Process video response:", response);
+      const selectedVideo = videos.find(
+        (v: VideoItem) =>
+          v.url === payload.video_url ||
+          v.id?.toString() === payload.video_url ||
+          v.video_url === payload.video_url ||
+          v.file_url === payload.video_url
+      );
+
+      const videoName =
+        payload.video_name ||
+        selectedVideo?.video_name ||
+        selectedVideo?.name ||
+        selectedVideo?.title ||
+        "Untitled Video";
+
+      // Add video_name to payload if not present
+      const completePayload = {
+        ...payload,
+        video_name: videoName,
+      };
+
+      console.log("Complete payload with video_name:", completePayload);
+      const response = await apiService.processVideo(completePayload);
 
       // Extract the actual response data (API returns response wrapped in axios response)
       const responseData: ProcessVideoResponse =
@@ -608,19 +629,6 @@ useEffect(() => {
         );
         throw new Error("Server did not return a processing UUID");
       }
-
-      const selectedVideo = videos.find(
-        (v: VideoItem) =>
-          v.url === payload.video_url ||
-          v.id?.toString() === payload.video_url ||
-          v.video_url === payload.video_url
-      );
-      const videoName =
-        selectedVideo?.video_name ||
-        selectedVideo?.name ||
-        selectedVideo?.title ||
-        payload.video_name || 
-        payload.video_url;
 
       const processingVideo: ExtendedProcessingVideo = {
         video_id: responseData.video_id,
