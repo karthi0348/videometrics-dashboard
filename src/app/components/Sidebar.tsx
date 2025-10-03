@@ -221,26 +221,41 @@ const Sidebar: React.FC<SidebarProps> = ({
     [isMobile, onNavigate]
   );
 
-  const handleLogout = useCallback(() => {
-    console.log("Logging out...");
+const handleLogout = useCallback(() => {
+  console.log("🚪 Logging out...");
 
-    // Handle window closing or redirect
-    if (window.opener && !window.opener.closed) {
-      window.opener.postMessage(
-        {
-          type: "LOGOUT",
-        },
-        "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io"
-      );
+  // Step 1: Clear ALL storage - this clears the cache
+  localStorage.clear();
+  sessionStorage.clear();
+  
+  console.log("✅ Storage cleared");
 
-      
+  // Step 2: Send logout message to login page
+  if (window.opener && !window.opener.closed) {
+    console.log("📤 Sending LOGOUT message to parent window");
+    
+    window.opener.postMessage(
+      { type: "LOGOUT" },
+      "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io"
+    );
 
-      window.opener.focus();
-      window.close();
-    } else {
-      window.location.href = "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io";
-    }
-  }, []);
+    // Step 3: Focus parent and close current window
+    setTimeout(() => {
+      try {
+        window.opener.focus();
+        window.close();
+      } catch (error) {
+        console.error("Error closing window:", error);
+        // Fallback: redirect to login
+        window.location.href = "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io";
+      }
+    }, 100);
+  } else {
+    // No parent window - just redirect to login
+    console.log("↪️ No parent window, redirecting to login");
+    window.location.href = "https://videometricsui.salmonrock-70d8a746.eastus.azurecontainerapps.io";
+  }
+}, []);
 
   const toggleMobileMenu = useCallback(() => {
     setMobileMenuOpen((prev) => !prev);

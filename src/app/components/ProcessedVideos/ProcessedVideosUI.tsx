@@ -11,6 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { ProcessedVideo } from "./types/types";
+import PlayVideoModal from "../Modal/Video/PlayVideoModal";
 
 type ViewMode = "grid" | "list" | "compact";
 
@@ -100,6 +101,29 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
 }) => {
   const [hoveredVideo, setHoveredVideo] = useState<number | null>(null);
   const [isSelectMode, setIsSelectMode] = useState(false);
+  // State for PlayVideoModal
+  const [selectedVideoForPlay, setSelectedVideoForPlay] = useState<any>(null);
+  const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
+
+  // Handler to open video modal
+  const handlePlayVideo = (video: ProcessedVideo) => {
+    // Map ProcessedVideo to the Video interface expected by PlayVideoModal
+    const videoForModal = {
+      id: video.analytics_id || video.id.toString(),
+      uuid: video.analytics_id,
+      user_id: "", // Add if available in your data
+      video_name: video.video_title,
+      description: video.template_name || "",
+      video_url: video.video_url || "",
+      file_size: undefined,
+      duration: undefined,
+      created_at: video.created_at,
+      updated_at: video.updated_at,
+    };
+
+    setSelectedVideoForPlay(videoForModal);
+    setIsPlayModalOpen(true);
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -147,6 +171,7 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
       className="relative aspect-video cursor-pointer group"
       onMouseEnter={() => setHoveredVideo(video.id)}
       onMouseLeave={() => setHoveredVideo(null)}
+      onClick={() => handlePlayVideo(video)} // ADD THIS LINE
     >
       {video.thumbnail_url ? (
         <img
@@ -212,12 +237,12 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
 
       {/* Duration Badge */}
       {/* {video.processing_duration && (
-        <div className="absolute bottom-2 right-2">
-          <div className="bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded-md font-medium">
-            {video.processing_duration}
-          </div>
+      <div className="absolute bottom-2 right-2">
+        <div className="bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded-md font-medium">
+          {video.processing_duration}
         </div>
-      )} */}
+      </div>
+    )} */}
     </div>
   );
 
@@ -281,9 +306,8 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
                 {video.processing_status}
               </span>
             </div>
-            
-            
-           {/* Metadata grid */}
+
+            {/* Metadata grid */}
             <div className="grid grid-cols-1 gap-1 mb-6">
               {video.template_name &&
                 video.template_name !== "Unknown Template" && (
@@ -377,7 +401,9 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
               )}
 
               <button
-                onClick={() => handleDeleteVideo(video.analytics_id || video.id.toString())}
+                onClick={() =>
+                  handleDeleteVideo(video.analytics_id || video.id.toString())
+                }
                 className="px-3 py-2.5 border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 rounded-xl transition-all duration-200 hover:scale-105"
                 title="Delete video"
               >
@@ -413,7 +439,11 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
           )}
 
           {/* Enhanced Thumbnail */}
-          <div className="relative w-20 h-12 flex-shrink-0 group">
+          <div
+            className="relative w-20 h-12 flex-shrink-0 group cursor-pointer"
+            onClick={() => handlePlayVideo(video)}
+          >
+            {" "}
             {video.thumbnail_url ? (
               <img
                 src={video.thumbnail_url}
@@ -429,7 +459,6 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
                 <Video className="w-5 h-5 text-white/70" />
               </div>
             )}
-
             {/* Play overlay on hover */}
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
               <Play className="w-4 h-4 text-white fill-white" />
@@ -548,7 +577,8 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
         <div
           className={`w-10 h-10 bg-gradient-to-br ${getGradientColor(
             video.id
-          )} rounded-lg flex items-center justify-center flex-shrink-0`}
+          )} rounded-lg flex items-center justify-center flex-shrink-0 cursor-pointer`}
+          onClick={() => handlePlayVideo(video)}
         >
           <Video className="w-5 h-5 text-white" />
         </div>
@@ -1138,7 +1168,6 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
               Videos that have completed processing will appear here
               {autoRefresh && " and update automatically"}
             </p>
-         
           </div>
         ) : (
           <>
@@ -1377,6 +1406,15 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
           </>
         )}
       </div>
+
+      <PlayVideoModal
+        video={selectedVideoForPlay}
+        isOpen={isPlayModalOpen}
+        onClose={() => {
+          setIsPlayModalOpen(false);
+          setSelectedVideoForPlay(null);
+        }}
+      />
     </div>
   );
 };
