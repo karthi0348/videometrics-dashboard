@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import MetricStructureEditor from "./MetricStructureEditor";
 import ChartConfiguration from "./ChartConfiguration/ChartConfiguration";
 import SummaryConfiguration from "./SummaryConfiguration/SummaryConfiguration";
@@ -27,7 +28,7 @@ interface TemplateData {
   analysis_prompt?: string;
   is_public?: boolean;
   metric_structure?: Record<string, unknown> | null;
-  chart_config?: ChartConfig[];
+  chart_config?: (ChartConfig | null)[] | null;
   summary_config?: SummaryConfig | null;
 }
 
@@ -53,7 +54,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
     description: "",
     tags: [],
     analysisPrompt: "",
-    makePublic: false,
+    makePublic: true,
   });
 
   const [tagInput, setTagInput] = useState("");
@@ -113,7 +114,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
         tags: formData.tags,
         version: "1.0.0",
         analysis_prompt: formData.analysisPrompt,
-        metric_structure: metricStructure, // Can be null now
+        metric_structure: metricStructure,
         chart_config: chartConfigs.length > 0 ? chartConfigs : [],
         summary_config: summaryConfig || null,
         gui_config: {
@@ -127,15 +128,23 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
       };
 
       await templateApiService.editTemplate(id, payload);
+      
+      // Show success message
+      toast.success("Template updated successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+      });
+      
       refresh();
       onClose();
+      
       // Reset form
       setFormData({
         templateName: "",
         description: "",
         tags: [],
         analysisPrompt: "",
-        makePublic: false,
+        makePublic: true,
       });
       setTagInput("");
       setJsonContent(`{
@@ -158,7 +167,10 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
       }
       // Handle non-Axios errors
       console.error("Unexpected error:", error);
-      // You could also show a generic error message here
+      toast.error("Failed to update template. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -170,10 +182,8 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
     }
   };
 
-  // Removed unused function 'getObjectProperties'
-
   const isValidJson = () => {
-    if (!jsonContent.trim()) return true; // Empty content is valid (optional)
+    if (!jsonContent.trim()) return true;
     try {
       JSON.parse(jsonContent);
       return true;
@@ -187,7 +197,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
       formData.templateName.trim().length >= 3 &&
       formData.description.trim().length >= 10 &&
       formData.analysisPrompt.trim().length >= 20 &&
-      isValidJson() // Only check if JSON is valid, not if it exists
+      isValidJson()
     );
   };
 
@@ -204,7 +214,6 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
       const result = await templateApiService.getAllTemplateById(id);
       setTemplates(result as TemplateData);
     } catch (error: unknown) {
-      // Type guard for the error handler
       if (error instanceof AxiosError) {
         return ErrorHandler(error as AxiosError<ErrorResponse>);
       }
@@ -221,17 +230,20 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({
       makePublic: data.is_public || false,
     });
 
-    // Set metric structure as JSON string - can be empty now
     setJsonContent(
       data.metric_structure
         ? JSON.stringify(data.metric_structure, null, 2)
-        : "" // Empty string instead of default structure
+        : ""
     );
 
-    // Set chart config (if null, use empty array)
-    setChartConfigs(data.chart_config || []);
-
-    // Set summary config (if null, use null)
+    setChartConfigs(
+      data.chart_config
+        ? data.chart_config.filter(
+            (config) => config !== null && config !== undefined
+          )
+        : []
+    );
+    
     setSummaryConfig(data.summary_config || null);
   };
 

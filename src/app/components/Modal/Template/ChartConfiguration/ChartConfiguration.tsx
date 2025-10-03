@@ -51,13 +51,11 @@ const ChartConfiguration: React.FC<ChartConfigurationProps> = ({
   }, [config]);
 
   const chartTypes = [
-    "Line Chart",
     "Bar Chart",
     "Pie Chart",
-    "Area Chart",
-    "Scatter Plot",
     "Histogram",
     "Bubble Chart",
+    "Donut Chart"
   ];
 
   const updateChart = (

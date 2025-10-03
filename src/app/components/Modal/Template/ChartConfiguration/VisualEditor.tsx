@@ -106,7 +106,7 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={chart.x_axis.field}
+                  value={chart.x_axis?.field || ""}
                   onChange={(e) =>
                     updateChart(index, "x_axis.field", e.target.value)
                   }
@@ -120,7 +120,7 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={chart.x_axis.label}
+                  value={chart.x_axis?.label || ""}
                   onChange={(e) =>
                     updateChart(index, "x_axis.label", e.target.value)
                   }
@@ -134,7 +134,7 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={chart.y_axis.field}
+                  value={chart.y_axis?.field || ""}
                   onChange={(e) =>
                     updateChart(index, "y_axis.field", e.target.value)
                   }
@@ -148,7 +148,7 @@ export const VisualEditor: React.FC<VisualEditorProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={chart.y_axis.label}
+                  value={chart.y_axis?.label || ""}
                   onChange={(e) =>
                     updateChart(index, "y_axis.label", e.target.value)
                   }
