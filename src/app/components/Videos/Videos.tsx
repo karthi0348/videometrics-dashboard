@@ -50,7 +50,6 @@ import {
   Clear as ClearIcon,
   GridView as GridViewIcon,
   List as ListIcon,
-  ViewCompact as CompactIcon,
   CheckBox as CheckBoxIcon,
   CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
   Delete as DeleteIcon,
@@ -240,7 +239,6 @@ const Header: React.FC<HeaderProps> = ({
   const viewModeOptions = [
     { key: "grid" as ViewMode, label: "Grid", icon: <GridViewIcon /> },
     { key: "list" as ViewMode, label: "List", icon: <ListIcon /> },
-    { key: "compact" as ViewMode, label: "Compact", icon: <CompactIcon /> },
   ];
 
   return (

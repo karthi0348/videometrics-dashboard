@@ -33,8 +33,8 @@ import {
   CardActions,
   Divider,
   LinearProgress,
-  Container
-} from '@mui/material';
+  Container,
+} from "@mui/material";
 import {
   PlayArrow as PlayIcon,
   Edit as EditIcon,
@@ -47,8 +47,8 @@ import {
   CheckCircle as CheckCircleIcon,
   Refresh as RefreshIcon,
   Movie as MovieIcon,
-  CloudUpload as UploadIcon
-} from '@mui/icons-material';
+  CloudUpload as UploadIcon,
+} from "@mui/icons-material";
 import { API_ENDPOINTS } from "../../config/api";
 import PlayVideoModal from "../Modal/Video/PlayVideoModal";
 import EditVideoModal from "../Modal/Video/EditVideoModal";
@@ -68,7 +68,7 @@ interface Video {
   updated_at: string;
 }
 
-type ViewMode = "grid" | "list" | "compact";
+type ViewMode = "grid" | "list";
 
 interface VideoTableProps {
   viewMode: ViewMode;
@@ -126,10 +126,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
   };
 
   const getVideoThumbnail = () => {
-    const colors = [
-'linear-gradient(135deg, #7e22ce 0%, #c084fc 100%)'
-
-    ];
+    const colors = ["linear-gradient(135deg, #7e22ce 0%, #c084fc 100%)"];
     const idx = parseInt(video.id, 36) % colors.length;
     return colors[idx];
   };
@@ -138,44 +135,52 @@ const VideoCard: React.FC<VideoCardProps> = ({
     <Card
       onClick={handleCardClick}
       sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        cursor: isSelectMode ? 'pointer' : 'default',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: isSelected ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: isSelected 
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        cursor: isSelectMode ? "pointer" : "default",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        transform: isSelected ? "translateY(-4px)" : "translateY(0)",
+        boxShadow: isSelected
           ? `0 8px 25px ${theme.palette.primary.main}25, 0 0 0 2px ${theme.palette.primary.main}`
-          : '0 2px 8px rgba(0,0,0,0.1)',
-        '&:hover': {
-          transform: isSelectMode ? 'translateY(-6px)' : 'translateY(-2px)',
+          : "0 2px 8px rgba(0,0,0,0.1)",
+        "&:hover": {
+          transform: isSelectMode ? "translateY(-6px)" : "translateY(-2px)",
           boxShadow: isSelected
             ? `0 12px 35px ${theme.palette.primary.main}35, 0 0 0 2px ${theme.palette.primary.main}`
-            : '0 8px 25px rgba(0,0,0,0.15)',
+            : "0 8px 25px rgba(0,0,0,0.15)",
         },
         borderRadius: 3,
-        overflow: 'hidden',
-        bgcolor: isSelected ? `${theme.palette.primary.main}08` : 'background.paper'
+        overflow: "hidden",
+        bgcolor: isSelected
+          ? `${theme.palette.primary.main}08`
+          : "background.paper",
       }}
     >
       {/* Selection Checkbox */}
       {isSelectMode && (
-        <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
+        <Box sx={{ position: "absolute", top: 12, right: 12, zIndex: 2 }}>
           <Checkbox
             checked={isSelected}
             onChange={handleCardClick}
-            icon={<Box sx={{ 
-              width: 24, 
-              height: 24, 
-              borderRadius: '50%', 
-              border: '2px solid white',
-              bgcolor: 'rgba(0,0,0,0.3)',
-              backdropFilter: 'blur(4px)'
-            }} />}
-            checkedIcon={<CheckCircleIcon sx={{ color: theme.palette.primary.main }} />}
+            icon={
+              <Box
+                sx={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  border: "2px solid white",
+                  bgcolor: "rgba(0,0,0,0.3)",
+                  backdropFilter: "blur(4px)",
+                }}
+              />
+            }
+            checkedIcon={
+              <CheckCircleIcon sx={{ color: theme.palette.primary.main }} />
+            }
             sx={{
-              color: 'white',
-              '& .MuiSvgIcon-root': { fontSize: 28 }
+              color: "white",
+              "& .MuiSvgIcon-root": { fontSize: 28 },
             }}
           />
         </Box>
@@ -190,24 +195,25 @@ const VideoCard: React.FC<VideoCardProps> = ({
         sx={{
           height: 200,
           background: getVideoThumbnail(),
-          position: 'relative',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-
+          position: "relative",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         {/* Decorative Pattern */}
-        <Box sx={{
-          position: 'absolute',
-          inset: 0,
-          opacity: 0.1,
-          background: `
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            opacity: 0.1,
+            background: `
             radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3) 0%, transparent 50%),
             radial-gradient(circle at 80% 80%, rgba(255,255,255,0.2) 0%, transparent 50%)
-          `
-        }} />
+          `,
+          }}
+        />
 
         {/* Play Button Overlay */}
         <Box
@@ -215,39 +221,39 @@ const VideoCard: React.FC<VideoCardProps> = ({
           sx={{
             width: 80,
             height: 80,
-            borderRadius: '50%',
-            bgcolor: 'rgba(0,0,0,0.7)',
-            backdropFilter: 'blur(10px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            borderRadius: "50%",
+            bgcolor: "rgba(0,0,0,0.7)",
+            backdropFilter: "blur(10px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
             opacity: 0.8,
-            border: '3px solid rgba(255,255,255,0.3)',
-            '&:hover': {
-              bgcolor: 'rgba(0,0,0,0.8)',
-              borderColor: 'rgba(255,255,255,0.5)'
-            }
+            border: "3px solid rgba(255,255,255,0.3)",
+            "&:hover": {
+              bgcolor: "rgba(0,0,0,0.8)",
+              borderColor: "rgba(255,255,255,0.5)",
+            },
           }}
         >
-          <PlayIcon sx={{ fontSize: 36, color: 'white', ml: 0.5 }} />
+          <PlayIcon sx={{ fontSize: 36, color: "white", ml: 0.5 }} />
         </Box>
 
         {/* Duration Badge */}
         {video.duration && (
           <Chip
-            icon={<ClockIcon sx={{ fontSize: '16px !important' }} />}
+            icon={<ClockIcon sx={{ fontSize: "16px !important" }} />}
             label={formatDuration(video.duration)}
             size="small"
             sx={{
-              position: 'absolute',
+              position: "absolute",
               bottom: 12,
               right: 12,
-              bgcolor: 'rgba(0,0,0,0.8)',
-              color: 'white',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.2)',
-              '& .MuiChip-icon': { color: 'white' }
+              bgcolor: "rgba(0,0,0,0.8)",
+              color: "white",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              "& .MuiChip-icon": { color: "white" },
             }}
           />
         )}
@@ -255,35 +261,35 @@ const VideoCard: React.FC<VideoCardProps> = ({
 
       {/* Card Content */}
       <CardContent sx={{ flexGrow: 1, p: 3 }}>
-        <Typography 
-          variant="h6" 
-          component="div" 
+        <Typography
+          variant="h6"
+          component="div"
           gutterBottom
-          sx={{ 
+          sx={{
             fontWeight: 600,
-            fontSize: '1.1rem',
+            fontSize: "1.1rem",
             lineHeight: 1.3,
             mb: 1,
-            display: '-webkit-box',
+            display: "-webkit-box",
             WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
           }}
         >
           {video.video_name}
         </Typography>
 
         {video.description && (
-          <Typography 
-            variant="body2" 
-            color="text.secondary" 
-            sx={{ 
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{
               mb: 2,
-              display: '-webkit-box',
+              display: "-webkit-box",
               WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              lineHeight: 1.4
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              lineHeight: 1.4,
             }}
           >
             {video.description}
@@ -291,7 +297,7 @@ const VideoCard: React.FC<VideoCardProps> = ({
         )}
 
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-          <CalendarIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+          <CalendarIcon sx={{ fontSize: 16, color: "text.secondary" }} />
           <Typography variant="caption" color="text.secondary">
             {new Date(video.created_at).toLocaleDateString("en-US", {
               month: "short",
@@ -318,19 +324,20 @@ const VideoCard: React.FC<VideoCardProps> = ({
                 py: 1.5,
                 borderRadius: 2,
                 fontWeight: 600,
-                textTransform: 'none',
-                background: 'linear-gradient(135deg, #2196F3 0%, #1976D2 100%)',
-                boxShadow: '0 4px 12px rgba(33, 150, 243, 0.3)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #1976D2 0%, #1565C0 100%)',
-                  boxShadow: '0 6px 16px rgba(33, 150, 243, 0.4)',
-                  transform: 'translateY(-1px)'
-                }
+                textTransform: "none",
+                background: "linear-gradient(135deg, #2196F3 0%, #1976D2 100%)",
+                boxShadow: "0 4px 12px rgba(33, 150, 243, 0.3)",
+                "&:hover": {
+                  background:
+                    "linear-gradient(135deg, #1976D2 0%, #1565C0 100%)",
+                  boxShadow: "0 6px 16px rgba(33, 150, 243, 0.4)",
+                  transform: "translateY(-1px)",
+                },
               }}
             >
               Edit
             </Button>
-            
+
             <Button
               variant="outlined"
               startIcon={<DeleteIcon />}
@@ -344,13 +351,13 @@ const VideoCard: React.FC<VideoCardProps> = ({
                 py: 1.5,
                 borderRadius: 2,
                 fontWeight: 600,
-                textTransform: 'none',
+                textTransform: "none",
                 borderWidth: 2,
-                '&:hover': {
+                "&:hover": {
                   borderWidth: 2,
-                  transform: 'translateY(-1px)',
-                  boxShadow: '0 4px 12px rgba(244, 67, 54, 0.3)'
-                }
+                  transform: "translateY(-1px)",
+                  boxShadow: "0 4px 12px rgba(244, 67, 54, 0.3)",
+                },
               }}
             >
               Delete
@@ -377,20 +384,20 @@ const VideoTable: React.FC<VideoTableProps> = ({
   onVideoDeselect,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalVideos, setTotalVideos] = useState(0);
-  
+
   // Modal states
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isPlayModalOpen, setIsPlayModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  
+
   const pageSize = 12;
 
   const fetchVideos = async (page: number = 1) => {
@@ -563,19 +570,33 @@ const VideoTable: React.FC<VideoTableProps> = ({
   if (loading) {
     return (
       <Container>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
-          <Box sx={{ position: 'relative', mb: 4 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            py: 8,
+          }}
+        >
+          <Box sx={{ position: "relative", mb: 4 }}>
             <CircularProgress size={60} thickness={4} />
-            <Box sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)'
-            }}>
-              <VideoIcon sx={{ fontSize: 24, color: 'primary.main' }} />
+            <Box
+              sx={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              <VideoIcon sx={{ fontSize: 24, color: "primary.main" }} />
             </Box>
           </Box>
-          <Typography variant="h6" gutterBottom color="text.primary" fontWeight={600}>
+          <Typography
+            variant="h6"
+            gutterBottom
+            color="text.primary"
+            fontWeight={600}
+          >
             Loading Videos
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -589,15 +610,17 @@ const VideoTable: React.FC<VideoTableProps> = ({
   if (error) {
     return (
       <Container>
-        <Alert 
-          severity="error" 
-          sx={{ 
-            mb: 3, 
+        <Alert
+          severity="error"
+          sx={{
+            mb: 3,
             borderRadius: 3,
-            '& .MuiAlert-message': { width: '100%' }
+            "& .MuiAlert-message": { width: "100%" },
           }}
         >
-          <AlertTitle sx={{ fontWeight: 'bold' }}>Something went wrong</AlertTitle>
+          <AlertTitle sx={{ fontWeight: "bold" }}>
+            Something went wrong
+          </AlertTitle>
           <Typography variant="body2" sx={{ mb: 2 }}>
             {error}
           </Typography>
@@ -607,9 +630,9 @@ const VideoTable: React.FC<VideoTableProps> = ({
             onClick={() => fetchVideos(currentPage)}
             size="small"
             sx={{
-              textTransform: 'none',
+              textTransform: "none",
               borderRadius: 2,
-              mt: 1
+              mt: 1,
             }}
           >
             Try Again
@@ -622,35 +645,39 @@ const VideoTable: React.FC<VideoTableProps> = ({
   if (videos.length === 0) {
     return (
       <Container>
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          py: 8,
-          textAlign: 'center'
-        }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            py: 8,
+            textAlign: "center",
+          }}
+        >
           <Avatar
             sx={{
               width: 80,
               height: 80,
-              bgcolor: 'grey.100',
-              mb: 3
+              bgcolor: "grey.100",
+              mb: 3,
             }}
           >
-            <VideoIcon sx={{ fontSize: 40, color: 'grey.400' }} />
+            <VideoIcon sx={{ fontSize: 40, color: "grey.400" }} />
           </Avatar>
-          
+
           <Typography variant="h5" gutterBottom fontWeight={600}>
             No videos found
           </Typography>
-          
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: 400 }}>
+
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ mb: 3, maxWidth: 400 }}
+          >
             {searchQuery || dateFrom || dateTo
               ? "No videos match your current filters. Try adjusting your search criteria."
               : "Upload/Add your first video to get started with your collection."}
           </Typography>
-
-     
         </Box>
       </Container>
     );
@@ -661,18 +688,21 @@ const VideoTable: React.FC<VideoTableProps> = ({
     return (
       <Container>
         {isSelectMode && (
-          <Alert 
-            icon={<CheckCircleIcon />} 
+          <Alert
+            icon={<CheckCircleIcon />}
             severity="info"
-            sx={{ 
-              mb: 3, 
+            sx={{
+              mb: 3,
               borderRadius: 3,
               bgcolor: `${theme.palette.primary.main}08`,
-              border: `1px solid ${theme.palette.primary.main}20`
+              border: `1px solid ${theme.palette.primary.main}20`,
             }}
           >
-            <AlertTitle sx={{ fontWeight: 'bold' }}>Selection Mode Active</AlertTitle>
-            Click on videos to select them. {selectedVideos.length} of {videos.length} selected.
+            <AlertTitle sx={{ fontWeight: "bold" }}>
+              Selection Mode Active
+            </AlertTitle>
+            Click on videos to select them. {selectedVideos.length} of{" "}
+            {videos.length} selected.
           </Alert>
         )}
 
@@ -694,7 +724,7 @@ const VideoTable: React.FC<VideoTableProps> = ({
         </Grid>
 
         {totalVideos > pageSize && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
             <Pagination
               count={Math.ceil(totalVideos / pageSize)}
               page={currentPage}
@@ -704,17 +734,19 @@ const VideoTable: React.FC<VideoTableProps> = ({
               showFirstButton
               showLastButton
               sx={{
-                '& .MuiPaginationItem-root': {
+                "& .MuiPaginationItem-root": {
                   borderRadius: 2,
                   fontWeight: 500,
-                  '&.Mui-selected': {
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
-                    }
-                  }
-                }
+                  "&.Mui-selected": {
+                    background:
+                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    color: "white",
+                    "&:hover": {
+                      background:
+                        "linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)",
+                    },
+                  },
+                },
               }}
             />
           </Box>
@@ -748,26 +780,29 @@ const VideoTable: React.FC<VideoTableProps> = ({
   return (
     <Container>
       {isSelectMode && (
-        <Alert 
-          icon={<CheckCircleIcon />} 
+        <Alert
+          icon={<CheckCircleIcon />}
           severity="info"
-          sx={{ 
-            mb: 3, 
+          sx={{
+            mb: 3,
             borderRadius: 3,
             bgcolor: `${theme.palette.primary.main}08`,
-            border: `1px solid ${theme.palette.primary.main}20`
+            border: `1px solid ${theme.palette.primary.main}20`,
           }}
         >
-          <AlertTitle sx={{ fontWeight: 'bold' }}>Selection Mode Active</AlertTitle>
-          Select videos from the list below. {selectedVideos.length} of {videos.length} selected.
+          <AlertTitle sx={{ fontWeight: "bold" }}>
+            Selection Mode Active
+          </AlertTitle>
+          Select videos from the list below. {selectedVideos.length} of{" "}
+          {videos.length} selected.
         </Alert>
       )}
 
-      <Paper elevation={2} sx={{ borderRadius: 3, overflow: 'hidden' }}>
+      <Paper elevation={2} sx={{ borderRadius: 3, overflow: "hidden" }}>
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: 'grey.50' }}>
+              <TableRow sx={{ bgcolor: "grey.50" }}>
                 {isSelectMode && (
                   <TableCell padding="checkbox">
                     <Typography variant="subtitle2" fontWeight={600}>
@@ -819,17 +854,17 @@ const VideoTable: React.FC<VideoTableProps> = ({
                 <TableRow
                   key={video.id}
                   sx={{
-                    bgcolor: selectedVideos.includes(video.id) 
-                      ? `${theme.palette.primary.main}08` 
-                      : index % 2 === 0 
-                        ? 'grey.25' 
-                        : 'background.paper',
-                    '&:hover': {
+                    bgcolor: selectedVideos.includes(video.id)
+                      ? `${theme.palette.primary.main}08`
+                      : index % 2 === 0
+                      ? "grey.25"
+                      : "background.paper",
+                    "&:hover": {
                       bgcolor: selectedVideos.includes(video.id)
                         ? `${theme.palette.primary.main}12`
-                        : 'action.hover'
+                        : "action.hover",
                     },
-                    transition: 'background-color 0.2s'
+                    transition: "background-color 0.2s",
                   }}
                 >
                   {isSelectMode && (
@@ -848,13 +883,18 @@ const VideoTable: React.FC<VideoTableProps> = ({
                     </TableCell>
                   )}
                   <TableCell>
+                    <Typography variant="body2" fontWeight={500}>
+                      {video.video_name   || "Untitled Video"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
                     <Chip
                       size="small"
                       label={formatFileSize(video.file_size)}
                       sx={{
-                        bgcolor: 'primary.50',
-                        color: 'primary.700',
-                        fontWeight: 500
+                        bgcolor: "primary.50",
+                        color: "primary.700",
+                        fontWeight: 500,
                       }}
                     />
                   </TableCell>
@@ -863,9 +903,9 @@ const VideoTable: React.FC<VideoTableProps> = ({
                       size="small"
                       label={formatDuration(video.duration)}
                       sx={{
-                        bgcolor: 'success.50',
-                        color: 'success.700',
-                        fontWeight: 500
+                        bgcolor: "success.50",
+                        color: "success.700",
+                        fontWeight: 500,
                       }}
                     />
                   </TableCell>
@@ -876,52 +916,56 @@ const VideoTable: React.FC<VideoTableProps> = ({
                   </TableCell>
                   <TableCell align="center">
                     {!isSelectMode && (
-                      <Stack direction="row" spacing={1} justifyContent="center">
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        justifyContent="center"
+                      >
                         <Tooltip title="View Video">
                           <IconButton
                             onClick={() => handlePlayVideo(video)}
                             size="small"
                             sx={{
-                              bgcolor: 'primary.50',
-                              color: 'primary.main',
-                              '&:hover': {
-                                bgcolor: 'primary.100',
-                                transform: 'scale(1.1)'
-                              }
+                              bgcolor: "primary.50",
+                              color: "primary.main",
+                              "&:hover": {
+                                bgcolor: "primary.100",
+                                transform: "scale(1.1)",
+                              },
                             }}
                           >
                             <ViewIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        
+
                         <Tooltip title="Edit Video">
                           <IconButton
                             onClick={() => handleEditVideo(video)}
                             size="small"
                             sx={{
-                              bgcolor: 'info.50',
-                              color: 'info.main',
-                              '&:hover': {
-                                bgcolor: 'info.100',
-                                transform: 'scale(1.1)'
-                              }
+                              bgcolor: "info.50",
+                              color: "info.main",
+                              "&:hover": {
+                                bgcolor: "info.100",
+                                transform: "scale(1.1)",
+                              },
                             }}
                           >
                             <EditIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
-                        
+
                         <Tooltip title="Delete Video">
                           <IconButton
                             onClick={() => handleDeleteVideo(video)}
                             size="small"
                             sx={{
-                              bgcolor: 'error.50',
-                              color: 'error.main',
-                              '&:hover': {
-                                bgcolor: 'error.100',
-                                transform: 'scale(1.1)'
-                              }
+                              bgcolor: "error.50",
+                              color: "error.main",
+                              "&:hover": {
+                                bgcolor: "error.100",
+                                transform: "scale(1.1)",
+                              },
                             }}
                           >
                             <DeleteIcon fontSize="small" />
@@ -938,7 +982,7 @@ const VideoTable: React.FC<VideoTableProps> = ({
       </Paper>
 
       {totalVideos > pageSize && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <Pagination
             count={Math.ceil(totalVideos / pageSize)}
             page={currentPage}
@@ -948,17 +992,19 @@ const VideoTable: React.FC<VideoTableProps> = ({
             showFirstButton
             showLastButton
             sx={{
-              '& .MuiPaginationItem-root': {
+              "& .MuiPaginationItem-root": {
                 borderRadius: 2,
                 fontWeight: 500,
-                '& .MuiPaginationItem-root.Mui-selected': {
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  color: 'white',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)'
-                  }
-                }
-              }
+                "& .MuiPaginationItem-root.Mui-selected": {
+                  background:
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  color: "white",
+                  "&:hover": {
+                    background:
+                      "linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)",
+                  },
+                },
+              },
             }}
           />
         </Box>
