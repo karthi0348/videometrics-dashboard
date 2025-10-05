@@ -337,66 +337,54 @@ interface VideoInfoBannerProps {
 export const VideoInfoBanner: React.FC<VideoInfoBannerProps> = ({
   analytics,
 }) => (
-    <div className="flex-center">
-      <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-base font-semibold text-gray-900">
-            Video Information
-          </h2>
-          <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-              analytics.status === "completed"
-                ? "bg-green-100 text-green-700"
-                : analytics.status === "processing"
-                ? "bg-yellow-100 text-yellow-700"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            {analytics.status}
+<div className="flex-center">
+  <div className="relative group bg-white rounded-xl p-6 shadow-lg border border-slate-200/60 transition-all duration-300 hover:shadow-xl hover:border-slate-300">
+    <div className="flex items-center gap-3 mb-4">
+      <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+        Video Information
+      </h2>
+      <span
+        className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-all ${
+          analytics.status === "completed"
+            ? "bg-emerald-500/10 text-emerald-700 ring-1 ring-emerald-500/20"
+            : analytics.status === "processing"
+            ? "bg-amber-500/10 text-amber-700 ring-1 ring-amber-500/20"
+            : "bg-slate-500/10 text-slate-700 ring-1 ring-slate-500/20"
+        }`}
+      >
+        {analytics.status}
+      </span>
+    </div>
+
+    <div className="space-y-4">
+      <div>
+        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+          Video Name
+        </label>
+        <p className="text-sm text-slate-900 font-medium break-words">
+          {analytics.video_name}
+        </p>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            Confidence Score
+          </label>
+          <span className="text-2xl font-bold text-emerald-600 tabular-nums">
+            {analytics.confidence_score}%
           </span>
         </div>
-
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-black-500 uppercase tracking-wide">
-              Video Name
-            </label>
-            <p className="text-sm text-gray-900 break-words mt-1">
-              {analytics.video_name}
-            </p>
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-black-500 uppercase tracking-wide">
-              Video URL
-            </label>
-            <p className="text-xs text-gray-700 break-all mt-1 font-mono bg-gray-50 rounded px-2 py-1">
-              {analytics.video_url}
-            </p>
-          </div>
-
-          <div>
-            <label className="text-xs font-medium text-black-900 uppercase tracking-wide">
-              Processed URL
-            </label>
-            <p className="text-xs text-gray-700 break-all mt-1 font-mono bg-gray-50 rounded px-2 py-1">
-              {analytics.compressed_video_url}
-            </p>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-black-500 uppercase tracking-wide">
-                Confidence Score
-              </label>
-              <span className="text-sm font-semibold text-green-600">
-                {analytics.confidence_score}%
-              </span>
-            </div>
-          </div>
+        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full transition-all duration-700"
+            style={{ width: `${analytics.confidence_score}%` }}
+          />
         </div>
       </div>
     </div>
+  </div>
+</div>
 );
 
 // Navigation Tabs Component

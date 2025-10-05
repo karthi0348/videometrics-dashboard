@@ -315,7 +315,7 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
                     <span className="text-sm font-medium text-gray-600">
                       Template
                     </span>
-                    <span className="text-sm text-gray-900 font-medium">
+                    <span className="text-sm text-gray-900 font-medium ps-2 text-right block">
                       {video.template_name}
                     </span>
                   </div>

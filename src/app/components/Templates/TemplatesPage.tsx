@@ -91,7 +91,8 @@ const TemplatesPage: React.FC = () => {
 
   // Clone template states
   const [showCloneModal, setShowCloneModal] = useState(false);
-  const [selectedTemplateForClone, setSelectedTemplateForClone] = useState<Template | null>(null);
+  const [selectedTemplateForClone, setSelectedTemplateForClone] =
+    useState<Template | null>(null);
   const [cloneLoading, setCloneLoading] = useState(false);
   const [cloneName, setCloneName] = useState("");
 
@@ -161,16 +162,21 @@ const TemplatesPage: React.FC = () => {
 
   // Handle the actual cloning
   const handleCloneTemplate = async () => {
-      console.log('handleCloneTemplate called'); // Add this line
+    console.log("handleCloneTemplate called"); // Add this line
 
     if (!selectedTemplateForClone || !cloneName.trim()) {
-      toast.error("Please provide a name for the new template", { containerId: "TR" });
+      toast.error("Please provide a name for the new template", {
+        containerId: "TR",
+      });
       return;
     }
 
     setCloneLoading(true);
     try {
-    await templateApiService.cloneTemplate(selectedTemplateForClone.id, cloneName.trim());
+      await templateApiService.cloneTemplate(
+        selectedTemplateForClone.id,
+        cloneName.trim()
+      );
       toast.success("Template cloned successfully", { containerId: "TR" });
       await getAllTemplate();
       setShowCloneModal(false);
@@ -653,9 +659,7 @@ const TemplatesPage: React.FC = () => {
                       <div className="text-center">
                         <div className="flex items-center justify-center gap-1 mb-1">
                           <Users className="w-3 h-3 text-slate-500" />
-                          <span className="text-xs text-slate-500">
-                            Rating
-                          </span>
+                          <span className="text-xs text-slate-500">Rating</span>
                         </div>
                         <span className="text-sm font-semibold text-slate-700">
                           {template.rating}
@@ -704,32 +708,31 @@ const TemplatesPage: React.FC = () => {
                         onClick={() => handleUseTemplate(template)}
                         variant="outline"
                         size="sm"
-                        className="flex-1 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200/50 hover:from-purple-100 hover:to-blue-100 text-purple-700 text-xs sm:text-sm rounded-lg"
+                        className="sm:flex-1 bg-white/80 backdrop-blur-sm border border-purple-200/60 hover:bg-purple-50/80 hover:border-purple-300/60 text-purple-700 font-medium text-xs rounded-2xl h-9 shadow-sm hover:shadow-md transition-all duration-200"
                       >
-                        <Copy className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                        <Copy className="w-3.5 h-3.5 mr-1.5" />
                         Use Template
                       </Button>
                       <div className="flex gap-2">
                         <Button
                           onClick={() => handleOpenAssignment(template)}
                           size="sm"
-                          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0 text-xs sm:text-sm px-3 sm:px-4 rounded-lg flex-shrink-0"
+                          className="flex-1 sm:flex-none bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium border-0 text-xs px-3 sm:px-4 rounded-2xl h-9 shadow-lg shadow-purple-500/25 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-200"
                         >
-                          <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                          <Users className="w-3.5 h-3.5 mr-1.5" />
                           Assign
                         </Button>
                         <Button
                           onClick={() => toggleAssignments(template.id)}
                           variant="outline"
                           size="sm"
-                          className="bg-gradient-to-r from-slate-50 to-purple-50 border-purple-200/50 hover:from-slate-100 hover:to-purple-100 px-2 sm:px-3 rounded-lg flex-shrink-0"
+                          className="bg-white/80 backdrop-blur-sm border border-purple-200/60 hover:bg-purple-50/80 hover:border-purple-300/60 w-9 h-9 p-0 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center flex-shrink-0"
                         >
                           {tempId === template.id && showAssignments ? (
-                            <EyeOff className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <EyeOff className="w-3.5 h-3.5 text-purple-700" />
                           ) : (
-                            <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <Eye className="w-3.5 h-3.5 text-purple-700" />
                           )}
-                          
                         </Button>
                       </div>
                     </div>
@@ -806,11 +809,15 @@ const TemplatesPage: React.FC = () => {
                 Clone Template
               </h3>
               <p className="text-sm text-gray-600 mb-4">
-                Create a copy of "{selectedTemplateForClone?.template_name}" with a new name.
+                Create a copy of "{selectedTemplateForClone?.template_name}"
+                with a new name.
               </p>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="clone-name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="clone-name"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     New Template Name
                   </label>
                   <Input
