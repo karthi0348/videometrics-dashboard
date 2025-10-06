@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { GeneratedChart, ChartSeries } from "../types/types";
 
 // Define API service interface
 interface ApiService {
@@ -16,6 +15,7 @@ interface ChartSeries {
   category?: string[];
   value?: number[];
   label?: string[];
+  labels?: string[];
   values?: number[];
   [key: string]: any;
 }
@@ -25,13 +25,14 @@ interface GeneratedChart {
   title: string;
   plot_type: string;
   series?: ChartSeries;
-  x_axis?: string[];
+  x_axis?: any;
   y_axis_label?: string;
   value?: number;
   min?: number;
   max?: number;
   status?: string;
   insights?: string[];
+  recommendations?: string[];
   styling?: {
     max_value?: number;
     unit?: string;
@@ -118,15 +119,53 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     await loadChartsFromAPI();
   };
 
+  // Helper function to extract categories from various data structures
+  const extractCategories = (chart: GeneratedChart): string[] => {
+    if (chart.series?.labels && Array.isArray(chart.series.labels)) {
+      return chart.series.labels;
+    }
+    if (chart.series?.label && Array.isArray(chart.series.label)) {
+      return chart.series.label;
+    }
+    if (chart.series?.category && Array.isArray(chart.series.category)) {
+      return chart.series.category;
+    }
+    if (chart.x_axis?.categories && Array.isArray(chart.x_axis.categories)) {
+      return chart.x_axis.categories;
+    }
+    if (chart.x_axis && Array.isArray(chart.x_axis)) {
+      return chart.x_axis;
+    }
+    return [];
+  };
+
+  // Helper function to extract values from various data structures
+  const extractValues = (chart: GeneratedChart): number[] => {
+    if (chart.series?.values && Array.isArray(chart.series.values)) {
+      return chart.series.values;
+    }
+    if (chart.series?.value && Array.isArray(chart.series.value)) {
+      return chart.series.value;
+    }
+    // For bar charts with named series
+    if (chart.series && !chart.series.values && !chart.series.value) {
+      const seriesEntries = Object.entries(chart.series);
+      if (seriesEntries.length > 0) {
+        const [, seriesData] = seriesEntries[0];
+        if (Array.isArray(seriesData)) {
+          return seriesData;
+        }
+      }
+    }
+    return [];
+  };
+
   // Helper function to validate pie chart data
   const isValidPieChartData = (chart: GeneratedChart): boolean => {
-    const categories = chart.series?.label || chart.series?.category || [];
-    const values = chart.series?.values || chart.series?.value || [];
+    const categories = extractCategories(chart);
+    const values = extractValues(chart);
     return (
       chart.plot_type === "pie" &&
-      chart.series &&
-      Array.isArray(categories) &&
-      Array.isArray(values) &&
       categories.length > 0 &&
       values.length > 0 &&
       categories.length === values.length
@@ -141,7 +180,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
       typeof val === "number" && !isNaN(val) && isFinite(val);
 
     const min = chart.min ?? 0;
-    const max = chart.max ?? 100;
+    const max = chart.max ?? chart.styling?.max_value ?? 100;
     const value = chart.value;
 
     return isSafeNumber(value) && min < max && value! >= min && value! <= max;
@@ -149,12 +188,12 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
   // Helper function to validate bar chart data
   const isValidBarChartData = (chart: GeneratedChart): boolean => {
+    const categories = extractCategories(chart);
+    const values = extractValues(chart);
     return (
       chart.plot_type === "bar" &&
-      chart.series &&
-      chart.x_axis &&
-      Array.isArray(chart.x_axis) &&
-      chart.x_axis.length > 0
+      categories.length > 0 &&
+      values.length > 0
     );
   };
 
@@ -189,6 +228,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
   // Helper function to render pie chart
   const renderPieChart = (categories: string[], values: number[], size: number = 180) => {
     const total = values.reduce((sum, val) => sum + val, 0);
+    if (total === 0) return renderEmptyState();
+    
     const colors = ["#10b981", "#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
     
     let currentAngle = 0;
@@ -258,6 +299,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
   // Helper function to render donut chart
   const renderDonutChart = (categories: string[], values: number[], size: number = 160) => {
     const total = values.reduce((sum, val) => sum + val, 0);
+    if (total === 0) return renderEmptyState();
+    
     const colors = ["#10b981", "#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
     
     let currentAngle = 0;
@@ -513,65 +556,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Function to render the appropriate chart based on selection
-  const renderChart = (chart: GeneratedChart) => {
-    const selectedType = getSelectedChartType(chart.id, chart.plot_type);
-
-    // Handle gauge charts
-    if (chart.plot_type === "gauge" && isValidGaugeChartData(chart)) {
-      const maxValue = chart.styling?.max_value || 100;
-      const currentValue = chart.value as number;
-      const remainingValue = Math.max(0, maxValue - currentValue);
-
-      switch (selectedType) {
-        case "gauge":
-          return renderGauge(currentValue, maxValue, chart.styling?.unit);
-        case "pie":
-          return renderPieChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
-        case "bar":
-          return renderBarChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
-        case "histogram":
-          return renderHistogramChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
-      }
-    }
-
-    // Handle pie charts
-    if (isValidPieChartData(chart)) {
-      const categories = chart.series?.label || chart.series?.category || [];
-      const values = chart.series?.values || chart.series?.value || [];
-
-      switch (selectedType) {
-        case "pie":
-          return renderPieChart(categories, values);
-        case "donut":
-          return renderDonutChart(categories, values);
-        case "bar":
-          return renderBarChart(categories, values);
-        case "histogram":
-          return renderHistogramChart(categories, values);
-      }
-    }
-
-    // Handle bar charts
-    if (chart.plot_type === "bar" && isValidBarChartData(chart)) {
-      const seriesEntries = Object.entries(chart.series);
-      if (seriesEntries.length > 0) {
-        const [, seriesData] = seriesEntries[0];
-        const values = Array.isArray(seriesData) ? seriesData : [];
-        
-        if (values.length > 0 && chart.x_axis) {
-          switch (selectedType) {
-            case "bar":
-              return renderBarChart(chart.x_axis, values);
-            case "histogram":
-              return renderHistogramChart(chart.x_axis, values);
-            case "pie":
-              return renderPieChart(chart.x_axis, values);
-          }
-        }
-      }
-    }
-
+  // Empty state renderer
+  const renderEmptyState = () => {
     return (
       <div className="w-full bg-gray-50 rounded-lg p-4 sm:p-8 text-center">
         <div className="text-gray-400 mb-2">
@@ -594,6 +580,63 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
         </p>
       </div>
     );
+  };
+
+  // Function to render the appropriate chart based on selection
+  const renderChart = (chart: GeneratedChart) => {
+    const selectedType = getSelectedChartType(chart.id, chart.plot_type);
+
+    // Handle gauge charts
+    if (chart.plot_type === "gauge" && isValidGaugeChartData(chart)) {
+      const maxValue = chart.styling?.max_value || chart.max || 100;
+      const currentValue = chart.value as number;
+      const remainingValue = Math.max(0, maxValue - currentValue);
+
+      switch (selectedType) {
+        case "gauge":
+          return renderGauge(currentValue, maxValue, chart.styling?.unit);
+        case "pie":
+          return renderPieChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
+        case "bar":
+          return renderBarChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
+        case "histogram":
+          return renderHistogramChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
+      }
+    }
+
+    // Handle pie charts
+    if (isValidPieChartData(chart)) {
+      const categories = extractCategories(chart);
+      const values = extractValues(chart);
+
+      switch (selectedType) {
+        case "pie":
+          return renderPieChart(categories, values);
+        case "donut":
+          return renderDonutChart(categories, values);
+        case "bar":
+          return renderBarChart(categories, values);
+        case "histogram":
+          return renderHistogramChart(categories, values);
+      }
+    }
+
+    // Handle bar charts
+    if (isValidBarChartData(chart)) {
+      const categories = extractCategories(chart);
+      const values = extractValues(chart);
+
+      switch (selectedType) {
+        case "bar":
+          return renderBarChart(categories, values);
+        case "histogram":
+          return renderHistogramChart(categories, values);
+        case "pie":
+          return renderPieChart(categories, values);
+      }
+    }
+
+    return renderEmptyState();
   };
 
   // Get chart type label
