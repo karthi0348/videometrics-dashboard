@@ -122,45 +122,93 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
   // Helper function to extract categories from various data structures
   const extractCategories = (chart: GeneratedChart): string[] => {
     if (chart.series?.labels && Array.isArray(chart.series.labels)) {
-      return chart.series.labels;
+      return chart.series.labels.map(String);
     }
     if (chart.series?.label && Array.isArray(chart.series.label)) {
-      return chart.series.label;
+      return chart.series.label.map(String);
     }
     if (chart.series?.category && Array.isArray(chart.series.category)) {
-      return chart.series.category;
+      return chart.series.category.map(String);
     }
     if (chart.x_axis?.categories && Array.isArray(chart.x_axis.categories)) {
-      return chart.x_axis.categories;
+      return chart.x_axis.categories.map(String);
     }
     if (chart.x_axis && Array.isArray(chart.x_axis)) {
-      return chart.x_axis;
+      return chart.x_axis.map(String);
     }
+    
+    if (chart.series && typeof chart.series === 'object' && !Array.isArray(chart.series)) {
+      const keys = Object.keys(chart.series).filter(key => 
+        !['labels', 'label', 'category', 'categories', 'value', 'values'].includes(key)
+      );
+      if (keys.length > 0) {
+        const firstSeries = chart.series[keys[0]];
+        if (Array.isArray(firstSeries) && chart.x_axis && Array.isArray(chart.x_axis)) {
+          return chart.x_axis.map(String);
+        }
+      }
+    }
+    
+    if (chart.insights && chart.insights.length > 0) {
+      const insights = chart.insights.join(' ');
+      if (insights.toLowerCase().includes('before') && insights.toLowerCase().includes('after')) {
+        return ['Before Fueling', 'After Fueling'];
+      }
+      if (insights.toLowerCase().includes('premium') && insights.toLowerCase().includes('non-premium')) {
+        return ['Premium', 'Non-Premium'];
+      }
+    }
+    
     return [];
   };
 
   // Helper function to extract values from various data structures
   const extractValues = (chart: GeneratedChart): number[] => {
     if (chart.series?.values && Array.isArray(chart.series.values)) {
-      return chart.series.values;
+      return chart.series.values.map(v => {
+        const num = Number(v);
+        return isNaN(num) || !isFinite(num) ? 0 : num;
+      });
     }
     if (chart.series?.value && Array.isArray(chart.series.value)) {
-      return chart.series.value;
+      return chart.series.value.map(v => {
+        const num = Number(v);
+        return isNaN(num) || !isFinite(num) ? 0 : num;
+      });
     }
-    // For bar charts with named series
-    if (chart.series && !chart.series.values && !chart.series.value) {
-      const seriesEntries = Object.entries(chart.series);
-      if (seriesEntries.length > 0) {
-        const [, seriesData] = seriesEntries[0];
+    
+    if (chart.series && typeof chart.series === 'object' && !Array.isArray(chart.series)) {
+      const dataKeys = Object.keys(chart.series).filter(key => 
+        !['labels', 'label', 'category', 'categories'].includes(key)
+      );
+      
+      for (const key of dataKeys) {
+        const seriesData = chart.series[key];
         if (Array.isArray(seriesData)) {
-          return seriesData;
+          return seriesData.map(v => {
+            const num = Number(v);
+            return isNaN(num) || !isFinite(num) ? 0 : num;
+          });
         }
       }
     }
+    
+    if (chart.insights && chart.insights.length > 0) {
+      const insights = chart.insights.join(' ');
+      const percentMatch = insights.match(/(\d+)%/g);
+      if (percentMatch) {
+        const values = percentMatch.map(p => parseInt(p));
+        if (values.length >= 2) {
+          return values;
+        } else if (values.length === 1) {
+          return [values[0], 100 - values[0]];
+        }
+      }
+    }
+    
     return [];
   };
 
-  // Helper function to validate pie chart data
   const isValidPieChartData = (chart: GeneratedChart): boolean => {
     const categories = extractCategories(chart);
     const values = extractValues(chart);
@@ -172,7 +220,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Helper function to validate gauge chart data
   const isValidGaugeChartData = (chart: GeneratedChart): boolean => {
     if (chart.plot_type !== "gauge") return false;
 
@@ -186,19 +233,27 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     return isSafeNumber(value) && min < max && value! >= min && value! <= max;
   };
 
-  // Helper function to validate bar chart data
   const isValidBarChartData = (chart: GeneratedChart): boolean => {
     const categories = extractCategories(chart);
     const values = extractValues(chart);
+    
     return (
       chart.plot_type === "bar" &&
       categories.length > 0 &&
-      values.length > 0
+      values.length > 0 &&
+      values.some(v => typeof v === 'number' && !isNaN(v))
     );
   };
 
-  // Get available chart types for a given chart
   const getAvailableChartTypes = (chart: GeneratedChart): string[] => {
+    if (chart.status === 'attention_needed') {
+      const categories = extractCategories(chart);
+      const values = extractValues(chart);
+      if (categories.length > 0 && values.length > 0) {
+        return ["bar", "pie", "donut", "histogram"];
+      }
+    }
+    
     if (isValidPieChartData(chart)) {
       return ["pie", "donut", "bar", "histogram"];
     }
@@ -211,12 +266,10 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     return [chart.plot_type];
   };
 
-  // Get the selected chart type for a given chart
   const getSelectedChartType = (chartId: string, defaultType: string): string => {
     return chartSelections.get(chartId) || defaultType;
   };
 
-  // Set the selected chart type
   const setSelectedChartType = (chartId: string, chartType: string) => {
     setChartSelections(prev => {
       const newMap = new Map(prev);
@@ -225,7 +278,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     });
   };
 
-  // Helper function to render pie chart
   const renderPieChart = (categories: string[], values: number[], size: number = 180) => {
     const total = values.reduce((sum, val) => sum + val, 0);
     if (total === 0) return renderEmptyState();
@@ -296,7 +348,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Helper function to render donut chart
   const renderDonutChart = (categories: string[], values: number[], size: number = 160) => {
     const total = values.reduce((sum, val) => sum + val, 0);
     if (total === 0) return renderEmptyState();
@@ -374,7 +425,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Helper function to render gauge
   const renderGauge = (value: number, maxValue: number, unit?: string, size: number = 180) => {
     const percentage = Math.min((value / maxValue) * 100, 100);
     const strokeWidth = 12;
@@ -424,8 +474,18 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Helper function to render bar chart
   const renderBarChart = (categories: string[], values: number[]) => {
+    if (!values || values.length === 0 || !categories || categories.length === 0) {
+      return renderEmptyState();
+    }
+
+    const validValues = values.map(v => {
+      const num = Number(v);
+      return isNaN(num) || !isFinite(num) ? 0 : num;
+    });
+
+    const maxValue = Math.max(...validValues, 1);
+    
     return (
       <div className="w-full">
         <div className="flex flex-col items-center p-6">
@@ -440,11 +500,10 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
               preserveAspectRatio="xMidYMid meet"
               className="overflow-visible"
             >
-              {values.map((value, index) => {
-                const barWidth = Math.min(25, 280 / values.length - 2);
-                const maxValue = Math.max(...values);
+              {validValues.map((value, index) => {
+                const barWidth = Math.min(25, 280 / validValues.length - 2);
                 const barHeight = Math.max(3, (value / maxValue) * 70);
-                const x = 20 + index * (280 / values.length);
+                const x = 20 + index * (280 / validValues.length);
                 const y = 90 - barHeight;
 
                 return (
@@ -490,8 +549,18 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Helper function to render histogram
   const renderHistogramChart = (categories: string[], values: number[]) => {
+    if (!values || values.length === 0 || !categories || categories.length === 0) {
+      return renderEmptyState();
+    }
+
+    const validValues = values.map(v => {
+      const num = Number(v);
+      return isNaN(num) || !isFinite(num) ? 0 : num;
+    });
+
+    const maxValue = Math.max(...validValues, 1);
+    
     return (
       <div className="w-full">
         <div className="flex flex-col items-center p-6">
@@ -506,9 +575,8 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
               preserveAspectRatio="xMidYMid meet"
               className="overflow-visible"
             >
-              {values.map((value, index) => {
-                const barWidth = Math.max(8, 260 / values.length);
-                const maxValue = Math.max(...values);
+              {validValues.map((value, index) => {
+                const barWidth = Math.max(8, 260 / validValues.length);
                 const barHeight = Math.max(3, (value / maxValue) * 70);
                 const x = 20 + index * barWidth;
                 const y = 90 - barHeight;
@@ -556,7 +624,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Empty state renderer
   const renderEmptyState = () => {
     return (
       <div className="w-full bg-gray-50 rounded-lg p-4 sm:p-8 text-center">
@@ -582,11 +649,35 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     );
   };
 
-  // Function to render the appropriate chart based on selection
   const renderChart = (chart: GeneratedChart) => {
+    console.log('=== Rendering Chart ===');
+    console.log('Chart:', chart.title);
+    console.log('Status:', chart.status);
+    
     const selectedType = getSelectedChartType(chart.id, chart.plot_type);
+    const categories = extractCategories(chart);
+    const values = extractValues(chart);
+    
+    console.log('Categories:', categories);
+    console.log('Values:', values);
 
-    // Handle gauge charts
+    if (chart.status === 'attention_needed' && categories.length > 0 && values.length > 0) {
+      switch (selectedType) {
+        case "bar":
+          return renderBarChart(categories, values);
+        case "histogram":
+          return renderHistogramChart(categories, values);
+        case "pie":
+          return renderPieChart(categories, values);
+        case "donut":
+          return renderDonutChart(categories, values);
+      }
+    }
+
+    if (categories.length === 0 && values.length === 0 && chart.value === undefined) {
+      return renderEmptyState();
+    }
+
     if (chart.plot_type === "gauge" && isValidGaugeChartData(chart)) {
       const maxValue = chart.styling?.max_value || chart.max || 100;
       const currentValue = chart.value as number;
@@ -596,19 +687,15 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
         case "gauge":
           return renderGauge(currentValue, maxValue, chart.styling?.unit);
         case "pie":
-          return renderPieChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
+          return renderPieChart(["Current", "Remaining"], [currentValue, remainingValue]);
         case "bar":
-          return renderBarChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
+          return renderBarChart(["Current", "Remaining"], [currentValue, remainingValue]);
         case "histogram":
-          return renderHistogramChart(["Current Value", "Remaining"], [currentValue, remainingValue]);
+          return renderHistogramChart(["Current", "Remaining"], [currentValue, remainingValue]);
       }
     }
 
-    // Handle pie charts
     if (isValidPieChartData(chart)) {
-      const categories = extractCategories(chart);
-      const values = extractValues(chart);
-
       switch (selectedType) {
         case "pie":
           return renderPieChart(categories, values);
@@ -621,11 +708,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
       }
     }
 
-    // Handle bar charts
     if (isValidBarChartData(chart)) {
-      const categories = extractCategories(chart);
-      const values = extractValues(chart);
-
       switch (selectedType) {
         case "bar":
           return renderBarChart(categories, values);
@@ -639,7 +722,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
     return renderEmptyState();
   };
 
-  // Get chart type label
   const getChartTypeLabel = (chartType: string) => {
     const labels: Record<string, string> = {
       donut: "Donut",
@@ -687,7 +769,7 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
               <p className="text-red-700 text-xs sm:text-sm mt-1 break-words">
                 {error}
               </p>
-              <button
+             <button
                 onClick={loadChartsFromAPI}
                 className="mt-3 inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-md text-xs sm:text-sm font-medium hover:bg-red-200 transition-colors"
               >
@@ -735,7 +817,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
-      {/* Header with refresh button */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 space-y-4 sm:space-y-0">
         <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">
           Analytics Charts
@@ -764,7 +845,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
         )}
       </div>
 
-      {/* Charts Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
         {charts.map((chart) => {
           const availableTypes = getAvailableChartTypes(chart);
@@ -779,7 +859,6 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
               data-chart-title={chart.title}
               style={{ minHeight: "400px" }}
             >
-              {/* Chart Title */}
               <div className="mb-4 sm:mb-6 lg:mb-8">
                 <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 text-center mb-3 sm:mb-4 leading-tight">
                   {chart.title}
@@ -791,15 +870,16 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                         ? "bg-green-100 text-green-800 border-2 border-green-200"
                         : chart.status === "good"
                         ? "bg-yellow-100 text-yellow-800 border-2 border-yellow-200"
+                        : chart.status === "attention_needed"
+                        ? "bg-orange-100 text-orange-800 border-2 border-orange-200"
                         : "bg-red-100 text-red-800 border-2 border-red-200"
                     }`}
                   >
-                    {chart.status?.toUpperCase() || "UNKNOWN"}
+                    {chart.status?.toUpperCase().replace('_', ' ') || "UNKNOWN"}
                   </span>
                 </div>
               </div>
 
-              {/* Chart Type Toggle Buttons */}
               {availableTypes.length > 1 && (
                 <div className="mb-4 flex flex-wrap justify-center gap-2">
                   {availableTypes.map((type) => (
@@ -818,12 +898,10 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                 </div>
               )}
 
-              {/* Chart Visualization Area */}
               <div className="flex-1" style={{ minHeight: "200px" }}>
                 {renderChart(chart)}
               </div>
 
-              {/* Data Summary */}
               {(chart.value !== undefined || chart.series) && (
                 <div className="data-summary bg-gray-50 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 text-xs sm:text-sm border border-gray-100">
                   <div className="font-semibold text-gray-800 mb-2 sm:mb-3 flex items-center">
@@ -839,63 +917,33 @@ const ChartDisplay: React.FC<ChartDisplayProps> = ({
                         </span>
                       </div>
                     )}
-                    {chart.series?.category &&
-                      chart.series?.value &&
-                      Array.isArray(chart.series.category) && (
-                        <>
-                          {chart.series.category.map((category, idx) => (
-                            <div
-                              key={idx}
-                              className="flex justify-between items-center"
-                            >
-                              <span className="text-gray-600 font-medium truncate mr-2">
-                                {category}:
-                              </span>
-                              <span className="font-bold text-gray-900 flex-shrink-0">
-                                {Array.isArray(chart.series.value)
-                                  ? chart.series.value[idx]
-                                  : chart.series.value}
-                              </span>
-                            </div>
-                          ))}
-                        </>
-                      )}
-                    {chart.plot_type === "bar" &&
-                      chart.series &&
-                      chart.x_axis && (
-                        <>
-                          {Object.entries(chart.series).map(
-                            ([seriesName, seriesValues]) => (
-                              <div key={seriesName} className="space-y-1">
-                                <div className="text-gray-700 font-medium text-xs uppercase tracking-wide">
-                                  {seriesName}
-                                </div>
-                                {Array.isArray(seriesValues) &&
-                                  chart.x_axis &&
-                                  seriesValues.map((value, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="flex justify-between items-center pl-2 sm:pl-4"
-                                    >
-                                      <span className="text-gray-600 font-medium truncate mr-2">
-                                        {chart.x_axis[idx]}:
-                                      </span>
-                                      <span className="font-bold text-gray-900 flex-shrink-0">
-                                        {value} {chart.y_axis_label || ""}
-                                      </span>
-                                    </div>
-                                  ))}
-                              </div>
-                            )
-                          )}
-                        </>
-                      )}
                   </div>
                 </div>
               )}
 
-              {/* Insights section */}
-              {chart.insights && chart.insights.length > 0 && (
+              {chart.status === "failed" && chart.insights && chart.insights.length > 0 && (
+                <div className="insights-section border-t border-red-200 pt-6">
+                  <h4 className="font-semibold text-red-900 mb-3 sm:mb-4 text-sm sm:text-base flex items-center">
+                    <span className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full mr-2"></span>
+                    Analysis Issues
+                  </h4>
+                  <ul className="space-y-2 sm:space-y-3">
+                    {chart.insights.map((insight: string, index: number) => (
+                      <li
+                        key={index}
+                        className="text-red-700 text-xs sm:text-sm flex items-start leading-relaxed bg-red-50 p-2 rounded"
+                      >
+                        <span className="text-red-500 mr-2 sm:mr-3 mt-0.5 sm:mt-1 text-base sm:text-lg flex-shrink-0">
+                          ⚠
+                        </span>
+                        <span className="min-w-0">{insight}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {chart.status !== "failed" && chart.insights && chart.insights.length > 0 && (
                 <div className="insights-section border-t border-gray-200 pt-6">
                   <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base flex items-center">
                     <span className="w-2 h-2 sm:w-3 sm:h-3 bg-teal-500 rounded-full mr-2"></span>
