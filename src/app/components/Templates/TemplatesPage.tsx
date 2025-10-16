@@ -546,8 +546,15 @@ const TemplatesPage: React.FC = () => {
                             >
                               <Settings className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400 hover:text-purple-600" />
                             </Button>
-                            <CardTitle className="text-sm sm:text-xl font-semibold text-slate-800 group-hover:text-purple-700 transition-colors break-words leading-tight min-w-0 flex-1">
-                              {template.template_name}
+                            <CardTitle
+                              className="text-sm sm:text-xl font-semibold text-slate-800 group-hover:text-purple-700 transition-colors leading-tight"
+                              style={{
+                                wordBreak: "normal",
+                                overflowWrap: "break-word",
+                                whiteSpace: "normal",
+                              }}
+                            >
+                              {template.template_name.replace(/_/g, "_\u200B")}
                             </CardTitle>
                           </div>
                           <div className="flex flex-wrap items-center gap-1 sm:gap-2">

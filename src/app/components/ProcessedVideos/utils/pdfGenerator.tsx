@@ -491,24 +491,31 @@ export const AnalyticsPDFDocument: React.FC<PDFDocumentProps> = ({
       </Page>
 
       {/* Metrics Page */}
-      <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>KEY PERFORMANCE METRICS</Text>
-        </View>
+<Page size="A4" style={styles.page}>
+  <View style={styles.header}>
+    <Text style={styles.headerText}>KEY PERFORMANCE METRICS</Text>
+  </View>
 
-        <View style={styles.metricContainer}>
-          {Object.entries(analytics.parsed_metrics || {}).map(
-            ([key, value], index) => (
-              <View key={index} style={styles.metricBox}>
-                <Text style={styles.metricLabel}>
-                  {key.replace(/_/g, " ").toUpperCase()}
-                </Text>
-                <Text style={styles.metricValue}>{value.toString()}</Text>
-              </View>
-            )
-          )}
-        </View>
-      </Page>
+  <View style={styles.metricContainer}>
+    {analytics.parsed_metrics && 
+      Object.entries(analytics.parsed_metrics || {})
+        .filter(([key, value]) => {
+          const strValue = String(value);
+          return strValue !== '[object Object]' && strValue.trim() !== '';
+        })
+        .map(([key, value], index) => (
+          <View key={index} style={styles.metricBox}>
+            <Text style={styles.metricLabel}>
+              {key.replace(/_/g, " ").toUpperCase()}
+            </Text>
+            <Text style={styles.metricValue}>
+              {String(value).substring(0, 100)}
+            </Text>
+          </View>
+        ))
+    }
+  </View>
+</Page>
 
       {/* Charts Pages */}
       {chartImages.length > 0 ? (
