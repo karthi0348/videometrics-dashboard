@@ -327,7 +327,7 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
                     <span className="text-sm font-medium text-gray-600">
                       Profile
                     </span>
-                    <span className="text-sm text-gray-900 font-medium">
+                    <span className="text-sm text-gray-900 font-medium ps-2 text-right block">
                       {video.profile_name}
                     </span>
                   </div>
@@ -584,7 +584,7 @@ const ProcessedVideosUI: React.FC<ProcessedVideosUIProps> = ({
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 text-sm">
+          <h3 className="font-medium text-gray-900 text-sm break-words leading-tight text-center sm:text-left">
             {video.video_title}
           </h3>
           <div className="flex items-center space-x-2 mt-1">

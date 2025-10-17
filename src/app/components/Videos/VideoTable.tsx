@@ -706,22 +706,31 @@ const VideoTable: React.FC<VideoTableProps> = ({
           </Alert>
         )}
 
-        <Grid container spacing={3}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, 1fr)",
+              md: "repeat(3, minmax(300px, 1fr))",
+            },
+            gap: 3,
+          }}
+        >
           {videos.map((video) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={video.id}>
-              <VideoCard
-                video={video}
-                onPlayVideo={handlePlayVideo}
-                onEditVideo={handleEditVideo}
-                onDeleteVideo={handleDeleteVideo}
-                isSelectMode={isSelectMode}
-                isSelected={selectedVideos.includes(video.id)}
-                onSelect={onVideoSelect}
-                onDeselect={onVideoDeselect}
-              />
-            </Grid>
+            <VideoCard
+              key={video.id}
+              video={video}
+              onPlayVideo={handlePlayVideo}
+              onEditVideo={handleEditVideo}
+              onDeleteVideo={handleDeleteVideo}
+              isSelectMode={isSelectMode}
+              isSelected={selectedVideos.includes(video.id)}
+              onSelect={onVideoSelect}
+              onDeselect={onVideoDeselect}
+            />
           ))}
-        </Grid>
+        </Box>
 
         {totalVideos > pageSize && (
           <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -884,7 +893,7 @@ const VideoTable: React.FC<VideoTableProps> = ({
                   )}
                   <TableCell>
                     <Typography variant="body2" fontWeight={500}>
-                      {video.video_name   || "Untitled Video"}
+                      {video.video_name || "Untitled Video"}
                     </Typography>
                   </TableCell>
                   <TableCell>
